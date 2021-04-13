@@ -8,3 +8,12 @@ plots/
 csvs/
 __pycache__/
 *.swp
+.venv/
+.idea/
+venv/
+pcaps/
+*.png
+*.csv
+*.pdf
+*.bat
+*.pcap
