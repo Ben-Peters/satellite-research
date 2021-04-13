@@ -1,5 +1,5 @@
 # This script was adapted from work by Kush Shah whos work can be 
-# found here: https://github.com/kush5683/TCP-over-Satellite/blob/main/MediatorCode/trial.py
+# found at https://github.com/kush5683/TCP-over-Satellite/blob/main/MediatorCode/trial.py
 
 import argparse
 import sys
@@ -112,7 +112,7 @@ class Trial:
 
     def startIperf3Server(self):
         for host in self.hosts:
-            iperf3ServerStart = f"ssh {self.user}@{host} \"iperf3 -s\"&"
+            iperf3ServerStart = f"ssh {self.user}@{host} \"iperf3 -s &\"&"
             self.serversRunning += 1
             print(f'\trunning command: \n {iperf3ServerStart}')
             timeStamp = self.getTimeStamp()
@@ -350,7 +350,7 @@ def main():
     # t = Trial(data='1G', cc=['cubic', 'hybla'],
     #          batchNum=111, timeout=100, log=True)
 
-    t = Trial(data='1G', batchNum=args.batch, timeout=100, log=args.log, cc=cc, runNum=args.runNum)
+    t = Trial(data='250M', batchNum=args.batch, timeout=100, log=args.log, cc=cc, runNum=args.runNum)
     t.start()
     print("All done")
 
