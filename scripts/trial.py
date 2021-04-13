@@ -13,13 +13,14 @@ from plot import PlotTputOneFlow
 
 class Trial:
 
-    def __init__(self, cc, batchNum, runNum,
+    def __init__(self, cc, batchNum, runNum, time,
                  user='btpeters', data='20M', timeout=600, log=False, ports=['5201', '5202'],
                  tcp_mem=60000000, tcp_wmem=60000000, tcp_rmem=60000000):
         self.dictionary = {}
         self.hosts = []
         self.cc = cc
         self.data = data
+        self.time = time
         self.batchNum = batchNum
         self.runNum = runNum
         self.user = user
@@ -117,7 +118,7 @@ class Trial:
             self.serversRunning += 1
             print(f'\trunning command: \n {iperf3ServerStart}')
             timeStamp = self.getTimeStamp()
-            os.system(iperf3ServerStart)
+            subprocess.call(iperf3ServerStart)
             self.commandsRun.append((timeStamp, iperf3ServerStart))
             # self.sleep(1)
 
@@ -127,11 +128,14 @@ class Trial:
         for host in self.hosts:
             # exitCodes.append(subprocess.Popen(["ssh", f"{self.user}@glomma.cs.wpi.edu", "iperf3", "--reverse", "-i", "\"eno2\"",
             #                                    "-c", f"{host}", f"-n{self.data}", f"-p{self.ports[self.clientsRunning]}"], stdout=subprocess.DEVNULL))
-            iperf3ClientStartCommand = f"ssh {self.user}@glomma.cs.wpi.edu \'iperf3 -i 30 -R -c {host} -n {self.data} > /dev/null\'"
+            if self.data is not None:
+                iperf3ClientStartCommand = f"ssh {self.user}@glomma.cs.wpi.edu \'iperf3 -R -c {host} -n {self.data} > /dev/null\'"
+            else:
+                iperf3ClientStartCommand = f"ssh {self.user}@glomma.cs.wpi.edu \'iperf3 -R -c {host} -t {self.time} > /dev/null\'"
             self.clientsRunning += 1
             print(f'\trunning command: \n{iperf3ClientStartCommand}')
             timeStamp = self.getTimeStamp()
-            os.system(iperf3ClientStartCommand)
+            subprocess.call(iperf3ClientStartCommand)
             self.commandsRun.append((timeStamp, iperf3ClientStartCommand))
         # self.sleep(self.timeout)
         # while exitCodes[0].poll() is None or exitCodes[1].poll() is None:
@@ -350,7 +354,11 @@ def main():
     parser.add_argument('--log', type=bool, help='Use logging output', default=True)
     parser.add_argument('--cc', type=str, help="congestion control algorithm", required=True)
     parser.add_argument('--runNum', type=int, help="what run number is this", required=True)
-    parser.add_argument('--run', type=bool, help="Run the trial or just get the files and analyze locally", default=True)
+    parser.add_argument('--run', type=bool, help="Run the trial or just get the files and analyze locally",
+                        default=True)
+    parser.add_argument('--time', type=int, help="How long should the download run for", default=60)
+    parser.add_argument('--size', type=str, help="How much data should be downloaded (exclusive use with time param)",
+                        default=None)
     args = parser.parse_args()
 
     cc = []
@@ -364,7 +372,7 @@ def main():
     # t = Trial(data='1G', cc=['cubic', 'hybla'],
     #          batchNum=111, timeout=100, log=True)
 
-    t = Trial(data='500M', batchNum=args.batch, timeout=100, log=args.log, cc=cc, runNum=args.runNum)
+    t = Trial(data=args.size, batchNum=args.batch, timeout=100, log=args.log, cc=cc, runNum=args.runNum, time=args.time)
     t.start()
     print("All done")
 
