@@ -135,7 +135,7 @@ class Trial:
             self.clientsRunning += 1
             print(f'\trunning command: \n{iperf3ClientStartCommand}')
             timeStamp = self.getTimeStamp()
-            subprocess.call(iperf3ClientStartCommand)
+            os.(iperf3ClientStartCommand)
             self.commandsRun.append((timeStamp, iperf3ClientStartCommand))
         # self.sleep(self.timeout)
         # while exitCodes[0].poll() is None or exitCodes[1].poll() is None:
