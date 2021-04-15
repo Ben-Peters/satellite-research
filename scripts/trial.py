@@ -219,7 +219,7 @@ class Trial:
                     -E quote=d \
                     -E separator=, \
                     -E occurrence=f \
-                    >> csvs/{csvFilename}'
+                    >> csvs/{csvFilename} 2> /dev/null'
 
             """
             -e frame.number \

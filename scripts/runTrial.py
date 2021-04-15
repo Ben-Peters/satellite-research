@@ -13,18 +13,19 @@ args = parser.parse_args()
 
 
 def getData():
-    os.mkdir(f'G:/research/csvs/Trial_{args.batch}')
-    getCSVs = f'scp btpeters@andromeda.dyn.wpi.edu:~/Research/Trial_{args.batch}/csvs/* G:/research/csvs/Trial_{args.batch}'
+    os.mkdir(f'G:/satellite-research/csvs/Trial_{args.batch}')
+    getCSVs = f'scp btpeters@andromeda.dyn.wpi.edu:~/Research/Trial_{args.batch}/csvs/* G:/satellite-research/csvs/Trial_{args.batch}'
     os.system(getCSVs)
 
 
 def plotData():
-    files = os.listdir(f'G:/research/csvs/Trial_{args.batch}')
-    try: os.mkdir(f'G:/research/plots/Trial_{args.batch}')
+    files = os.listdir(f'G:/satellite-research/csvs/Trial_{args.batch}')
+    try:
+        os.mkdir(f'G:/satellite-research/plots/Trial_{args.batch}')
     except:
         print("Folder not created")
     for file in files:
-        csvFilename = f'G:/research/csvs/Trial_{args.batch}' + file
+        csvFilename = f'G:/satellite-research/csvs/Trial_{args.batch}' + file
         plotFilename = csvFilename.replace("/csvs/", "/plots/").replace(".csv", "_RTT.png")
         plot = PlotTputOneFlow(protocol=args.cc, csvFilepath=csvFilename, plotFilepath=plotFilename)
         plot.plotTput()
