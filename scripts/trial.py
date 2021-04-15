@@ -260,6 +260,10 @@ class Trial:
                 timeStamp = self.getTimeStamp()
                 os.system(pkill)
                 self.commandsRun.append((timeStamp, pkill))
+            self.tcpdumpsRunning -= 1
+            self.serversRunning -= 1
+            self.clientsRunning -= 1
+            self.clientDumpsRunning -= 1
         pkill = f'ssh {self.user}@glomma.cs.wpi.edu \"sudo pkill -2 tcpdump\"'
         timeStamp = self.getTimeStamp()
         os.system(pkill)
