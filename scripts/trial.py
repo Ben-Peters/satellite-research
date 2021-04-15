@@ -149,7 +149,8 @@ class Trial:
         for host in self.hosts:
             timeStamp = self.getTimeStamp()
             filename = f'Trial_{self.batchNum}/{self.cc[self.tcpdumpsRunning]}_{timeStamp}.pcap'
-            tcpdump = f"ssh {self.user}@{host} \"sudo tcpdump -s 96 port {self.ports[self.tcpdumpsRunning]} -w '{filename}'\"&"
+            # tcpdump = f"ssh {self.user}@{host} \"sudo tcpdump -s 96 port {self.ports[self.tcpdumpsRunning]} -w '{filename}'\"&"
+            tcpdump = f"ssh {self.user}@{host} \"sudo tcpdump -s 96 port {self.ports[0]} -w '{filename}'\"&"
             self.tcpdumpsRunning += 1
             print(f'\trunning command: \n{tcpdump}')
             os.system(tcpdump)
@@ -160,7 +161,8 @@ class Trial:
     def startTcpdumpClient(self):
         timestamp = self.getTimeStamp()
         filename = f'Trial_{self.batchNum}/{self.cc[self.clientDumpsRunning]}_{timestamp}.pcap'
-        tcpdump = f'ssh {self.user}@glomma.cs.wpi.edu \"sudo tcpdump -i 2 -w {filename} port {self.ports[self.clientsRunning]} -s 96\"&'
+        # tcpdump = f'ssh {self.user}@glomma.cs.wpi.edu \"sudo tcpdump -i 2 -w {filename} port {self.ports[self.clientsRunning]} -s 96\"&'
+        tcpdump = f'ssh {self.user}@glomma.cs.wpi.edu \"sudo tcpdump -i 2 -w {filename} port {self.ports[0]} -s 96\"&'
         self.clientDumpsRunning += 1
         print(f'\trunning command: \n{tcpdump}')
         os.system(tcpdump)
@@ -436,7 +438,7 @@ def main():
     #          batchNum=111, timeout=100, log=True)
 
     t = Trial(data=args.size, batchNum=args.batch, timeout=100, log=args.log, cc=cc, runNum=args.runNum,
-              time=args.time, tcp_rmem=212992, tcp_mem=212992, tcp_wmem=212992)
+              time=args.time, tcp_rmem=212992, tcp_mem=212992, tcp_wmem=212992, ports=[5201, 5201])
     t.start()
     print("All done")
 
