@@ -52,7 +52,8 @@ def plotData():
 
 
 def main():
-    startTrial = f"ssh btpeters@Andromeda.dyn.wpi.edu \" python3 ~/Research/scripts/trial.py --batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} \" "
+    startTrial = f"ssh btpeters@Andromeda.dyn.wpi.edu \" python3 ~/Research/scripts/trial.py " \
+                 f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} --size {args.size}\" "
     print("Running command: " + startTrial)
     subprocess.call(startTrial, shell=True)
     # time.sleep(600)

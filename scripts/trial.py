@@ -274,6 +274,7 @@ class Trial:
                 os.system(remove)
             remove = f'ssh {self.user}@glomma.cs.wpi.edu \'sudo rm -r Trial_{self.batchNum}\''
             os.system(remove)
+            self.enableTuning()
             if self.log:
                 self.makeLogFile()
 
@@ -305,7 +306,20 @@ class Trial:
     # os.system(runScript)
     # self.commandsRun.append(runScript)
 
-    def pyplot(self):
+    def plotWithDiffSettings(self):
+        files = os.listdir("csvs")
+        csvs = []
+        legend = ['With tuning', 'Without tuning']
+        for file, i in zip(files, range(len(files))):
+            csvFilename = os.path.realpath("csvs/" + file)
+            csvs.append(csvFilename)
+        plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", "_TPUT")
+        plot = PlotTputCompare(protocol=self.cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend)
+        # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
+        plot.plotTput()
+        pass
+
+    def plotTputVTime(self):
         files = os.listdir("csvs")
         hosts = self.hosts
         hosts += ["glomma.cs.wpi.edu"]
@@ -320,6 +334,20 @@ class Trial:
         # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
         plot.plotTput()
 
+    def enableTuning(self):
+        sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
+        command = f'{sshPrefix} \"sudo sysctl net.ipv4.tcp_moderate_rcvbuf=1\"'
+        self.commandsRun.append((self.getTimeStamp(), command))
+        os.system(command)
+        self.sleep(3)
+
+    def disableTuning(self):
+        sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
+        command = f'{sshPrefix} \"sudo sysctl net.ipv4.tcp_moderate_rcvbuf=0\"'
+        self.commandsRun.append((self.getTimeStamp(), command))
+        os.system(command)
+        self.sleep(3)
+
     def start(self):
         os.chdir(os.path.expanduser("~/Research"))
         os.system('clear')
@@ -332,24 +360,45 @@ class Trial:
             self.setUpLocal()
             print("Running setProtocolsRemote()")
             self.setProtocolsRemote()
+
+        # Run w/ rcvbuf tuning
+        print("Enabling tuning")
+        self.enableTuning()
         print("Running startIperf3Server()")
         self.startIperf3Server()
         print("Running startTcpdumpServer()")
         self.startTcpdumpServer()
-        print("Running startTcpdumpClient()")
-        self.startTcpdumpClient()
+        # print("Running startTcpdumpClient()")
+        # self.startTcpdumpClient()
         print("Running startIperf3Client()")
         self.startIperf3Client()
         # print("Sleeping")
         # self.sleep(self.timeout)
         print('Killing tcpdump and iperf3')
         self.terminateCommands()
+
+        # Run w/o rcvbuf tuning
+        print("Disabling tuning")
+        self.disableTuning()
+        print("Running startIperf3Server()")
+        self.startIperf3Server()
+        print("Running startTcpdumpServer()")
+        self.startTcpdumpServer()
+        # print("Running startTcpdumpClient()")
+        # self.startTcpdumpClient()
+        print("Running startIperf3Client()")
+        self.startIperf3Client()
+        # print("Sleeping")
+        # self.sleep(self.timeout)
+        print('Killing tcpdump and iperf3')
+        self.terminateCommands()
+
         print("Getting pcaps")
         self.getPcaps()
         print("Running pcapToCsv()")
         self.pcapToCsv()  # move to other file
         print('Generating graphs')
-        self.pyplot()
+        self.plotTputVTime()
         # self.generateGraphs()  # move to other file
         self.done = True
         print("Running cleanUp()")
@@ -381,7 +430,8 @@ def main():
     # t = Trial(data='1G', cc=['cubic', 'hybla'],
     #          batchNum=111, timeout=100, log=True)
 
-    t = Trial(data=args.size, batchNum=args.batch, timeout=100, log=args.log, cc=cc, runNum=args.runNum, time=args.time)
+    t = Trial(data=args.size, batchNum=args.batch, timeout=100, log=args.log, cc=cc, runNum=args.runNum,
+              time=args.time, tcp_rmem=212992, tcp_mem=212992, tcp_wmem=212992)
     t.start()
     print("All done")
 
