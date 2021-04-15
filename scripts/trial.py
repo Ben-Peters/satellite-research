@@ -15,7 +15,7 @@ class Trial:
 
     def __init__(self, cc, batchNum, runNum, time,
                  user='btpeters', data='20M', timeout=600, log=False, ports=['5201', '5202'],
-                 tcp_mem=262144, tcp_wmem=262144, tcp_rmem=262144):
+                 tcp_mem=60000000, tcp_wmem=60000000, tcp_rmem=60000000):
         self.dictionary = {}
         self.hosts = []
         self.cc = cc
