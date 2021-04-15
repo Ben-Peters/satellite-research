@@ -137,6 +137,7 @@ class Trial:
             timeStamp = self.getTimeStamp()
             os.system(iperf3ClientStartCommand)
             self.commandsRun.append((timeStamp, iperf3ClientStartCommand))
+        self.sleep(5)
         # self.sleep(self.timeout)
         # while exitCodes[0].poll() is None or exitCodes[1].poll() is None:
         #     if time.time() - time1 > 600.0:
