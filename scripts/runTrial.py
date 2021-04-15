@@ -1,6 +1,6 @@
 import argparse
 import os
-from plot import PlotTputOneFlow
+from plot import PlotTputOneFlow, PlotTputCompare
 import subprocess
 import time
 
@@ -11,6 +11,12 @@ parser.add_argument('--cc', type=str, help="congestion control algorithm", requi
 parser.add_argument('--runNum', type=int, help="what run number is this", required=True)
 args = parser.parse_args()
 
+dictionary = {
+            "cubic": "mlcneta.cs.wpi.edu",
+            "hybla": "mlcnetb.cs.wpi.edu",
+            "bbr": "mlcnetc.cs.wpi.edu",
+            "pcc": "mlcnetd.cs.wpi.edu"
+        }
 
 def getData():
     os.mkdir(f'G:/satellite-research/csvs/Trial_{args.batch}')
@@ -19,17 +25,29 @@ def getData():
 
 
 def plotData():
+    hosts = []
+    cc = []
+    for c in args.cc.split(" "):
+        cc.append(c)
+    for c in cc:
+        hosts.append(dictionary.get(c))
     files = os.listdir(f'G:/satellite-research/csvs/Trial_{args.batch}')
     try:
         os.mkdir(f'G:/satellite-research/plots/Trial_{args.batch}')
     except:
         print("Folder not created")
-    for file in files:
+
+    hosts += ["glomma.cs.wpi.edu"]
+    csvs = []
+    legend = []
+    for file, i in zip(files, range(len(files))):
         csvFilename = f'G:/satellite-research/csvs/Trial_{args.batch}/' + file
-        plotFilename = csvFilename.replace("/csvs/", "/plots/").replace(".csv", "_RTT.png")
-        plot = PlotTputOneFlow(protocol=args.cc, csvFilepath=csvFilename, plotFilepath=plotFilename)
-        plot.plotTput()
-    pass
+        csvs.append(csvFilename)
+        legend.append(hosts[i].split('.')[0])
+    plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", "_TPUT.png")
+    plot = PlotTputCompare(protocol=cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend)
+    # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
+    plot.plotTput()
 
 
 def main():

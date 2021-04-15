@@ -308,7 +308,7 @@ class Trial:
     def pyplot(self):
         files = os.listdir("csvs")
         hosts = self.hosts
-        hosts += ["glomma.cs.wpi.edu"] 
+        hosts += ["glomma.cs.wpi.edu"]
         csvs = []
         legend = []
         for file, i in zip(files, range(len(files))):
