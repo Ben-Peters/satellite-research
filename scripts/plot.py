@@ -108,10 +108,10 @@ class PlotTputOneFlow:
 
 
 class PlotTputCompare:
-    def __init__(self, protocol, legend, csvFiles, plotFiles):
+    def __init__(self, protocol, legend, csvFiles, plotFile):
         self.protocol = protocol
         self.csvFile = csvFiles
-        self.plotFilepath = plotFiles
+        self.plotFilepath = plotFile
         self.legend = legend
         self.data = []
         for csv in csvFiles:

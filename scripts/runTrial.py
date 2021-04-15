@@ -25,7 +25,7 @@ def plotData():
     except:
         print("Folder not created")
     for file in files:
-        csvFilename = f'G:/satellite-research/csvs/Trial_{args.batch}' + file
+        csvFilename = f'G:/satellite-research/csvs/Trial_{args.batch}/' + file
         plotFilename = csvFilename.replace("/csvs/", "/plots/").replace(".csv", "_RTT.png")
         plot = PlotTputOneFlow(protocol=args.cc, csvFilepath=csvFilename, plotFilepath=plotFilename)
         plot.plotTput()
@@ -35,9 +35,9 @@ def plotData():
 def main():
     startTrial = f"ssh btpeters@Andromeda.dyn.wpi.edu \" python3 ~/Research/scripts/trial.py --batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} \" "
     print("Running command: " + startTrial)
-    subprocess.call(startTrial, shell=True)
+    # subprocess.call(startTrial, shell=True)
     # time.sleep(600)
-    getData()
+    # getData()
     plotData()
 
 

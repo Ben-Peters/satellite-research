@@ -8,7 +8,7 @@ import time
 import subprocess
 import datetime
 from datetime import datetime
-from plot import PlotTputOneFlow
+from plot import PlotTputOneFlow, PlotTputCompare
 
 
 class Trial:
@@ -307,11 +307,18 @@ class Trial:
 
     def pyplot(self):
         files = os.listdir("csvs")
-        for file in files:
+        hosts = ["glomma.cs.wpi.edu"]
+        hosts += self.hosts
+        csvs = []
+        legend = []
+        for file, i in zip(files, range(len(files))):
             csvFilename = os.path.realpath("csvs/" + file)
-            plotFilename = csvFilename.replace("/csvs/", "/plots/").replace(".csv", "_TPUT")
-            plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
-            plot.plotTput()
+            csvs.append(csvFilename)
+            legend.append(hosts[i].split('.')[0])
+        plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", "_TPUT")
+        plot = PlotTputCompare(protocol=self.cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend)
+        # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
+        plot.plotTput()
 
     def start(self):
         os.chdir(os.path.expanduser("~/Research"))
