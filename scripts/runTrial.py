@@ -9,6 +9,7 @@ parser.add_argument('--batch', type=int, help='What batch number is this', requi
 parser.add_argument('--log', type=bool, help='Use logging output', default=True)
 parser.add_argument('--cc', type=str, help="congestion control algorithm", required=True)
 parser.add_argument('--runNum', type=int, help="what run number is this", required=True)
+parser.add_argument('--size', type=str, help='How much data do you want to download', default="250M")
 args = parser.parse_args()
 
 dictionary = {
