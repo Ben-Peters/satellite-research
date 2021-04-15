@@ -70,8 +70,8 @@ class PlotTputOneFlow:
 
     def filterCSV(self):
         self.df = self.df[self.df['tcp.srcport'] == 5201]
-        endTime = self.df[self.df['tcp.flags.fin'] == 1]['frame.time'].to_numpy()[0]
-        self.df = self.df[self.df['frame.time'] < endTime]
+        # endTime = self.df[self.df['tcp.flags.fin'] == 1]['frame.time'].to_numpy()[0]
+        # self.df = self.df[self.df['frame.time'] < endTime]
         self.timesRaw = pandas.to_datetime(self.df['frame.time'], infer_datetime_format=True)
 
     def removeTimeOffset(self):
@@ -125,8 +125,8 @@ class PlotTputCompare:
         for i in range(len(self.data)):
             df = self.data[i]
             df = df[df['tcp.srcport'] == 5201]
-            endTime = df[df['tcp.flags.fin'] == 1]['frame.time'].to_numpy()[0]
-            df = df[df['frame.time'] < endTime]
+            # endTime = df[df['tcp.flags.fin'] == 1]['frame.time'].to_numpy()[0]
+            # df = df[df['frame.time'] < endTime]
             self.timesRaw.append(pandas.to_datetime(df['frame.time'], infer_datetime_format=True))
             self.data[i] = df
 
@@ -172,11 +172,11 @@ class PlotTputCompare:
         pyplot.show()
 
 if __name__ == "__main__":
-    # plot = PlotTputOneFlow("hybla", "G:/research/hybla_2021_04_12-23-07-43.csv", "G:/research/hyblaTput")
-    # plot.plotTput()
+    plot = PlotTputOneFlow("hybla", "G:\satellite-research/cubic_2021_04_13-20-28-37.csv", "G:/satellite-research/cubicTput")
+    plot.plotTput()
     # plot = PlotRTTOneFlow("hybla", "G:/research/hybla_2021_04_12-23-07-43.csv", "G:/research/hyblaRTT")
     # plot.plotRTT()
-    csvs = ["G:/research/hybla_2021_04_12-23-07-43.csv", "G:/research/hybla_2021_04_12-23-07-46.csv"]
-    legend = ["Server", "Client"]
-    plot = PlotTputCompare("hybla", legend, csvs, "G:/research/hyblaCompareTput")
-    plot.plotTput()
+    # csvs = ["G:/research/hybla_2021_04_12-23-07-43.csv", "G:/research/hybla_2021_04_12-23-07-46.csv"]
+    # legend = ["Server", "Client"]
+    # plot = PlotTputCompare("hybla", legend, csvs, "G:/research/hyblaCompareTput")
+    # plot.plotTput()
