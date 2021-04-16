@@ -13,7 +13,7 @@ from plot import PlotTputOneFlow, PlotTputCompare
 
 class Trial:
 
-    def __init__(self, cc, batchNum, runNum, time,
+    def __init__(self, cc, batchNum, runNum, time, numToRun,
                  user='btpeters', data='20M', timeout=600, log=False, ports=['5201', '5202'],
                  tcp_mem=60000000, tcp_wmem=60000000, tcp_rmem=60000000):
         self.dictionary = {}
@@ -24,6 +24,7 @@ class Trial:
         self.batchNum = batchNum
         self.runNum = runNum
         self.user = user
+        self.numToRun = numToRun
         self.pcaps = []
         self.clientPcaps = []
         self.csvs = []
@@ -321,7 +322,7 @@ class Trial:
             csvFilename = os.path.realpath("csvs/" + file)
             csvs.append(csvFilename)
         plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", "_TPUT")
-        plot = PlotTputCompare(protocol=self.cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend)
+        plot = PlotTputCompare(protocol=self.cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend, numRuns=self.numToRun/2)
         # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
         plot.plotTput()
         pass
@@ -368,37 +369,27 @@ class Trial:
             print("Running setProtocolsRemote()")
             self.setProtocolsRemote()
 
-        # Run w/ rcvbuf tuning
-        print("Enabling tuning")
-        self.enableTuning()
-        print("Running startIperf3Server()")
-        self.startIperf3Server()
-        print("Running startTcpdumpServer()")
-        self.startTcpdumpServer()
-        # print("Running startTcpdumpClient()")
-        # self.startTcpdumpClient()
-        print("Running startIperf3Client()")
-        self.startIperf3Client()
-        # print("Sleeping")
-        # self.sleep(self.timeout)
-        print('Killing tcpdump and iperf3')
-        self.terminateCommands()
+        # run downloads
+        for i in range(self.numToRun):
+            if i <= self.numToRun/2:
+                print("Enabling tuning")
+                self.enableTuning()
+            else:
+                print("Disabling tuning")
+                self.disableTuning()
 
-        # Run w/o rcvbuf tuning
-        print("Disabling tuning")
-        self.disableTuning()
-        print("Running startIperf3Server()")
-        self.startIperf3Server()
-        print("Running startTcpdumpServer()")
-        self.startTcpdumpServer()
-        # print("Running startTcpdumpClient()")
-        # self.startTcpdumpClient()
-        print("Running startIperf3Client()")
-        self.startIperf3Client()
-        # print("Sleeping")
-        # self.sleep(self.timeout)
-        print('Killing tcpdump and iperf3')
-        self.terminateCommands()
+            print("Running startIperf3Server()")
+            self.startIperf3Server()
+            print("Running startTcpdumpServer()")
+            self.startTcpdumpServer()
+            # print("Running startTcpdumpClient()")
+            # self.startTcpdumpClient()
+            print("Running startIperf3Client()")
+            self.startIperf3Client()
+            # print("Sleeping")
+            # self.sleep(self.timeout)
+            print('Killing tcpdump and iperf3')
+            self.terminateCommands()
 
         print("Getting pcaps")
         self.getPcaps()

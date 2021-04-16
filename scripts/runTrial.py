@@ -40,13 +40,13 @@ def plotData():
 
     hosts += ["glomma.cs.wpi.edu"]
     csvs = []
-    legend = []
+    legend = ['With Tuning', 'Without Tuning']
     for file, i in zip(files, range(len(files))):
         csvFilename = f'G:/satellite-research/csvs/Trial_{args.batch}/' + file
         csvs.append(csvFilename)
-        legend.append(hosts[i].split('.')[0])
+        # legend.append(hosts[i].split('.')[0])
     plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", "_TPUT.png")
-    plot = PlotTputCompare(protocol=cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend)
+    plot = PlotTputCompare(protocol=cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend, numRuns=1)
     # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
     plot.plotTput()
 
@@ -55,9 +55,9 @@ def main():
     startTrial = f"ssh btpeters@Andromeda.dyn.wpi.edu \" python3 ~/Research/scripts/trial.py " \
                  f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} --size {args.size}\" "
     print("Running command: " + startTrial)
-    subprocess.call(startTrial, shell=True)
+    #subprocess.call(startTrial, shell=True)
     # time.sleep(600)
-    getData()
+    #getData()
     plotData()
 
 

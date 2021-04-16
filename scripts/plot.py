@@ -108,18 +108,21 @@ class PlotTputOneFlow:
 
 
 class PlotTputCompare:
-    def __init__(self, protocol, legend, csvFiles, plotFile):
+    def __init__(self, protocol, legend, csvFiles, plotFile, numRuns=1):
         self.protocol = protocol
         self.csvFile = csvFiles
         self.plotFilepath = plotFile
         self.legend = legend
         self.data = []
+        self.numRuns = numRuns
         for csv in csvFiles:
             self.data.append(pandas.read_csv(csv))
         self.timesRaw = []  # pandas.to_datetime(self.df['frame.time'], infer_datetime_format=True)
         self.frameTime = []
         self.throughput = []
         self.seconds = []
+        self.throughputAVG = []
+        self.secondsAVG = []
 
     def filterCSVs(self):
         for i in range(len(self.data)):
@@ -127,7 +130,7 @@ class PlotTputCompare:
             df = df[df['tcp.srcport'] == 5201]
             # endTime = df[df['tcp.flags.fin'] == 1]['frame.time'].to_numpy()[0]
             # df = df[df['frame.time'] < endTime]
-            self.timesRaw.append(pandas.to_datetime(df['frame.time'], infer_datetime_format=True))
+            self.timesRaw.append(pandas.to_datetime(df['frame.time']))
             self.data[i] = df
 
     def removeTimeOffset(self):
@@ -156,12 +159,40 @@ class PlotTputCompare:
             self.throughput.append(tput)
             self.seconds.append(secs)
 
+    def avgRuns(self):
+        maxLength = 0
+        maxIndex = 0
+        for i in range(self.numRuns*2):
+            if maxLength < len(self.throughput[i]):
+                maxLength = len(self.throughput[i])
+                maxIndex = i
+        sums = [0 for x in range(maxLength)]
+        for i in range(self.numRuns):
+            # time = self.seconds[i]
+            tput = self.throughput[i]
+            #sums = [val+bits for val, bits in zip(sums, tput)]
+            for j in range(len(tput)):
+                sums[j] += tput[j]
+        self.throughputAVG.append([x/self.numRuns for x in sums])
+        self.secondsAVG.append(self.seconds[maxIndex])
+        sums = [0 for x in range(maxLength)]
+        for i in range(self.numRuns):
+            # time = self.seconds[i]
+            tput = self.throughput[i+self.numRuns]
+            #sums = [val + bits for val, bits in zip(sums, tput)]
+            for j in range(len(tput)):
+                sums[j] += tput[j]
+        self.throughputAVG.append([x / self.numRuns for x in sums])
+        self.secondsAVG.append(self.seconds[maxIndex])
+        # self.throughputAVG = [float('nan') if x == 0 else x for x in self.throughputAVG]
+
     def plotTput(self):
         self.filterCSVs()
         self.removeTimeOffset()
         self.calculateThroughput()
+        self.avgRuns()
 
-        for time, tput in zip(self.seconds,self.throughput):
+        for time, tput in zip(self.secondsAVG, self.throughputAVG):
             pyplot.plot(time, tput)
         pyplot.xlabel("Time (seconds)")
         pyplot.ylabel("Throughput (Mbits)")
@@ -170,6 +201,7 @@ class PlotTputCompare:
         pyplot.savefig(self.plotFilepath)
 
         pyplot.show()
+
 
 if __name__ == "__main__":
     plot = PlotTputOneFlow("hybla", "G:\satellite-research/cubic_2021_04_13-20-28-37.csv", "G:/satellite-research/cubicTput")
