@@ -10,6 +10,7 @@ parser.add_argument('--log', type=bool, help='Use logging output', default=True)
 parser.add_argument('--cc', type=str, help="congestion control algorithm", required=True)
 parser.add_argument('--runNum', type=int, help="what run number is this", required=True)
 parser.add_argument('--size', type=str, help='How much data do you want to download', default="250M")
+parser.add_argument('--numToRun', type=int, help='Total number of downloads to run', default="10")
 args = parser.parse_args()
 
 dictionary = {
@@ -46,14 +47,15 @@ def plotData():
         csvs.append(csvFilename)
         # legend.append(hosts[i].split('.')[0])
     plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", "_TPUT.png")
-    plot = PlotTputCompare(protocol=cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend, numRuns=1)
+    plot = PlotTputCompare(protocol=cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend, numRuns=args.numToRun/5)
     # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
     plot.plotTput()
 
 
 def main():
     startTrial = f"ssh btpeters@Andromeda.dyn.wpi.edu \" python3 ~/Research/scripts/trial.py " \
-                 f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} --size {args.size}\" "
+                 f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
+                 f"--size {args.size} --numToRun {args.numToRun}\" "
     print("Running command: " + startTrial)
     #subprocess.call(startTrial, shell=True)
     # time.sleep(600)

@@ -415,6 +415,7 @@ def main():
     parser.add_argument('--time', type=int, help="How long should the download run for", default=60)
     parser.add_argument('--size', type=str, help="How much data should be downloaded (exclusive use with time param)",
                         default=None)
+    parser.add_argument('--numToRun', type=int, help="Total number of trial to run")
     args = parser.parse_args()
 
     cc = []
@@ -429,7 +430,8 @@ def main():
     #          batchNum=111, timeout=100, log=True)
 
     t = Trial(data=args.size, batchNum=args.batch, timeout=100, log=args.log, cc=cc, runNum=args.runNum,
-              time=args.time, tcp_rmem=212992, tcp_mem=212992, tcp_wmem=212992, ports=[5201, 5201])
+              numToRun=args.numToRun, time=args.time, tcp_rmem=212992, tcp_mem=212992, tcp_wmem=212992,
+              ports=['5201', '5201'])
     t.start()
     print("All done")
 
