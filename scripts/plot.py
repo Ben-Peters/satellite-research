@@ -160,30 +160,30 @@ class PlotTputCompare:
             self.seconds.append(secs)
 
     def avgRuns(self):
-        maxLength = 0
-        maxIndex = 0
+        minLength = len(self.throughput[0])
+        minIndex = 0
         for i in range(int(self.numRuns*2)):
-            if maxLength < len(self.throughput[i]):
-                maxLength = len(self.throughput[i])
-                maxIndex = i
-        sums = [0 for x in range(maxLength)]
+            if minLength > len(self.throughput[i]):
+                minLength = len(self.throughput[i])
+                minIndex = i
+        sums = [0 for x in range(minLength)]
         for i in range(self.numRuns):
             # time = self.seconds[i]
-            tput = self.throughput[i]
+            tput = self.throughput[i][0:minLength]
             #sums = [val+bits for val, bits in zip(sums, tput)]
             for j in range(len(tput)):
                 sums[j] += tput[j]
         self.throughputAVG.append([x/self.numRuns for x in sums])
-        self.secondsAVG.append(self.seconds[maxIndex])
-        sums = [0 for x in range(maxLength)]
+        self.secondsAVG.append(self.seconds[minIndex])
+        sums = [0 for x in range(minLength)]
         for i in range(self.numRuns):
             # time = self.seconds[i]
-            tput = self.throughput[i+self.numRuns]
+            tput = self.throughput[i+self.numRuns][0:minLength]
             #sums = [val + bits for val, bits in zip(sums, tput)]
             for j in range(len(tput)):
                 sums[j] += tput[j]
         self.throughputAVG.append([x / self.numRuns for x in sums])
-        self.secondsAVG.append(self.seconds[maxIndex])
+        self.secondsAVG.append(self.seconds[minIndex])
         # self.throughputAVG = [float('nan') if x == 0 else x for x in self.throughputAVG]
 
     def plotTput(self):

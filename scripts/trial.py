@@ -339,7 +339,8 @@ class Trial:
             csvs.append(csvFilename)
             # legend.append(hosts[i].split('.')[0])
         plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", "_TPUT")
-        plot = PlotTputCompare(protocol=self.cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend)
+        plot = PlotTputCompare(protocol=self.cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend,
+                               numRuns=self.numToRun/2)
         # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
         plot.plotTput()
 
