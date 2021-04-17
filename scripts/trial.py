@@ -76,7 +76,7 @@ class Trial:
         # os.system(hystart)
 
         for command in self.setupCommand:
-            os.system(f'{sshPrefix} \"{command}\"')
+            os.system(f'{sshPrefix} \'{command}\'')
         filePrefix = f'Trial_{self.batchNum}'
         os.system(f'mkdir {filePrefix}')
         os.system(f'{sshPrefix} \"mkdir {filePrefix}\"')
