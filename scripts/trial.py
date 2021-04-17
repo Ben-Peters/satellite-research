@@ -15,7 +15,7 @@ class Trial:
 
     def __init__(self, cc, batchNum, runNum, time, numToRun,
                  user='btpeters', data='20M', timeout=600, log=False, ports=['5201', '5202'],
-                 tcp_mem=60000000, tcp_wmem=60000000, tcp_rmem=60000000):
+                 tcp_mem="60000000", tcp_wmem="60000000", tcp_rmem="60000000"):
         self.dictionary = {}
         self.hosts = []
         self.cc = cc
@@ -340,7 +340,7 @@ class Trial:
             # legend.append(hosts[i].split('.')[0])
         plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", "_TPUT")
         plot = PlotTputCompare(protocol=self.cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend,
-                               numRuns=self.numToRun/2)
+                               numRuns=int(self.numToRun/2))
         # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
         plot.plotTput()
 
@@ -393,6 +393,7 @@ class Trial:
             print('Killing tcpdump and iperf3')
             self.terminateCommands()
 
+        self.enableTuning()
         print("Getting pcaps")
         self.getPcaps()
         print("Running pcapToCsv()")
@@ -432,8 +433,8 @@ def main():
     #          batchNum=111, timeout=100, log=True)
 
     t = Trial(data=args.size, batchNum=args.batch, timeout=100, log=args.log, cc=cc, runNum=args.runNum,
-              numToRun=args.numToRun, time=args.time, tcp_rmem=212992, tcp_mem=212992, tcp_wmem=212992,
-              ports=['5201', '5201'])
+              numToRun=args.numToRun, time=args.time, tcp_rmem="4096 87380 33554432",
+              tcp_mem="181419  241895  362838", tcp_wmem="4096 16384 33554432", ports=['5201', '5201'])
     t.start()
     print("All done")
 
