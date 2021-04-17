@@ -162,7 +162,7 @@ class PlotTputCompare:
     def avgRuns(self):
         maxLength = 0
         maxIndex = 0
-        for i in range(self.numRuns*2):
+        for i in range(int(self.numRuns*2)):
             if maxLength < len(self.throughput[i]):
                 maxLength = len(self.throughput[i])
                 maxIndex = i

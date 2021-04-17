@@ -57,9 +57,9 @@ def main():
                  f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
                  f"--size {args.size} --numToRun {args.numToRun}\" "
     print("Running command: " + startTrial)
-    #subprocess.call(startTrial, shell=True)
+    subprocess.call(startTrial, shell=True)
     # time.sleep(600)
-    #getData()
+    getData()
     plotData()
 
 

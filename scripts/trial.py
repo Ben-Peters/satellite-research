@@ -332,11 +332,12 @@ class Trial:
         hosts = self.hosts
         hosts += ["glomma.cs.wpi.edu"]
         csvs = []
-        legend = []
+        # legend = []
+        legend = ['With Tuning', 'Without Tuning']
         for file, i in zip(files, range(len(files))):
             csvFilename = os.path.realpath("csvs/" + file)
             csvs.append(csvFilename)
-            legend.append(hosts[i].split('.')[0])
+            # legend.append(hosts[i].split('.')[0])
         plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", "_TPUT")
         plot = PlotTputCompare(protocol=self.cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend)
         # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
