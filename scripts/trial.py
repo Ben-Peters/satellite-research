@@ -43,9 +43,9 @@ class Trial:
         self.tcp_wmem = tcp_wmem
         self.tcp_rmem = tcp_rmem
         self.setupCommand = [
-            f'sudo sysctl -w net.ipv4.tcp_mem=\'{self.tcp_mem}\'',
-            f'sudo sysctl -w net.ipv4.tcp_wmem=\'{self.tcp_wmem}\'',
-            f'sudo sysctl -w net.ipv4.tcp_rmem=\'{self.tcp_rmem}\'',
+            f'sudo sysctl -w net.ipv4.tcp_mem=\"{self.tcp_mem}\"',
+            f'sudo sysctl -w net.ipv4.tcp_wmem=\"{self.tcp_wmem}\"',
+            f'sudo sysctl -w net.ipv4.tcp_rmem=\"{self.tcp_rmem}\"',
             # 'sudo sysctl -p'
         ]
         self.graphCommand = ''
@@ -434,7 +434,7 @@ def main():
 
     t = Trial(data=args.size, batchNum=args.batch, timeout=100, log=args.log, cc=cc, runNum=args.runNum,
               numToRun=args.numToRun, time=args.time, tcp_rmem="4096 87380 33554432",
-              tcp_mem="181419  241895  362838", tcp_wmem="4096 16384 33554432", ports=['5201', '5201'])
+              tcp_mem="181419 241895 362838", tcp_wmem="4096 16384 33554432", ports=['5201', '5201'])
     t.start()
     print("All done")
 
