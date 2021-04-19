@@ -10,6 +10,7 @@ parser.add_argument('--log', type=bool, help='Use logging output', default=True)
 parser.add_argument('--cc', type=str, help="congestion control algorithm", required=True)
 parser.add_argument('--runNum', type=int, help="what run number is this", required=True)
 parser.add_argument('--size', type=str, help='How much data do you want to download', default="250M")
+parser.add_argument('--time', type=int, help='How long do you want the download to run', default=None)
 parser.add_argument('--numToRun', type=int, help='Total number of downloads to run', default=10)
 args = parser.parse_args()
 
@@ -54,9 +55,14 @@ def plotData():
 
 
 def main():
-    startTrial = f"ssh btpeters@Andromeda.dyn.wpi.edu \" python3 ~/Research/scripts/trial.py " \
-                 f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
-                 f"--size {args.size} --numToRun {args.numToRun}\" "
+    if args.time is not None:
+        startTrial = f"ssh btpeters@Andromeda.dyn.wpi.edu \" python3 ~/Research/scripts/trial.py " \
+                     f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
+                     f"--time {args.time} --numToRun {args.numToRun}\" "
+    else:
+        startTrial = f"ssh btpeters@Andromeda.dyn.wpi.edu \" python3 ~/Research/scripts/trial.py " \
+                     f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
+                     f"--size {args.size} --numToRun {args.numToRun}\" "
     print("Running command: " + startTrial)
     subprocess.call(startTrial, shell=True)
     # time.sleep(600)
