@@ -72,8 +72,8 @@ class Trial:
 
     def setUpLocal(self):
         sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
-        # hystart = f'{sshPrefix} \"sudo echo 0 > /sys/module/tcp_cubic/parameters/hystart\"'
-        # os.system(hystart)
+        hystart = f'{sshPrefix} \"sudo echo 1 > /sys/module/tcp_cubic/parameters/hystart\"'
+        os.system(hystart)
 
         for command in self.setupCommand:
             os.system(f'{sshPrefix} \'{command}\'')
@@ -97,8 +97,8 @@ class Trial:
             sshPrefix = f'ssh {self.user}@{host}'
             for command in self.setupCommand:
                 os.system(f'{sshPrefix} \'{command}\'')
-            hystart = f'{sshPrefix} \"sudo echo 0 > /sys/module/tcp_cubic/parameters/hystart\"'
-        # os.system(hystart)
+            hystart = f'{sshPrefix} \"sudo echo 1 > /sys/module/tcp_cubic/parameters/hystart\"'
+            os.system(hystart)
         for i in range(len(self.hosts)):
             protocol = list(self.dictionary.keys())[list(self.dictionary.values()).index(self.hosts[i])]
             command = f'ssh {self.user}@{self.hosts[i]} \"sudo sysctl -w net.ipv4.tcp_congestion_control=\'{protocol}\'\"'
@@ -398,8 +398,8 @@ class Trial:
         self.getPcaps()
         print("Running pcapToCsv()")
         self.pcapToCsv()  # move to other file
-        print('Generating graphs')
-        self.plotTputVTime()
+        # print('Generating graphs')
+        # self.plotTputVTime()
         # self.generateGraphs()  # move to other file
         self.done = True
         print("Running cleanUp()")
