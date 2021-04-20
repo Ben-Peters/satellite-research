@@ -213,12 +213,13 @@ class Trial:
                     -e frame.len \
                     -e tcp.srcport \
                     -e tcp.dstport \
-                    -e tcp.seq_raw \
-                    -e tcp.ack_raw \
                     -e tcp.len \
+                    -e tcp.analysis.retransmission \
+                    -e tcp.analysis.fast_retransmission \
+                    -e tcp.analysis.bytes_in_flight \
                     -e tcp.analysis.ack_rtt \
-                    -e tcp.flags.fin \
                     -e frame.time \
+                    -e tcp.time_relative \
                     -E header=y \
                     -E quote=d \
                     -E separator=, \
