@@ -1,6 +1,6 @@
 import argparse
 import os
-from plot import PlotTputOneFlow, PlotTputCompare
+from plot import PlotTputOneFlow, PlotTputCompare, PlotAllData
 import subprocess
 import time
 
@@ -15,11 +15,12 @@ parser.add_argument('--numToRun', type=int, help='Total number of downloads to r
 args = parser.parse_args()
 
 dictionary = {
-            "cubic": "mlcneta.cs.wpi.edu",
-            "hybla": "mlcnetb.cs.wpi.edu",
-            "bbr": "mlcnetc.cs.wpi.edu",
-            "pcc": "mlcnetd.cs.wpi.edu"
-        }
+    "cubic": "mlcneta.cs.wpi.edu",
+    "hybla": "mlcnetb.cs.wpi.edu",
+    "bbr": "mlcnetc.cs.wpi.edu",
+    "pcc": "mlcnetd.cs.wpi.edu"
+}
+
 
 def getData():
     os.mkdir(f'G:/satellite-research/csvs/Trial_{args.batch}')
@@ -48,10 +49,10 @@ def plotData():
         csvs.append(csvFilename)
         # legend.append(hosts[i].split('.')[0])
     plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", "_TPUT.png")
-    plot = PlotTputCompare(protocol=cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend,
-                           numRuns=int(args.numToRun/2))
+    plot = PlotAllData(protocol=cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend,
+                       numRuns=int(args.numToRun / 2), title="tcp_moderate_rcvbuf on vs off")
     # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
-    plot.plotTput()
+    plot.plot()
 
 
 def main():
@@ -64,9 +65,9 @@ def main():
                      f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
                      f"--size {args.size} --numToRun {args.numToRun}\" "
     print("Running command: " + startTrial)
-    subprocess.call(startTrial, shell=True)
+    #subprocess.call(startTrial, shell=True)
     # time.sleep(600)
-    getData()
+    #getData()
     plotData()
 
 

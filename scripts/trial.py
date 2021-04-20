@@ -214,6 +214,7 @@ class Trial:
                     -e tcp.srcport \
                     -e tcp.dstport \
                     -e tcp.len \
+                    -e tcp.window_size \
                     -e tcp.analysis.retransmission \
                     -e tcp.analysis.fast_retransmission \
                     -e tcp.analysis.bytes_in_flight \

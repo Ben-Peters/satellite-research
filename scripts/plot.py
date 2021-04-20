@@ -245,7 +245,7 @@ class Plot:
             self.throughput.append(tput)
             self.seconds.append(secs)
 
-    def avgRuns(self, protocol, legend, csvFiles, plotFile, numRuns=1):
+    def avgRuns(self):
         # TODO: Convert this to a better version
         minLength = len(self.throughput[0])
         minIndex = 0
@@ -289,10 +289,10 @@ class Plot:
 
         pyplot.show()
 
-class plotAllData(Plot):
+class PlotAllData(Plot):
     # TODO: Make this work
     def __init__(self, protocol, legend, csvFiles, plotFile, title, numRuns=1):
-        super().__init__(self, protocol, legend, csvFiles, plotFile)
+        super().__init__(protocol=protocol, legend=legend, csvFiles=csvFiles, plotFile=plotFile)
         self.numRuns = numRuns
         self.title = title
         self.rtt = []
@@ -304,6 +304,64 @@ class plotAllData(Plot):
 
     def calculateStats(self):
         # TODO: do this
+        for df in self.data:
+            cutOffTime = 1
+            bytesSent = 0
+            throughput = []
+            seconds = []
+
+            rtt = []
+            avgRTT = 0
+
+            cwnd = []
+            avgCwnd = 0
+
+            retransmissions = []
+            retransmissionsCount = 0
+            startFrame = 1
+
+            for j in range(len(df)):
+
+                if df['tcp.srcport'].iloc[j] == 5201:
+                    bytesSent += df['frame.len'].iloc[j]
+
+                # rolling average for RTT
+                if df['tcp.dstport'].iloc[j] == 5201 and (not pandas.isnull(df['tcp.analysis.ack_rtt'].iloc[j])):
+                    if avgRTT != 0:
+                        avgRTT = (avgRTT + df['tcp.analysis.ack_rtt'].iloc[j]) / 2
+                    else:
+                        avgRTT = df['tcp.analysis.ack_rtt'].iloc[j]
+
+                # rolling average for CWND est.
+                if df['tcp.srcport'].iloc[j] == 5201 and (not pandas.isnull(df['tcp.analysis.bytes_in_flight'].iloc[j])):
+                    if avgCwnd != 0:
+                        avgCwnd = (avgCwnd + df['tcp.analysis.bytes_in_flight'].iloc[j]) / 2
+                    else:
+                        avgCwnd = df['tcp.analysis.bytes_in_flight'].iloc[j]
+
+                # count retransmissions
+                if not pandas.isnull(df['tcp.analysis.retransmission'].iloc[j]) or not pandas.isnull(
+                        df['tcp.analysis.fast_retransmission'].iloc[j]):
+                    retransmissionsCount += 1
+
+                if df['tcp.time_relative'].iloc[j] > float(cutOffTime):
+                    throughput.append((bytesSent * 8) / 1000000)
+                    seconds.append(cutOffTime)
+                    rtt.append(avgRTT*1000)
+                    cwnd.append(avgCwnd)
+                    retransmissions.append(retransmissionsCount / (j - startFrame + 1))
+
+                    bytesSent = 0
+                    avgRTT = 0
+                    retransmissionsCount = 0
+                    startFrame = j
+                    cutOffTime += 1
+
+            self.throughput.append(throughput)
+            self.rtt.append(rtt)
+            self.cwnd.append(cwnd)
+            self.retransmissions.append(retransmissions)
+            self.seconds.append(seconds)
         pass
 
     def avgAllData(self, startPos):
@@ -340,8 +398,8 @@ class plotAllData(Plot):
         self.retransmissionsAVG.append(avgRetrans)
 
     def plot(self):
-        self.filterCSVs()
-        self.removeTimeOffset()
+        # self.filterCSVs()
+        # self.removeTimeOffset()
         self.calculateStats()
         self.avgAllData(0)
         self.avgAllData(1)
@@ -352,16 +410,21 @@ class plotAllData(Plot):
 
         # for i in range(len(self.throughputAVG)):
         # axs[0].plot(self.secondsAVG[i], self.throughputAVG[i], '.', color='tab:blue')
+        minLength = len(self.seconds[0])
+        minIndex = 0
+        for i in range(int(self.numRuns * 2)):
+            if minLength > len(self.seconds[i]):
+                minIndex = i
+                minLength = len(self.seconds[i])
+        axs[0].plot(self.seconds[minIndex], self.throughputAVG[0], color='tab:orange')
+        axs[1].plot(self.seconds[minIndex], self.rttAVG[0], color='tab:orange')
+        axs[2].plot(self.seconds[minIndex], self.cwndAVG[0], color='tab:orange')
+        axs[3].plot(self.seconds[minIndex], self.retransmissionsAVG[0], color='tab:orange')
 
-        axs[0].plot(self.secondsAVG, self.throughputAVG[0], color='tab:orange')
-        axs[1].plot(self.secondsAVG, self.rttAVG[0], color='tab:orange')
-        axs[2].plot(self.secondsAVG, self.cwndAVG[0], color='tab:orange')
-        axs[3].plot(self.secondsAVG, self.retransmissionsAVG[0], color='tab:orange')
-
-        axs[0].plot(self.secondsAVG, self.throughputAVG[1], color='tab:blue')
-        axs[1].plot(self.secondsAVG, self.rttAVG[1], color='tab:blue')
-        axs[2].plot(self.secondsAVG, self.cwndAVG[1], color='tab:blue')
-        axs[3].plot(self.secondsAVG, self.retransmissionsAVG[1], color='tab:blue')
+        axs[0].plot(self.seconds[minIndex], self.throughputAVG[1], color='tab:blue')
+        axs[1].plot(self.seconds[minIndex], self.rttAVG[1], color='tab:blue')
+        axs[2].plot(self.seconds[minIndex], self.cwndAVG[1], color='tab:blue')
+        axs[3].plot(self.seconds[minIndex], self.retransmissionsAVG[1], color='tab:blue')
 
         fig.suptitle(self.title)
         fig.legend(self.legend)
