@@ -524,7 +524,7 @@ class PlotAllData(Plot):
         self.avgAllData(1)
 
         # Setup formatting of plots
-        fig, axs = pyplot.subplots(4, gridspec_kw={'height_ratios': [3, 1, 1, 1]})
+        fig, axs = pyplot.subplots(5, gridspec_kw={'height_ratios': [2, 1, 1, 1, 1]})
         fig.set_figheight(8)
 
         # for i in range(len(self.throughputAVG)):
@@ -537,27 +537,31 @@ class PlotAllData(Plot):
                 minLength = len(self.seconds[i])
         axs[0].plot(self.seconds[minIndex], self.throughputAVG[0], color='tab:orange')
         axs[1].plot(self.seconds[minIndex], self.rttAVG[0], color='tab:orange')
-        axs[2].plot(self.seconds[minIndex], self.cwndAVG[0], color='tab:orange')
-        axs[3].plot(self.seconds[minIndex], self.retransmissionsAVG[0], color='tab:orange')
+        axs[2].plot(self.seconds[minIndex], self.rwndAVG[0], color='tab:orange')
+        axs[3].plot(self.seconds[minIndex], self.cwndAVG[0], color='tab:orange')
+        axs[4].plot(self.seconds[minIndex], self.retransmissionsAVG[0], color='tab:orange')
 
         axs[0].plot(self.seconds[minIndex], self.throughputAVG[1], color='tab:blue')
         axs[1].plot(self.seconds[minIndex], self.rttAVG[1], color='tab:blue')
-        axs[2].plot(self.seconds[minIndex], self.cwndAVG[1], color='tab:blue')
-        axs[3].plot(self.seconds[minIndex], self.retransmissionsAVG[1], color='tab:blue')
+        axs[2].plot(self.seconds[minIndex], self.rwndAVG[1], color='tab:blue')
+        axs[3].plot(self.seconds[minIndex], self.cwndAVG[1], color='tab:blue')
+        axs[4].plot(self.seconds[minIndex], self.retransmissionsAVG[1], color='tab:blue')
+
         for i in range(len(maxY)):
             if maxY[i] is not None:
-                if i == 1:
-                    axs[i].set_ylim([minRTT, maxY[i]])
                 axs[i].set_ylim([0, maxY[i]])
             axs[i].set_xlim([0, len(self.seconds[minIndex])])
+
         fig.suptitle(self.title)
         fig.legend(self.legend)
+
         axs[0].set_ylabel("Throughput (Mbits)")
         axs[1].set_ylabel("RTT (ms)")
-        axs[2].set_ylabel("CWND (MB)")
-        axs[3].set_ylabel("Retrans. (%)")
+        axs[2].set_ylabel("RWND (MB)")
+        axs[3].set_ylabel("CWND (MB)")
+        axs[4].set_ylabel("Retrans. (%)")
 
-        axs[3].set_xlabel("Time (seconds)")
+        axs[4].set_xlabel("Time (seconds)")
 
         pyplot.savefig(self.plotFilepath)
         pyplot.show()
