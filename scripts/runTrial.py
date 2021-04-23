@@ -12,6 +12,7 @@ parser.add_argument('--runNum', type=int, help="what run number is this", requir
 parser.add_argument('--size', type=str, help='How much data do you want to download', default="250M")
 parser.add_argument('--time', type=int, help='How long do you want the download to run', default=None)
 parser.add_argument('--numToRun', type=int, help='Total number of downloads to run', default=10)
+parser.add_argument('--tcpSettings', type=str, help='Which settings should be used', required=True)
 args = parser.parse_args()
 
 dictionary = {
@@ -50,7 +51,7 @@ def plotData():
         # legend.append(hosts[i].split('.')[0])
     plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", "_TPUT.png")
     plot = PlotAllData(protocol=cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend,
-                       numRuns=int(args.numToRun / 2), title="medium mem settings")
+                       numRuns=int(args.numToRun / 2), title=f'mem settings: {args.tcpSettings}')
     # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
     plot.plotALL()
     # plot.plotStartTput(20)
@@ -68,7 +69,6 @@ def main():
                      f"--size {args.size} --numToRun {args.numToRun}\" "
     print("Running command: " + startTrial)
     subprocess.call(startTrial, shell=True)
-
     getData()
     plotData()
 

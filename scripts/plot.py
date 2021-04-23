@@ -337,8 +337,6 @@ class PlotAllData(Plot):
                         else:
                             avgCwnd = df['tcp.analysis.bytes_in_flight'].iloc[j]
 
-
-
                 # only packets from the Client
                 if df['tcp.dstport'].iloc[j] == 5201 and (not pandas.isnull(df['tcp.analysis.ack_rtt'].iloc[j])):
                     # rolling avg for RTT est.
@@ -513,7 +511,7 @@ class PlotAllData(Plot):
         # self.filterCSVs()
         # self.removeTimeOffset()
         if maxY is None:
-            maxY = [None, None, None, None]
+            maxY = [None, None, None, None, None]
         self.calculateStats()
         self.avgAllData(0)
         self.avgAllData(1)
