@@ -1,5 +1,6 @@
 import matplotlib.pyplot as pyplot
 import pandas
+import numpy
 
 
 class PlotRTTOneFlow:
@@ -89,7 +90,7 @@ class PlotTputOneFlow:
             if self.frameTime[i] <= float(cutoffTime):
                 bytesSent += self.df['frame.len'].iloc[i]
             else:
-                self.throughput.append((bytesSent * 8) / 1000000)
+                self.throughput.append((bytesSent * 8) / 1048576)
                 self.seconds.append(cutoffTime)
                 bytesSent = self.df['frame.len'].iloc[i]
                 cutoffTime += 1
@@ -155,7 +156,7 @@ class PlotTputCompare:
                 if time[i] <= float(cutoffTime):
                     bytesSent += df['frame.len'].iloc[i]
                 else:
-                    tput.append((bytesSent * 8) / 1000000)
+                    tput.append((bytesSent * 8) / 1048576)
                     secs.append(cutoffTime)
                     bytesSent = df['frame.len'].iloc[i]
                     cutoffTime += 1
@@ -238,7 +239,7 @@ class Plot:
                 if time[i] <= float(cutoffTime):
                     bytesSent += df['frame.len'].iloc[i]
                 else:
-                    tput.append((bytesSent * 8) / 1000000)
+                    tput.append((bytesSent * 8) / 1048576)
                     secs.append(cutoffTime)
                     bytesSent = df['frame.len'].iloc[i]
                     cutoffTime += 1
@@ -289,6 +290,7 @@ class Plot:
 
         pyplot.show()
 
+
 class PlotAllData(Plot):
     # TODO: Make this work
     def __init__(self, protocol, legend, csvFiles, plotFile, title, numRuns=1):
@@ -299,6 +301,8 @@ class PlotAllData(Plot):
         self.rttAVG = []
         self.cwnd = []
         self.cwndAVG = []
+        self.rwnd = []
+        self.rwndAVG = []
         self.retransmissions = []
         self.retransmissionsAVG = []
 
@@ -316,28 +320,41 @@ class PlotAllData(Plot):
             cwnd = []
             avgCwnd = 0
 
+            rwnd = []
+            avgRwnd = 0
+
             retransmissions = []
             retransmissionsCount = 0
             startFrame = 1
 
             for j in range(len(df)):
-
+                # only packets from the Server
                 if df['tcp.srcport'].iloc[j] == 5201:
+                    # Track bytes sent for tput calc
                     bytesSent += df['frame.len'].iloc[j]
 
-                # rolling average for RTT
+                    # rolling avg for CWND est.
+                    if not pandas.isnull(df['tcp.analysis.bytes_in_flight'].iloc[j]):
+                        if avgCwnd != 0:
+                            avgCwnd = (avgCwnd + df['tcp.analysis.bytes_in_flight'].iloc[j]) / 2
+                        else:
+                            avgCwnd = df['tcp.analysis.bytes_in_flight'].iloc[j]
+
+
+
+                # only packets from the Client
                 if df['tcp.dstport'].iloc[j] == 5201 and (not pandas.isnull(df['tcp.analysis.ack_rtt'].iloc[j])):
+                    # rolling avg for RTT est.
                     if avgRTT != 0:
                         avgRTT = (avgRTT + df['tcp.analysis.ack_rtt'].iloc[j]) / 2
                     else:
                         avgRTT = df['tcp.analysis.ack_rtt'].iloc[j]
 
-                # rolling average for CWND est.
-                if df['tcp.srcport'].iloc[j] == 5201 and (not pandas.isnull(df['tcp.analysis.bytes_in_flight'].iloc[j])):
-                    if avgCwnd != 0:
-                        avgCwnd = (avgCwnd + df['tcp.analysis.bytes_in_flight'].iloc[j]) / 2
+                    # rolling avg for RWND est.
+                    if avgRwnd != 0:
+                        avgRwnd = (avgRwnd + df['tcp.window_size'].iloc[j]) / 2
                     else:
-                        avgCwnd = df['tcp.analysis.bytes_in_flight'].iloc[j]
+                        avgRwnd = df['tcp.window_size'].iloc[j]
 
                 # count retransmissions
                 if not pandas.isnull(df['tcp.analysis.retransmission'].iloc[j]) or not pandas.isnull(
@@ -345,10 +362,11 @@ class PlotAllData(Plot):
                     retransmissionsCount += 1
 
                 if df['tcp.time_relative'].iloc[j] > float(cutOffTime):
-                    throughput.append((bytesSent * 8) / 1000000)
+                    throughput.append((bytesSent * 8) / 1048576)
                     seconds.append(cutOffTime)
                     rtt.append(avgRTT*1000)
                     cwnd.append(avgCwnd)
+                    rwnd.append(avgRwnd)
                     retransmissions.append(retransmissionsCount / (j - startFrame + 1))
 
                     bytesSent = 0
@@ -360,6 +378,7 @@ class PlotAllData(Plot):
             self.throughput.append(throughput)
             self.rtt.append(rtt)
             self.cwnd.append(cwnd)
+            self.rwnd.append(rwnd)
             self.retransmissions.append(retransmissions)
             self.seconds.append(seconds)
         pass
@@ -370,6 +389,7 @@ class PlotAllData(Plot):
         avgTput = []
         avgRTT = []
         avgCwnd = []
+        avgRwnd = []
         avgRetrans = []
         for i in range(int(self.numRuns * 2)):
             if minLength > len(self.throughput[i]):
@@ -378,6 +398,7 @@ class PlotAllData(Plot):
             tputSum = 0
             rttSum = 0
             cwndSum = 0
+            rwndSum = 0
             retransSum = 0
             num = 0
             for i in range(self.numRuns):
@@ -385,21 +406,119 @@ class PlotAllData(Plot):
                     tputSum += self.throughput[i+minPos][t]
                     rttSum += self.rtt[i+minPos][t]
                     cwndSum += self.cwnd[i+minPos][t]
+                    rwndSum += self.rwnd[i+minPos][t]
                     retransSum += self.retransmissions[i+minPos][t]
                     num += 1
 
             avgTput.append(tputSum / num)
             avgRTT.append(rttSum / num)
             avgCwnd.append(cwndSum / num / 1048576)  # Bytes to MBytes
+            avgRwnd.append(rwndSum / num / 1048576)  # Bytes to MBytes
             avgRetrans.append(retransSum / num)
         self.throughputAVG.append(avgTput)
         self.rttAVG.append(avgRTT)
-        self.cwndAVG.append(avgCwnd)  # Bytes to MBytes
+        self.cwndAVG.append(avgCwnd)
+        self.rwndAVG.append(avgRwnd)
         self.retransmissionsAVG.append(avgRetrans)
 
-    def plot(self):
+    def plotStart(self, seconds):
+        # TODO: Implement this and test it
+        if not self.retransmissionsAVG:
+            self.calculateStats()
+            self.avgAllData(0)
+            self.avgAllData(1)
+
+        avgRTT = 0
+        for i in range(len(self.rttAVG)):
+            avgRTT += sum(self.rttAVG[i][0:seconds])
+        avgRTT /= seconds * len(self.rttAVG)
+        time = numpy.arange(0., seconds+1, 1)
+
+        theoreticalTime = numpy.arange(0., seconds+1, avgRTT/1000)
+        theoreticalCWND = numpy.copy(theoreticalTime)
+        theoreticalTput = numpy.copy(theoreticalTime)
+
+        for i in range(len(theoreticalTime)):
+            if i == 0:
+                theoreticalCWND[i] = 12000/1048576/8
+                theoreticalTput[i] = 12000 / 1048576
+            else:
+                theoreticalCWND[i] = theoreticalCWND[i - 1] * 2
+                theoreticalTput[i] = theoreticalTput[i - 1] * 2
+
+        pyplot.clf()
+        fig, axs = pyplot.subplots(3, gridspec_kw={'height_ratios': [2, 2, 2]})
+        fig.set_figheight(8)
+
+        axs[0].plot(theoreticalTime, theoreticalTput, 'k--')
+        axs[0].plot(time, self.throughputAVG[0][0:seconds + 1], color='tab:orange')
+        axs[0].plot(time, self.throughputAVG[1][0:seconds + 1], color='tab:blue')
+
+        axs[1].plot(theoreticalTime, theoreticalCWND, 'k--')
+        axs[1].plot(time, self.cwndAVG[0][0:seconds+1], color='tab:orange')
+        axs[1].plot(time, self.cwndAVG[1][0:seconds+1], color='tab:blue')
+
+        axs[2].plot(time, self.rwndAVG[0][0:seconds + 1], color='tab:orange')
+        axs[2].plot(time, self.rwndAVG[1][0:seconds + 1], color='tab:blue')
+
+        axs[0].set_ylabel("Throughput (Mbits)")
+        axs[1].set_ylabel("CWND (MBytes)")
+        axs[2].set_ylabel("RWND (MBytes)")
+
+        axs[2].set_xlabel("Time (seconds)")
+        legend = ['Theoretical'] + self.legend
+        fig.legend(legend)
+        fig.suptitle(self.title)
+
+        maxY = max(self.rwndAVG[0][0:seconds+1])
+        axs[0].set_ylim([0, max(self.throughputAVG[0][0:seconds+1])])
+        axs[0].set_xlim([0, seconds])
+        axs[1].set_ylim([0, maxY])
+        axs[1].set_xlim([0, seconds])
+        axs[2].set_ylim([0, maxY])
+        axs[2].set_xlim([0, seconds])
+
+        pyplot.savefig(self.plotFilepath.replace('.png', '_Start_CWND.png'))
+        pyplot.show()
+
+    def plotStartTput(self, seconds):
+        # TODO: Implement this and test it
+        if not self.retransmissionsAVG:
+            self.calculateStats()
+            self.avgAllData(0)
+            self.avgAllData(1)
+        avgRTT = 0
+        for i in range(len(self.rttAVG)):
+            avgRTT += sum(self.rttAVG[i][0:seconds])
+        avgRTT /= seconds * len(self.rttAVG)
+        theoreticalTime = numpy.arange(0., seconds+1, avgRTT/1000)
+        theoreticalTput = numpy.copy(theoreticalTime)
+        for i in range(len(theoreticalTime)):
+            if i == 0:
+                theoreticalTput[i] = 12000/1048576
+            else:
+                theoreticalTput[i] = theoreticalTput[i - 1] * 2
+        time = numpy.arange(0., seconds+1, 1)
+        pyplot.clf()
+        pyplot.plot(theoreticalTime, theoreticalTput, 'k--')
+        pyplot.plot(time, self.throughputAVG[0][0:seconds+1], color='tab:orange')
+        pyplot.plot(time, self.throughputAVG[1][0:seconds+1], color='tab:blue')
+        pyplot.ylabel("Throughput (Mbits)")
+        pyplot.xlabel("Time (seconds)")
+        legend = ['Theoretical'] + self.legend
+        pyplot.legend(legend)
+        pyplot.ylim([0, 19])
+        pyplot.xlim([0, seconds])
+
+        pyplot.savefig(self.plotFilepath.replace('.png', '_Start_TPUT.png'))
+
+        pyplot.show()
+
+    def plotALL(self, maxY=None, minRTT=550):
         # self.filterCSVs()
         # self.removeTimeOffset()
+        if maxY is None:
+            maxY = [None, None, None, None]
         self.calculateStats()
         self.avgAllData(0)
         self.avgAllData(1)
@@ -425,18 +544,42 @@ class PlotAllData(Plot):
         axs[1].plot(self.seconds[minIndex], self.rttAVG[1], color='tab:blue')
         axs[2].plot(self.seconds[minIndex], self.cwndAVG[1], color='tab:blue')
         axs[3].plot(self.seconds[minIndex], self.retransmissionsAVG[1], color='tab:blue')
-
+        for i in range(len(maxY)):
+            if maxY[i] is not None:
+                if i == 1:
+                    axs[i].set_ylim([minRTT, maxY[i]])
+                axs[i].set_ylim([0, maxY[i]])
+            axs[i].set_xlim([0, len(self.seconds[minIndex])])
         fig.suptitle(self.title)
         fig.legend(self.legend)
         axs[0].set_ylabel("Throughput (Mbits)")
         axs[1].set_ylabel("RTT (ms)")
         axs[2].set_ylabel("CWND (MB)")
         axs[3].set_ylabel("Retrans. (%)")
+
         axs[3].set_xlabel("Time (seconds)")
 
         pyplot.savefig(self.plotFilepath)
-
         pyplot.show()
+
+        flag = True
+        if flag:
+            print(f'Max Tput: {max(self.throughputAVG[0])}')
+            print(f'Min RTT: {min(self.rttAVG[1])}')
+            print(f'Max RTT: {max(self.rttAVG[0])}')
+            print(f'Max cwnd: {max(self.cwndAVG[0])}')
+            print(f'Max rwnd: {max(self.rwndAVG[0])}')
+            print(f'Max retransmission rate: {max(self.retransmissionsAVG[0])}')
+
+        for i in range(len(self.throughputAVG)):
+            if i == 0:
+                print("With Tuning")
+            else:
+                print("Without Tuning")
+            print(f'Avg Throughput: {sum(self.throughputAVG[i])/len(self.throughputAVG[i])}')
+            print(f'Avg rtt: {sum(self.rttAVG[i]) / len(self.rttAVG[i])}')
+            print(f'Avg cwnd size: {sum(self.cwndAVG[i]) / len(self.cwndAVG[i])}')
+            print(f'Avg Retransmission rate: {sum(self.retransmissionsAVG[i]) / len(self.retransmissionsAVG[i])}')
 
 if __name__ == "__main__":
     plot = PlotTputOneFlow("hybla", "G:\satellite-research/cubic_2021_04_13-20-28-37.csv", "G:/satellite-research/cubicTput")

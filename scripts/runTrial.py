@@ -50,9 +50,11 @@ def plotData():
         # legend.append(hosts[i].split('.')[0])
     plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", "_TPUT.png")
     plot = PlotAllData(protocol=cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend,
-                       numRuns=int(args.numToRun / 2), title="tcp_moderate_rcvbuf on vs off")
+                       numRuns=int(args.numToRun / 2), title="medium mem settings")
     # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
-    plot.plot()
+    plot.plotALL(maxY=[100, 2050, 17, 0.07])
+    # plot.plotStartTput(20)
+    plot.plotStart(20)
 
 
 def main():
@@ -65,9 +67,9 @@ def main():
                      f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
                      f"--size {args.size} --numToRun {args.numToRun}\" "
     print("Running command: " + startTrial)
-    subprocess.call(startTrial, shell=True)
+    #subprocess.call(startTrial, shell=True)
     # time.sleep(600)
-    getData()
+    #getData()
     plotData()
 
 
