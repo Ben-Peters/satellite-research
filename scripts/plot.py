@@ -194,7 +194,6 @@ class PlotTputCompare:
 
 
 class Plot:
-    # TODO: make sure this does what I want
     def __init__(self, protocol, legend, csvFiles, plotFile, numRuns=1):
         self.protocol = protocol
         self.csvFile = csvFiles
@@ -292,7 +291,6 @@ class Plot:
 
 
 class PlotAllData(Plot):
-    # TODO: Make this work
     def __init__(self, protocol, legend, csvFiles, plotFile, title, numRuns=1):
         super().__init__(protocol=protocol, legend=legend, csvFiles=csvFiles, plotFile=plotFile)
         self.numRuns = numRuns
@@ -307,7 +305,6 @@ class PlotAllData(Plot):
         self.retransmissionsAVG = []
 
     def calculateStats(self):
-        # TODO: do this
         for df in self.data:
             cutOffTime = 1
             bytesSent = 0
@@ -422,7 +419,6 @@ class PlotAllData(Plot):
         self.retransmissionsAVG.append(avgRetrans)
 
     def plotStart(self, seconds):
-        # TODO: Implement this and test it
         if not self.retransmissionsAVG:
             self.calculateStats()
             self.avgAllData(0)
@@ -482,7 +478,6 @@ class PlotAllData(Plot):
         pyplot.show()
 
     def plotStartTput(self, seconds):
-        # TODO: Implement this and test it
         if not self.retransmissionsAVG:
             self.calculateStats()
             self.avgAllData(0)
@@ -584,6 +579,7 @@ class PlotAllData(Plot):
             print(f'Avg rtt: {sum(self.rttAVG[i]) / len(self.rttAVG[i])}')
             print(f'Avg cwnd size: {sum(self.cwndAVG[i]) / len(self.cwndAVG[i])}')
             print(f'Avg Retransmission rate: {sum(self.retransmissionsAVG[i]) / len(self.retransmissionsAVG[i])}')
+
 
 if __name__ == "__main__":
     plot = PlotTputOneFlow("hybla", "G:\satellite-research/cubic_2021_04_13-20-28-37.csv", "G:/satellite-research/cubicTput")

@@ -52,7 +52,7 @@ def plotData():
     plot = PlotAllData(protocol=cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend,
                        numRuns=int(args.numToRun / 2), title="medium mem settings")
     # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
-    plot.plotALL(maxY=[100, 2050, 17, 17, 0.07], minRTT=450)
+    plot.plotALL()
     # plot.plotStartTput(20)
     plot.plotStart(20)
 
@@ -67,9 +67,9 @@ def main():
                      f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
                      f"--size {args.size} --numToRun {args.numToRun}\" "
     print("Running command: " + startTrial)
-    #subprocess.call(startTrial, shell=True)
-    # time.sleep(600)
-    #getData()
+    subprocess.call(startTrial, shell=True)
+
+    getData()
     plotData()
 
 
