@@ -51,7 +51,7 @@ def plotData():
         # legend.append(hosts[i].split('.')[0])
     plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", "_TPUT.png")
     plot = PlotAllData(protocol=cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend,
-                       numRuns=int(args.numToRun / 2), title=f'default rmem settings')
+                       numRuns=int(args.numToRun / 2), title=f'default value doubled')
     # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
     plot.plotALL()
     # plot.plotStartTput(20)
