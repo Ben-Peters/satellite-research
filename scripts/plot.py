@@ -545,8 +545,8 @@ class PlotAllData(Plot):
 
         axs[0].set_ylim([0, 125])
         axs[1].set_ylim([0, 2000])
-        axs[2].set_ylim([0, 30])
-        axs[3].set_ylim([0, 30])
+        axs[2].set_ylim([0, 6])
+        axs[3].set_ylim([0, 6])
         axs[4].set_ylim([0, 0.15])
 
 
@@ -585,6 +585,7 @@ class PlotAllData(Plot):
                 print("Without Tuning")
             print(f'Avg Throughput: {sum(self.throughputAVG[i])/len(self.throughputAVG[i])}')
             print(f'Avg rtt: {sum(self.rttAVG[i]) / len(self.rttAVG[i])}')
+            print(f'Avg rwnd size: {sum(self.rwndAVG[i]) / len(self.rwndAVG[i])}')
             print(f'Avg cwnd size: {sum(self.cwndAVG[i]) / len(self.cwndAVG[i])}')
             print(f'Avg Retransmission rate: {sum(self.retransmissionsAVG[i]) / len(self.retransmissionsAVG[i])}')
 
