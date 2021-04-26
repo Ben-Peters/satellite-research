@@ -465,11 +465,14 @@ class PlotAllData(Plot):
         fig.suptitle(self.title)
 
         maxY = max(self.rwndAVG[0][0:seconds+1])
-        axs[0].set_ylim([0, max(self.throughputAVG[0][0:seconds+1])])
+        #axs[0].set_ylim([0, max(self.throughputAVG[0][0:seconds+1])])
+        axs[0].set_ylim([0,35])
         axs[0].set_xlim([0, seconds])
-        axs[1].set_ylim([0, maxY])
+        #axs[1].set_ylim([0, maxY])
+        axs[1].set_ylim([0, 3])
         axs[1].set_xlim([0, seconds])
-        axs[2].set_ylim([0, maxY])
+        #axs[2].set_ylim([0, maxY])
+        axs[2].set_ylim([0, 3])
         axs[2].set_xlim([0, seconds])
 
         pyplot.savefig(self.plotFilepath.replace('.png', '_Start_CWND.png'))
@@ -539,6 +542,13 @@ class PlotAllData(Plot):
         axs[2].plot(self.seconds[minIndex], self.rwndAVG[1], color='tab:blue')
         axs[3].plot(self.seconds[minIndex], self.cwndAVG[1], color='tab:blue')
         axs[4].plot(self.seconds[minIndex], self.retransmissionsAVG[1], color='tab:blue')
+
+        axs[0].set_ylim([0, 125])
+        axs[1].set_ylim([0, 2000])
+        axs[2].set_ylim([0, 30])
+        axs[3].set_ylim([0, 30])
+        axs[4].set_ylim([0, 0.15])
+
 
         for i in range(len(maxY)):
             if maxY[i] is not None:
