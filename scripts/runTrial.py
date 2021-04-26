@@ -24,7 +24,10 @@ dictionary = {
 
 
 def getData():
-    os.mkdir(f'G:/satellite-research/csvs/Trial_{args.batch}')
+    try:
+        os.mkdir(f'G:/satellite-research/csvs/Trial_{args.batch}')
+    except:
+        print('Folder not created')
     getCSVs = f'scp btpeters@andromeda.dyn.wpi.edu:~/Research/Trial_{args.batch}/csvs/* G:/satellite-research/csvs/Trial_{args.batch}'
     os.system(getCSVs)
 
@@ -51,7 +54,7 @@ def plotData():
         # legend.append(hosts[i].split('.')[0])
     plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", "_TPUT.png")
     plot = PlotAllData(protocol=cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend,
-                       numRuns=int(args.numToRun / 2), title=f'default value doubled')
+                       numRuns=int(args.numToRun / 2), title=f'All set to 60M')
     # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
     plot.plotALL()
     # plot.plotStartTput(20)
