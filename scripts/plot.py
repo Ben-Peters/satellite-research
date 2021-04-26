@@ -545,8 +545,8 @@ class PlotAllData(Plot):
 
         axs[0].set_ylim([0, 125])
         axs[1].set_ylim([0, 2000])
-        axs[2].set_ylim([0, 6])
-        axs[3].set_ylim([0, 6])
+        axs[2].set_ylim([0, 6.5])
+        axs[3].set_ylim([0, 6.5])
         axs[4].set_ylim([0, 0.15])
 
 
