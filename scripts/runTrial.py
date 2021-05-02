@@ -16,7 +16,7 @@ parser.add_argument('--tcpSettings', type=int, help='Which settings should be us
 parser.add_argument('--rmem', type=str, help='Value for rmem', default="4096 131072 6291456")
 parser.add_argument('--wmem', type=str, help='Value for wmem', default="4096 16384 4194304")
 parser.add_argument('--mem', type=str, help='Value for mem', default="382185 509580 764370")
-parser.add_argument('--plotName', type=str, help='Name for plots created', required=True)
+parser.add_argument('--plotName', type=str, help='Name for plots created', default="TCP Performance")
 args = parser.parse_args()
 
 dictionary = {
@@ -26,22 +26,22 @@ dictionary = {
     "pcc": "mlcnetd.cs.wpi.edu"
 }
 # Settings for quick recalls format is (rmem, wmem, mem, title)
-tcpSettings = [("4096 131072 6291456", "4096 16384 4194304", "382185 509580 764370", "Default Settings"),
-               ("4096 262144 6291456", "4096 16384 4194304", "382185 509580 764370", "Default Value Doubled"),
-               ("4096 131072 12582912", "4096 16384 4194304", "382185 509580 764370", "Max Value Doubled"),
-               ("60000000 60000000 60000000", "4096 16384 4194304", "382185 509580 764370", "All at 60MB"),
-               ("4096 131072 6291456", "60000000 60000000 60000000", "382185 509580 764370", "Default Settings"),
-               ("4096 262144 6291456", "60000000 60000000 60000000", "382185 509580 764370", "Default Value Doubled"),
-               ("4096 131072 12582912", "60000000 60000000 60000000", "382185 509580 764370", "Max Value Doubled"),
-               ("60000000 60000000 60000000", "60000000 60000000 60000000", "382185 509580 764370", "All at 60MB"),
-               ("4096 60000000 6291456", "60000000 60000000 60000000", "382185 509580 764370", "Default at 60MB"),
-               ("4096 131072 60000000", "60000000 60000000 60000000", "382185 509580 764370", "Max at 60MB")]
+tcpSettings = [["4096 131072 6291456", "4096 16384 4194304", "382185 509580 764370", "Default Settings"],
+               ["4096 262144 6291456", "4096 16384 4194304", "382185 509580 764370", "Default Value Doubled"],
+               ["4096 131072 12582912", "4096 16384 4194304", "382185 509580 764370", "Max Value Doubled"],
+               ["60000000 60000000 60000000", "4096 16384 4194304", "382185 509580 764370", "All at 60MB"],
+               ["4096 131072 6291456", "60000000 60000000 60000000", "382185 509580 764370", "Default Settings"],
+               ["4096 262144 6291456", "60000000 60000000 60000000", "382185 509580 764370", "Default Value Doubled"],
+               ["4096 131072 12582912", "60000000 60000000 60000000", "382185 509580 764370", "Max Value Doubled"],
+               ["60000000 60000000 60000000", "60000000 60000000 60000000", "382185 509580 764370", "All at 60MB"],
+               ["4096 60000000 6291456", "60000000 60000000 60000000", "382185 509580 764370", "Default at 60MB"],
+               ["4096 131072 60000000", "60000000 60000000 60000000", "382185 509580 764370", "Max at 60MB"]]
 
 if args.tcpSettings is not None:
-    args.rmem = [args.tcpSettings][0]
-    args.wmem = [args.tcpSettings][1]
-    args.mem = [args.tcpSettings][2]
-    args.plotName = [args.tcpSettings][3]
+    args.rmem = tcpSettings[args.tcpSettings][0]
+    args.wmem = tcpSettings[args.tcpSettings][1]
+    args.mem = tcpSettings[args.tcpSettings][2]
+    args.plotName = tcpSettings[args.tcpSettings][3]
 
 def getData():
     try:
@@ -86,12 +86,12 @@ def main():
         startTrial = f"ssh btpeters@Andromeda.dyn.wpi.edu \" python3 ~/Research/scripts/trial.py " \
                      f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
                      f"--time {args.time} --numToRun {args.numToRun} " \
-                     f"--rmem {args.rmem} --wmem {args.wmem} --mem {args.mem}\" "
+                     f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\'\" "
     else:
         startTrial = f"ssh btpeters@Andromeda.dyn.wpi.edu \" python3 ~/Research/scripts/trial.py " \
                      f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
                      f"--size {args.size} --numToRun {args.numToRun}" \
-                     f"--rmem {args.rmem} --wmem {args.wmem} --mem {args.mem}\" "
+                     f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\'\" "
     print("Running command: " + startTrial)
     subprocess.call(startTrial, shell=True)
     getData()

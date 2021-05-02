@@ -441,8 +441,8 @@ def main():
     #          batchNum=111, timeout=100, log=True)
 
     t = Trial(data=args.size, batchNum=args.batch, timeout=100, log=args.log, cc=cc, runNum=args.runNum,
-              numToRun=args.numToRun, time=args.time, tcp_rmem="4096 262144 6291456",
-              tcp_mem="382185 509580 764370", tcp_wmem="4096 16384 4194304 ", ports=['5201', '5201'])
+              numToRun=args.numToRun, time=args.time, tcp_rmem=args.rmem,
+              tcp_mem=args.mem, tcp_wmem=args.wmem, ports=['5201', '5201'])
     t.start()
     print("All done")
 
