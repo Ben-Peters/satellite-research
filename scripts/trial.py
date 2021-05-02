@@ -439,11 +439,11 @@ def main():
 
     # t = Trial(data='1G', cc=['cubic', 'hybla'],
     #          batchNum=111, timeout=100, log=True)
-
+    os.system(f'echo {args.rmem}')
     t = Trial(data=args.size, batchNum=args.batch, timeout=100, log=args.log, cc=cc, runNum=args.runNum,
               numToRun=args.numToRun, time=args.time, tcp_rmem=args.rmem,
               tcp_mem=args.mem, tcp_wmem=args.wmem, ports=['5201', '5201'])
-    t.start()
+    # t.start()
     print("All done")
 
 
