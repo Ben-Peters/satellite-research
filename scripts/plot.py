@@ -1,6 +1,10 @@
+import math
+
 import matplotlib.pyplot as pyplot
 import pandas
 import numpy
+import statistics
+from scipy import stats
 
 
 class PlotRTTOneFlow:
@@ -290,6 +294,15 @@ class Plot:
         pyplot.show()
 
 
+def calculateConfidenceInterval(values, confidenceLevel):
+    interval = stats.t.interval(alpha=confidenceLevel, df=len(values)-1, loc=numpy.mean(values), scale=stats.sem(values))
+    return interval
+    # sd = statistics.stdev(values)
+    # tscore = stats.t.ppf(q=confidenceLevel, df=len(values)-1)
+    # interval = tscore * sd/math.sqrt(sd)
+    # return interval
+
+
 class PlotAllData(Plot):
     def __init__(self, protocol, legend, csvFiles, plotFile, title, numRuns=1):
         super().__init__(protocol=protocol, legend=legend, csvFiles=csvFiles, plotFile=plotFile)
@@ -303,6 +316,11 @@ class PlotAllData(Plot):
         self.rwndAVG = []
         self.retransmissions = []
         self.retransmissionsAVG = []
+        self.rttCI = []
+        self.throughputCI = []
+        self.cwndCI = []
+        self.rwndCI = []
+        self.retransmissionsCI = []
 
     def calculateStats(self):
         for df in self.data:
@@ -313,12 +331,20 @@ class PlotAllData(Plot):
 
             rtt = []
             avgRTT = 0
+            RTTSum = 0
+            RTTCount = 0
 
             cwnd = []
             avgCwnd = 0
+            cwndSum = 0
+            cwndCount = 0
 
             rwnd = []
             avgRwnd = 0
+            rwndSum = 0
+
+            # serverCount = 0
+            clientCount = 0
 
             retransmissions = []
             retransmissionsCount = 0
@@ -327,31 +353,44 @@ class PlotAllData(Plot):
             for j in range(len(df)):
                 # only packets from the Server
                 if df['tcp.srcport'].iloc[j] == 5201:
+                    # serverCount += 1
                     # Track bytes sent for tput calc
                     bytesSent += df['frame.len'].iloc[j]
 
-                    # rolling avg for CWND est.
+                    # Only look at packets that have data bout CWND
                     if not pandas.isnull(df['tcp.analysis.bytes_in_flight'].iloc[j]):
-                        if avgCwnd != 0:
-                            avgCwnd = (avgCwnd + df['tcp.analysis.bytes_in_flight'].iloc[j]) / 2
-                        else:
-                            avgCwnd = df['tcp.analysis.bytes_in_flight'].iloc[j]
+                        cwndCount += 1
+                        cwndSum += df['tcp.analysis.bytes_in_flight'].iloc[j]
+
+                        # rolling avg for CWND est.
+                        # if avgCwnd != 0:
+                            # avgCwnd = (avgCwnd + df['tcp.analysis.bytes_in_flight'].iloc[j]) / 2
+                        # else:
+                            # avgCwnd = df['tcp.analysis.bytes_in_flight'].iloc[j]
 
                 # only packets from the Client
-                if df['tcp.dstport'].iloc[j] == 5201 and (not pandas.isnull(df['tcp.analysis.ack_rtt'].iloc[j])):
+                if df['tcp.dstport'].iloc[j] == 5201:
+                    clientCount += 1
+
+                    if not pandas.isnull(df['tcp.analysis.ack_rtt'].iloc[j]):
+                        RTTCount += 1
+                        RTTSum += df['tcp.analysis.ack_rtt'].iloc[j]
+
                     # rolling avg for RTT est.
-                    if avgRTT != 0:
-                        avgRTT = (avgRTT + df['tcp.analysis.ack_rtt'].iloc[j]) / 2
-                    else:
-                        avgRTT = df['tcp.analysis.ack_rtt'].iloc[j]
+                    # if avgRTT != 0:
+                        # avgRTT = (avgRTT + df['tcp.analysis.ack_rtt'].iloc[j]) / 2
+                    # else:
+                        # avgRTT = df['tcp.analysis.ack_rtt'].iloc[j]
+
+                    rwndSum += df['tcp.window_size'].iloc[j]
 
                     # rolling avg for RWND est.
-                    if avgRwnd != 0:
-                        avgRwnd = (avgRwnd + df['tcp.window_size'].iloc[j]) / 2
-                    else:
-                        avgRwnd = df['tcp.window_size'].iloc[j]
+                    # if avgRwnd != 0:
+                        # avgRwnd = (avgRwnd + df['tcp.window_size'].iloc[j]) / 2
+                    # else:
+                        # avgRwnd = df['tcp.window_size'].iloc[j]
 
-                # count retransmissions
+                # count retransmissions from both server and client
                 if not pandas.isnull(df['tcp.analysis.retransmission'].iloc[j]) or not pandas.isnull(
                         df['tcp.analysis.fast_retransmission'].iloc[j]):
                     retransmissionsCount += 1
@@ -359,13 +398,27 @@ class PlotAllData(Plot):
                 if df['tcp.time_relative'].iloc[j] > float(cutOffTime):
                     throughput.append((bytesSent * 8) / 1048576)
                     seconds.append(cutOffTime)
-                    rtt.append(avgRTT*1000)
-                    cwnd.append(avgCwnd)
-                    rwnd.append(avgRwnd)
+                    if RTTCount == 0:
+                        rtt.append(0)
+                    else:
+                        rtt.append((RTTSum/RTTCount)*1000)
+                    if cwndCount == 0:
+                        cwnd.append(0)
+                    else:
+                        cwnd.append(cwndSum/cwndCount)
+                    if clientCount == 0:
+                        rwnd.append(0)
+                    else:
+                        rwnd.append(rwndSum/clientCount)
                     retransmissions.append(retransmissionsCount / (j - startFrame + 1))
 
                     bytesSent = 0
-                    avgRTT = 0
+                    RTTSum = 0
+                    RTTCount = 0
+                    cwndSum = 0
+                    cwndCount = 0
+                    rwndSum = 0
+                    clientCount = 0
                     retransmissionsCount = 0
                     startFrame = j
                     cutOffTime += 1
@@ -386,6 +439,12 @@ class PlotAllData(Plot):
         avgCwnd = []
         avgRwnd = []
         avgRetrans = []
+
+        ciTput = []
+        ciRTT = []
+        ciCwnd = []
+        ciRwnd = []
+        ciRetrans = []
         for i in range(int(self.numRuns * 2)):
             if minLength > len(self.throughput[i]):
                 minLength = len(self.throughput[i])
@@ -395,6 +454,12 @@ class PlotAllData(Plot):
             cwndSum = 0
             rwndSum = 0
             retransSum = 0
+
+            tputValues = []
+            rttValues = []
+            cwndValues = []
+            rwndValues = []
+            retransValues = []
             num = 0
             for i in range(self.numRuns):
                 if len(self.throughput[i]) > t:
@@ -403,6 +468,13 @@ class PlotAllData(Plot):
                     cwndSum += self.cwnd[i+minPos][t]
                     rwndSum += self.rwnd[i+minPos][t]
                     retransSum += self.retransmissions[i+minPos][t]
+
+                    tputValues.append(self.throughput[i+minPos][t])
+                    rttValues.append(self.rtt[i + minPos][t])
+                    cwndValues.append(self.cwnd[i + minPos][t])  # Bytes to MBytes
+                    rwndValues.append(float(self.rwnd[i + minPos][t]))  # Bytes to MBytes
+                    retransValues.append(float(self.retransmissions[i + minPos][t]))
+
                     num += 1
 
             avgTput.append(tputSum / num)
@@ -410,11 +482,29 @@ class PlotAllData(Plot):
             avgCwnd.append(cwndSum / num / 1048576)  # Bytes to MBytes
             avgRwnd.append(rwndSum / num / 1048576)  # Bytes to MBytes
             avgRetrans.append(retransSum / num)
+
+            ciTput[0].append(calculateConfidenceInterval(tputValues, 0.975)[1])
+            ciTput[1].append(calculateConfidenceInterval(tputValues, 0.975)[1])
+            ciRTT[0].append(calculateConfidenceInterval(rttValues, 0.975)[0])
+            ciRTT[1].append(calculateConfidenceInterval(rttValues, 0.975)[1])
+            ciCwnd[0].append(calculateConfidenceInterval(cwndValues, 0.975)[0])
+            ciCwnd[1].append(calculateConfidenceInterval(cwndValues, 0.975)[1])
+            ciRwnd[0].append(calculateConfidenceInterval(rwndValues, 0.975)[0])
+            ciRwnd[1].append(calculateConfidenceInterval(rwndValues, 0.975)[1])
+            ciRetrans[0].append(calculateConfidenceInterval(retransValues, 0.975)[0])
+            ciRetrans[1].append(calculateConfidenceInterval(retransValues, 0.975)[1])
+
         self.throughputAVG.append(avgTput)
         self.rttAVG.append(avgRTT)
         self.cwndAVG.append(avgCwnd)
         self.rwndAVG.append(avgRwnd)
         self.retransmissionsAVG.append(avgRetrans)
+
+        self.throughputCI.append(ciTput)
+        self.rttCI.append(ciRTT)
+        self.cwndCI.append(ciCwnd)
+        self.rwndCI.append(ciRwnd)
+        self.retransmissionsCI.append(ciRetrans)
 
     def plotStart(self, seconds):
         if not self.retransmissionsAVG:
@@ -434,10 +524,11 @@ class PlotAllData(Plot):
 
         for i in range(len(theoreticalTime)):
             if i == 0:
-                theoreticalCWND[i] = 12000/1048576/8
-                theoreticalTput[i] = 12000 / 1048576
+                theoreticalCWND[i] = 1500/1048576
+                theoreticalTput[i] = (12000 / 1048576)/(avgRTT/1000)
             else:
                 theoreticalCWND[i] = theoreticalCWND[i - 1] * 2
+                # theoreticalTput[i] = theoreticalCWND[i]*8 / (avgRTT/1000)
                 theoreticalTput[i] = theoreticalTput[i - 1] * 2
 
         pyplot.clf()
@@ -446,14 +537,26 @@ class PlotAllData(Plot):
 
         axs[0].plot(theoreticalTime, theoreticalTput, 'k--')
         axs[0].plot(time, self.throughputAVG[0][0:seconds + 1], color='tab:orange')
+        axs[0].fill_between(time, self.throughputCI[0][0][0:seconds+1],
+                                  self.throughputCI[0][1][0:seconds+1], color='tab:orange', alpha=.2)
         axs[0].plot(time, self.throughputAVG[1][0:seconds + 1], color='tab:blue')
+        axs[0].fill_between(time, self.throughputCI[1][0][0:seconds + 1],
+                                  self.throughputCI[1][1][0:seconds + 1], color='tab:blue', alpha=.2)
 
         axs[1].plot(theoreticalTime, theoreticalCWND, 'k--')
         axs[1].plot(time, self.cwndAVG[0][0:seconds+1], color='tab:orange')
+        axs[1].fill_between(time, numpy.array(self.cwndCI[0][0][0:seconds + 1])/1048576,
+                                  numpy.array(self.cwndCI[0][1][0:seconds + 1])/1048576, color='tab:orange', alpha=.2)
         axs[1].plot(time, self.cwndAVG[1][0:seconds+1], color='tab:blue')
+        axs[1].fill_between(time, numpy.array(self.cwndCI[1][0][0:seconds + 1])/1048576,
+                                  numpy.array(self.cwndCI[1][1][0:seconds + 1])/1048576, color='tab:blue', alpha=.2)
 
         axs[2].plot(time, self.rwndAVG[0][0:seconds + 1], color='tab:orange')
+        axs[2].fill_between(time, numpy.array(self.rwndCI[0][0][0:seconds + 1])/1048576,
+                                  numpy.array(self.rwndCI[0][1][0:seconds + 1])/1048576, color='tab:orange', alpha=.2)
         axs[2].plot(time, self.rwndAVG[1][0:seconds + 1], color='tab:blue')
+        axs[2].fill_between(time, numpy.array(self.rwndCI[1][0][0:seconds + 1])/1048576,
+                                  numpy.array(self.rwndCI[1][1][0:seconds + 1])/1048576, color='tab:blue', alpha=.2)
 
         axs[0].set_ylabel("Throughput (Mbits)")
         axs[1].set_ylabel("CWND (MBytes)")
@@ -532,21 +635,40 @@ class PlotAllData(Plot):
                 minIndex = i
                 minLength = len(self.seconds[i])
         axs[0].plot(self.seconds[minIndex], self.throughputAVG[0], color='tab:orange')
+        axs[0].fill_between(self.seconds[minIndex], self.throughputCI[0][0],
+                                                    self.throughputCI[0][1], color='tab:orange', alpha=.2)
+
         axs[1].plot(self.seconds[minIndex], self.rttAVG[0], color='tab:orange')
+
         axs[2].plot(self.seconds[minIndex], self.rwndAVG[0], color='tab:orange')
+        axs[2].fill_between(self.seconds[minIndex], numpy.array(self.rwndCI[0][0])/1048576,
+                                                    numpy.array(self.rwndCI[0][1])/1048576, color='tab:orange', alpha=.2)
+
         axs[3].plot(self.seconds[minIndex], self.cwndAVG[0], color='tab:orange')
+        axs[3].fill_between(self.seconds[minIndex], numpy.array(self.cwndCI[0][0])/1048576,
+                                                    numpy.array(self.cwndCI[0][1])/1048576, color='tab:orange', alpha=.2)
         axs[4].plot(self.seconds[minIndex], self.retransmissionsAVG[0], color='tab:orange')
 
         axs[0].plot(self.seconds[minIndex], self.throughputAVG[1], color='tab:blue')
+        axs[0].fill_between(self.seconds[minIndex], self.throughputCI[1][0],
+                                                    self.throughputCI[1][1], color='tab:blue', alpha=.2)
+
         axs[1].plot(self.seconds[minIndex], self.rttAVG[1], color='tab:blue')
+
         axs[2].plot(self.seconds[minIndex], self.rwndAVG[1], color='tab:blue')
+        axs[2].fill_between(self.seconds[minIndex], numpy.array(self.rwndCI[1][0])/1048576,
+                                                    numpy.array(self.rwndCI[1][1])/1048576, color='tab:blue', alpha=.2)
+
         axs[3].plot(self.seconds[minIndex], self.cwndAVG[1], color='tab:blue')
+        axs[3].fill_between(self.seconds[minIndex], numpy.array(self.cwndCI[1][0])/1048576,
+                                                    numpy.array(self.cwndCI[1][1])/1048576, color='tab:blue', alpha=.2)
+
         axs[4].plot(self.seconds[minIndex], self.retransmissionsAVG[1], color='tab:blue')
 
         axs[0].set_ylim([0, 125])
         axs[1].set_ylim([0, 2000])
-        axs[2].set_ylim([0, 6.5])
-        axs[3].set_ylim([0, 6.5])
+        axs[2].set_ylim([0, 30])
+        axs[3].set_ylim([0, 30])
         axs[4].set_ylim([0, 0.15])
 
 
