@@ -251,7 +251,7 @@ class Trial:
                 subprocess.Popen(tshark, shell=True)
             self.commandsRun.append((timeStamp, tshark))
             self.csvsGenerated += 1
-            self.sleep(30)
+        self.sleep(30)
 
     def makeLogFile(self):
         timeStamp = self.getTimeStamp()
