@@ -245,10 +245,13 @@ class Trial:
             self.csvs.append(csvFilename)
             print(f'\trunning command: \n{tshark}')
             timeStamp = self.getTimeStamp()
-            os.system(tshark)
+            if self.csvsGenerated == self.numToRun*2:
+                subprocess.Popen(tshark).wait()
+            else:
+                subprocess.Popen(tshark)
             self.commandsRun.append((timeStamp, tshark))
             self.csvsGenerated += 1
-            self.sleep(5)
+            self.sleep(30)
 
     def makeLogFile(self):
         timeStamp = self.getTimeStamp()
@@ -399,7 +402,7 @@ class Trial:
         print("Getting pcaps")
         self.getPcaps()
         print("Running pcapToCsv()")
-        self.pcapToCsv()  # move to other file
+        self.pcapToCsv()
         # print('Generating graphs')
         # self.plotTputVTime()
         # self.generateGraphs()  # move to other file

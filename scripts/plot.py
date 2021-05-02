@@ -5,6 +5,7 @@ import pandas
 import numpy
 import statistics
 from scipy import stats
+from multiprocessing import Process, Lock, Pipe
 
 
 class PlotRTTOneFlow:
@@ -324,9 +325,11 @@ class PlotAllData(Plot):
         self.cwndCI = []
         self.rwndCI = []
         self.retransmissionsCI = []
+        self.producerSem = Lock()
+        self.consumerSem = Lock()
 
-    def calculateStats(self):
-        for df in self.data:
+    def calculateStats(self, data, pipe, pSem, count):
+            df = data
             cutOffTime = 1
             bytesSent = 0
             throughput = []
@@ -413,8 +416,8 @@ class PlotAllData(Plot):
                         rwnd.append(0)
                     else:
                         rwnd.append(rwndSum/clientCount)
-                        if cutOffTime == 11:
-                            print(rwndSum/clientCount)
+                        # if cutOffTime == 11:
+                            # print(rwndSum/clientCount)
                     retransmissions.append(retransmissionsCount / (j - startFrame + 1))
 
                     bytesSent = 0
@@ -428,13 +431,59 @@ class PlotAllData(Plot):
                     startFrame = j
                     cutOffTime += 1
 
+            results = (count, throughput, rtt, cwnd, rwnd, retransmissions, seconds)
             self.throughput.append(throughput)
             self.rtt.append(rtt)
             self.cwnd.append(cwnd)
             self.rwnd.append(rwnd)
             self.retransmissions.append(retransmissions)
             self.seconds.append(seconds)
-        pass
+            print(f"{count}: Results Ready")
+            # pSem.acquire()
+            pipe.send(results)
+            pipe.close()
+            # pSem.release()
+
+    def analyzeThreaded(self):
+        results = []
+        processes = []
+        parentPipes = []
+        # Create threads
+        for df, i in zip(self.data, range(len(self.data))):
+            self.throughput.append([])
+            self.rtt.append([])
+            self.cwnd.append([])
+            self.rwnd.append([])
+            self.retransmissions.append([])
+            self.seconds.append([])
+            parentPipe, childPipe = Pipe()
+            parentPipes.append(parentPipe)
+            p = Process(target=self.calculateStats, args=(df, childPipe, self.producerSem, i))
+            p.start()
+            processes.append(p)
+        # Get results from threads
+        for conn in parentPipes:
+            self.consumerSem.acquire()
+            results.append(conn.recv())
+            self.consumerSem.release()
+        # wait for threads to finish and join them
+        for p in processes:
+            p.join()
+        # put results in the right order
+        for result in results:
+            i = result[0]
+            throughput = result[1]
+            rtt = result[2]
+            cwnd = result[3]
+            rwnd = result[4]
+            retransmissions = result[5]
+            seconds = result[6]
+            self.throughput[i] = throughput
+            self.rtt[i] = rtt
+            self.cwnd[i] = cwnd
+            self.rwnd[i] = rwnd
+            self.retransmissions[i] = retransmissions
+            self.seconds[i] = seconds
 
     def avgAllData(self, startPos):
         minLength = len(self.throughput[0])
@@ -492,8 +541,8 @@ class PlotAllData(Plot):
             avgCwnd.append(numpy.mean(cwndValues) / 1048576)  # Bytes to MBytes
             avgRwnd.append(numpy.mean(rwndValues) / 1048576)  # Bytes to MBytes
             avgRetrans.append(numpy.mean(retransValues))
-            if t == 10:
-                print(numpy.mean(rwndValues))
+            # if t == 10:
+                # print(numpy.mean(rwndValues))
             ciTput[0].append(calculateConfidenceInterval(tputValues, 0.95)[0])
             ciTput[1].append(calculateConfidenceInterval(tputValues, 0.95)[1])
             ciRTT[0].append(calculateConfidenceInterval(rttValues, 0.95)[0])
@@ -519,7 +568,8 @@ class PlotAllData(Plot):
 
     def plotStart(self, seconds):
         if not self.retransmissionsAVG:
-            self.calculateStats()
+            self.analyzeThreaded()
+            #self.calculateStats()
             self.avgAllData(0)
             self.avgAllData(1)
 
@@ -594,7 +644,8 @@ class PlotAllData(Plot):
 
     def plotStartTput(self, seconds):
         if not self.retransmissionsAVG:
-            self.calculateStats()
+            self.analyzeThreaded()
+            # self.calculateStats()
             self.avgAllData(0)
             self.avgAllData(1)
         avgRTT = 0
@@ -629,7 +680,8 @@ class PlotAllData(Plot):
         # self.removeTimeOffset()
         if maxY is None:
             maxY = [None, None, None, None, None]
-        self.calculateStats()
+        self.analyzeThreaded()
+        # self.calculateStats()
         self.avgAllData(0)
         self.avgAllData(1)
 
