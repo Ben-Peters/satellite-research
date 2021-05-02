@@ -208,7 +208,7 @@ class Trial:
         for file in files:
             # host = f'{self.hosts[self.csvsGenerated][:7]}'
             csvFilename = file.split('.')[0] + '.csv'
-            tshark = f'tshark -r pcaps/{file} -Y "tcp.stream==1" \
+            args = f'/bin/tshark -r pcaps/{file} -Y "tcp.stream==1" \
                     -T fields\
                     -e frame.len \
                     -e tcp.srcport \
@@ -243,7 +243,7 @@ class Trial:
             """
             # fullCommand = f'ssh {self.user}@glomma.cs.wpi.edu \'{tshark}\''
             self.csvs.append(csvFilename)
-            print(f'\trunning command: \n{tshark}')
+            print(f'\trunning command: \ntshark {args}')
             timeStamp = self.getTimeStamp()
             if self.csvsGenerated == self.numToRun*2:
                 subprocess.Popen(tshark).wait()
