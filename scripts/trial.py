@@ -246,9 +246,9 @@ class Trial:
             print(f'\trunning command: \n{tshark}')
             timeStamp = self.getTimeStamp()
             if self.csvsGenerated == self.numToRun*2:
-                subprocess.Popen(tshark).wait()
+                subprocess.Popen(tshark, shell=True).wait()
             else:
-                subprocess.Popen(tshark)
+                subprocess.Popen(tshark, shell=True)
             self.commandsRun.append((timeStamp, tshark))
             self.csvsGenerated += 1
             self.sleep(30)
