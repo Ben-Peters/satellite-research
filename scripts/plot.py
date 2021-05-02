@@ -739,11 +739,11 @@ class PlotAllData(Plot):
 
         axs[4].plot(self.seconds[minIndex], self.retransmissionsAVG[1], color='tab:blue')
 
-        axs[0].set_ylim([0, 35])
-        axs[1].set_ylim([0, 1500])
-        axs[2].set_ylim([0, 6])
-        axs[3].set_ylim([0, 6])
-        axs[4].set_ylim([0, 0.005])
+        axs[0].set_ylim([0, 125])
+        axs[1].set_ylim([0, 2000])
+        axs[2].set_ylim([0, 6.5])
+        axs[3].set_ylim([0, 6.5])
+        axs[4].set_ylim([0, 0.15])
 
 
         for i in range(len(maxY)):
