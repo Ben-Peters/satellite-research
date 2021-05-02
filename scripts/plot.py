@@ -296,6 +296,9 @@ class Plot:
 
 def calculateConfidenceInterval(values, confidenceLevel):
     interval = stats.t.interval(alpha=confidenceLevel, df=len(values)-1, loc=numpy.mean(values), scale=stats.sem(values))
+    # print(stats.sem(values))
+    if math.isnan(interval[0]):
+        interval = (numpy.mean(values), numpy.mean(values))
     return interval
     # sd = statistics.stdev(values)
     # tscore = stats.t.ppf(q=confidenceLevel, df=len(values)-1)
@@ -410,6 +413,8 @@ class PlotAllData(Plot):
                         rwnd.append(0)
                     else:
                         rwnd.append(rwndSum/clientCount)
+                        if cutOffTime == 11:
+                            print(rwndSum/clientCount)
                     retransmissions.append(retransmissionsCount / (j - startFrame + 1))
 
                     bytesSent = 0
@@ -440,11 +445,11 @@ class PlotAllData(Plot):
         avgRwnd = []
         avgRetrans = []
 
-        ciTput = []
-        ciRTT = []
-        ciCwnd = []
-        ciRwnd = []
-        ciRetrans = []
+        ciTput = [[], []]
+        ciRTT = [[], []]
+        ciCwnd = [[], []]
+        ciRwnd = [[], []]
+        ciRetrans = [[], []]
         for i in range(int(self.numRuns * 2)):
             if minLength > len(self.throughput[i]):
                 minLength = len(self.throughput[i])
@@ -471,28 +476,34 @@ class PlotAllData(Plot):
 
                     tputValues.append(self.throughput[i+minPos][t])
                     rttValues.append(self.rtt[i + minPos][t])
-                    cwndValues.append(self.cwnd[i + minPos][t])  # Bytes to MBytes
-                    rwndValues.append(float(self.rwnd[i + minPos][t]))  # Bytes to MBytes
+                    cwndValues.append(self.cwnd[i + minPos][t])
+                    rwndValues.append(float(self.rwnd[i + minPos][t]))
                     retransValues.append(float(self.retransmissions[i + minPos][t]))
 
                     num += 1
 
-            avgTput.append(tputSum / num)
-            avgRTT.append(rttSum / num)
-            avgCwnd.append(cwndSum / num / 1048576)  # Bytes to MBytes
-            avgRwnd.append(rwndSum / num / 1048576)  # Bytes to MBytes
-            avgRetrans.append(retransSum / num)
-
-            ciTput[0].append(calculateConfidenceInterval(tputValues, 0.975)[1])
-            ciTput[1].append(calculateConfidenceInterval(tputValues, 0.975)[1])
-            ciRTT[0].append(calculateConfidenceInterval(rttValues, 0.975)[0])
-            ciRTT[1].append(calculateConfidenceInterval(rttValues, 0.975)[1])
-            ciCwnd[0].append(calculateConfidenceInterval(cwndValues, 0.975)[0])
-            ciCwnd[1].append(calculateConfidenceInterval(cwndValues, 0.975)[1])
-            ciRwnd[0].append(calculateConfidenceInterval(rwndValues, 0.975)[0])
-            ciRwnd[1].append(calculateConfidenceInterval(rwndValues, 0.975)[1])
-            ciRetrans[0].append(calculateConfidenceInterval(retransValues, 0.975)[0])
-            ciRetrans[1].append(calculateConfidenceInterval(retransValues, 0.975)[1])
+            #avgTput.append(tputSum / num)
+            #avgRTT.append(rttSum / num)
+            #avgCwnd.append(cwndSum / num / 1048576)  # Bytes to MBytes
+            #avgRwnd.append(rwndSum / num / 1048576)  # Bytes to MBytes
+            #avgRetrans.append(retransSum / num)
+            avgTput.append(numpy.mean(tputValues))
+            avgRTT.append(numpy.mean(rttValues))
+            avgCwnd.append(numpy.mean(cwndValues) / 1048576)  # Bytes to MBytes
+            avgRwnd.append(numpy.mean(rwndValues) / 1048576)  # Bytes to MBytes
+            avgRetrans.append(numpy.mean(retransValues))
+            if t == 10:
+                print(numpy.mean(rwndValues))
+            ciTput[0].append(calculateConfidenceInterval(tputValues, 0.95)[0])
+            ciTput[1].append(calculateConfidenceInterval(tputValues, 0.95)[1])
+            ciRTT[0].append(calculateConfidenceInterval(rttValues, 0.95)[0])
+            ciRTT[1].append(calculateConfidenceInterval(rttValues, 0.95)[1])
+            ciCwnd[0].append(calculateConfidenceInterval(cwndValues, 0.95)[0])
+            ciCwnd[1].append(calculateConfidenceInterval(cwndValues, 0.95)[1])
+            ciRwnd[0].append(calculateConfidenceInterval(rwndValues, 0.95)[0])
+            ciRwnd[1].append(calculateConfidenceInterval(rwndValues, 0.95)[1])
+            ciRetrans[0].append(calculateConfidenceInterval(retransValues, 0.95)[0])
+            ciRetrans[1].append(calculateConfidenceInterval(retransValues, 0.95)[1])
 
         self.throughputAVG.append(avgTput)
         self.rttAVG.append(avgRTT)
@@ -665,11 +676,11 @@ class PlotAllData(Plot):
 
         axs[4].plot(self.seconds[minIndex], self.retransmissionsAVG[1], color='tab:blue')
 
-        axs[0].set_ylim([0, 125])
-        axs[1].set_ylim([0, 2000])
-        axs[2].set_ylim([0, 30])
-        axs[3].set_ylim([0, 30])
-        axs[4].set_ylim([0, 0.15])
+        axs[0].set_ylim([0, 35])
+        axs[1].set_ylim([0, 1500])
+        axs[2].set_ylim([0, 6])
+        axs[3].set_ylim([0, 6])
+        axs[4].set_ylim([0, 0.005])
 
 
         for i in range(len(maxY)):
