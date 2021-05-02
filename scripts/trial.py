@@ -245,13 +245,13 @@ class Trial:
             self.csvs.append(csvFilename)
             print(f'\trunning command: \n{tshark}')
             timeStamp = self.getTimeStamp()
-            if self.csvsGenerated == self.numToRun*2:
+            if self.csvsGenerated == self.numToRun*2-1:
                 subprocess.Popen(tshark, shell=True).wait()
             else:
                 subprocess.Popen(tshark, shell=True)
             self.commandsRun.append((timeStamp, tshark))
             self.csvsGenerated += 1
-        self.sleep(30)
+        self.sleep(60)
 
     def makeLogFile(self):
         timeStamp = self.getTimeStamp()
