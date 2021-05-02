@@ -424,6 +424,9 @@ def main():
     parser.add_argument('--size', type=str, help="How much data should be downloaded (exclusive use with time param)",
                         default=None)
     parser.add_argument('--numToRun', type=int, help="Total number of trial to run")
+    parser.add_argument('--rmem', type=str, help='Value for rmem', default="4096 131072 6291456")
+    parser.add_argument('--wmem', type=str, help='Value for wmem', default="4096 16384 4194304")
+    parser.add_argument('--wmem', type=str, help='Value for wmem', default="382185 509580 764370")
     args = parser.parse_args()
 
     cc = []

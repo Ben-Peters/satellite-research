@@ -8,11 +8,15 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--batch', type=int, help='What batch number is this', required=True)
 parser.add_argument('--log', type=bool, help='Use logging output', default=True)
 parser.add_argument('--cc', type=str, help="congestion control algorithm", required=True)
-parser.add_argument('--runNum', type=int, help="what run number is this", required=True)
+parser.add_argument('--runNum', type=int, help="what run number is this", default=0)
 parser.add_argument('--size', type=str, help='How much data do you want to download', default="250M")
 parser.add_argument('--time', type=int, help='How long do you want the download to run', default=None)
 parser.add_argument('--numToRun', type=int, help='Total number of downloads to run', default=10)
-parser.add_argument('--tcpSettings', type=str, help='Which settings should be used', required=True)
+parser.add_argument('--tcpSettings', type=int, help='Which settings should be used', default=None)
+parser.add_argument('--rmem', type=str, help='Value for rmem', default="4096 131072 6291456")
+parser.add_argument('--wmem', type=str, help='Value for wmem', default="4096 16384 4194304")
+parser.add_argument('--wmem', type=str, help='Value for wmem', default="382185 509580 764370")
+parser.add_argument('--plotName', type=str, help='Name for plots created', required=True)
 args = parser.parse_args()
 
 dictionary = {
@@ -21,7 +25,23 @@ dictionary = {
     "bbr": "mlcnetc.cs.wpi.edu",
     "pcc": "mlcnetd.cs.wpi.edu"
 }
+# Settings for quick recalls format is (rmem, wmem, mem, title)
+tcpSettings = [("4096 131072 6291456", "4096 16384 4194304", "382185 509580 764370", "Default Settings"),
+               ("4096 262144 6291456", "4096 16384 4194304", "382185 509580 764370", "Default Value Doubled"),
+               ("4096 131072 12582912", "4096 16384 4194304", "382185 509580 764370", "Max Value Doubled"),
+               ("60000000 60000000 60000000", "4096 16384 4194304", "382185 509580 764370", "All at 60MB"),
+               ("4096 131072 6291456", "60000000 60000000 60000000", "382185 509580 764370", "Default Settings"),
+               ("4096 262144 6291456", "60000000 60000000 60000000", "382185 509580 764370", "Default Value Doubled"),
+               ("4096 131072 12582912", "60000000 60000000 60000000", "382185 509580 764370", "Max Value Doubled"),
+               ("60000000 60000000 60000000", "60000000 60000000 60000000", "382185 509580 764370", "All at 60MB"),
+               ("4096 60000000 6291456", "60000000 60000000 60000000", "382185 509580 764370", "Default at 60MB"),
+               ("4096 131072 60000000", "60000000 60000000 60000000", "382185 509580 764370", "Max at 60MB")]
 
+if args.tcpSettings is not None:
+    args.rmem = [args.tcpSettings][0]
+    args.wmem = [args.tcpSettings][1]
+    args.mem = [args.tcpSettings][2]
+    args.plotName = [args.tcpSettings][3]
 
 def getData():
     try:
@@ -54,7 +74,7 @@ def plotData():
         # legend.append(hosts[i].split('.')[0])
     plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", "_TPUT.png")
     plot = PlotAllData(protocol=cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend,
-                       numRuns=int(args.numToRun / 2), title=f'default value doubled\nrmem=4096 262144 6291456')
+                       numRuns=int(args.numToRun / 2), title=f'{args.plotName}\nrmem={args.rmem}')
     # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
     plot.plotALL()
     # plot.plotStartTput(20)
@@ -65,11 +85,13 @@ def main():
     if args.time is not None:
         startTrial = f"ssh btpeters@Andromeda.dyn.wpi.edu \" python3 ~/Research/scripts/trial.py " \
                      f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
-                     f"--time {args.time} --numToRun {args.numToRun}\" "
+                     f"--time {args.time} --numToRun {args.numToRun} " \
+                     f"--rmem {args.rmem} --wmem {args.wmem} --mem {args.mem}\" "
     else:
         startTrial = f"ssh btpeters@Andromeda.dyn.wpi.edu \" python3 ~/Research/scripts/trial.py " \
                      f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
-                     f"--size {args.size} --numToRun {args.numToRun}\" "
+                     f"--size {args.size} --numToRun {args.numToRun}" \
+                     f"--rmem {args.rmem} --wmem {args.wmem} --mem {args.mem}\" "
     print("Running command: " + startTrial)
     subprocess.call(startTrial, shell=True)
     getData()

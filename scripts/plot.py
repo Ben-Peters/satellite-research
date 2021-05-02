@@ -206,8 +206,19 @@ class Plot:
         self.legend = legend
         self.data = []
         self.numRuns = numRuns
+        typeDict = {'frame.len': int,
+                    'tcp.srcport': int,
+                    'tcp.dstport': int,
+                    'tcp.len': int,
+                    'tcp.window_size': int,
+                    'tcp.analysis.retransmission': int,
+                    'tcp.analysis.fast_retransmission': int,
+                    'tcp.analysis.bytes_in_flight': int,
+                    'tcp.analysis.ack_rtt': float,
+                    'frame.time': str,
+                    'tcp.time_relative': float}
         for csv in csvFiles:
-            self.data.append(pandas.read_csv(csv))
+            self.data.append(pandas.read_csv(csv, memory_map=True))
         self.timesRaw = []  # pandas.to_datetime(self.df['frame.time'], infer_datetime_format=True)
         self.frameTime = []
         self.throughput = []
