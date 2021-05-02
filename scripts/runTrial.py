@@ -26,16 +26,16 @@ dictionary = {
     "pcc": "mlcnetd.cs.wpi.edu"
 }
 # Settings for quick recalls format is (rmem, wmem, mem, title)
-tcpSettings = [["4096 131072 6291456", "4096 16384 4194304", "382185 509580 764370", "Default Settings"],
-               ["4096 262144 6291456", "4096 16384 4194304", "382185 509580 764370", "Default Value Doubled"],
-               ["4096 131072 12582912", "4096 16384 4194304", "382185 509580 764370", "Max Value Doubled"],
-               ["60000000 60000000 60000000", "4096 16384 4194304", "382185 509580 764370", "All at 60MB"],
-               ["4096 131072 6291456", "60000000 60000000 60000000", "382185 509580 764370", "Default Settings"],
-               ["4096 262144 6291456", "60000000 60000000 60000000", "382185 509580 764370", "Default Value Doubled"],
-               ["4096 131072 12582912", "60000000 60000000 60000000", "382185 509580 764370", "Max Value Doubled"],
-               ["60000000 60000000 60000000", "60000000 60000000 60000000", "382185 509580 764370", "All at 60MB"],
-               ["4096 60000000 6291456", "60000000 60000000 60000000", "382185 509580 764370", "Default at 60MB"],
-               ["4096 131072 60000000", "60000000 60000000 60000000", "382185 509580 764370", "Max at 60MB"]]
+tcpSettings = [["4096 131072 6291456", "4096 16384 4194304", "382185 509580 764370", "Default Settings"],               # 0
+               ["4096 262144 6291456", "4096 16384 4194304", "382185 509580 764370", "Default Value Doubled"],          # 1
+               ["4096 131072 12582912", "4096 16384 4194304", "382185 509580 764370", "Max Value Doubled"],             # 2
+               ["60000000 60000000 60000000", "4096 16384 4194304", "382185 509580 764370", "All at 60MB"],             # 3
+               ["4096 131072 6291456", "60000000 60000000 60000000", "382185 509580 764370", "Default Settings"],       # 4
+               ["4096 262144 6291456", "60000000 60000000 60000000", "382185 509580 764370", "Default Value Doubled"],  # 5
+               ["4096 131072 12582912", "60000000 60000000 60000000", "382185 509580 764370", "Max Value Doubled"],     # 6
+               ["60000000 60000000 60000000", "60000000 60000000 60000000", "382185 509580 764370", "All at 60MB"],     # 7
+               ["4096 60000000 6291456", "60000000 60000000 60000000", "382185 509580 764370", "Default at 60MB"],      # 8
+               ["4096 131072 60000000", "60000000 60000000 60000000", "382185 509580 764370", "Max at 60MB"]]           # 9
 
 if args.tcpSettings is not None:
     args.rmem = tcpSettings[args.tcpSettings][0]
@@ -93,8 +93,12 @@ def main():
                      f"--size {args.size} --numToRun {args.numToRun}" \
                      f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\'\" "
     print("Running command: " + startTrial)
-    subprocess.call(startTrial, shell=True)
-    getData()
+    try:
+        os.listdir(f'G:/satellite-research/csvs/Trial_{args.batch}')
+        print("This trial has already been run, just creating plots")
+    except:
+        subprocess.call(startTrial, shell=True)
+        getData()
     plotData()
 
 
