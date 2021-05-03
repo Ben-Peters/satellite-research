@@ -218,7 +218,8 @@ class Plot:
                     'frame.time': str,
                     'tcp.time_relative': float}
         for csv in csvFiles:
-            self.data.append(pandas.read_csv(csv, memory_map=True))
+            # memory mapping can be enabled to improve performance but at the expense of memory usage for large files
+            self.data.append(pandas.read_csv(csv, memory_map=False))
         self.timesRaw = []  # pandas.to_datetime(self.df['frame.time'], infer_datetime_format=True)
         self.frameTime = []
         self.throughput = []
@@ -739,11 +740,11 @@ class PlotAllData(Plot):
 
         axs[4].plot(self.seconds[minIndex], self.retransmissionsAVG[1], color='tab:blue')
 
-        axs[0].set_ylim([0, 125])
-        axs[1].set_ylim([0, 2000])
-        axs[2].set_ylim([0, 6.5])
-        axs[3].set_ylim([0, 6.5])
-        axs[4].set_ylim([0, 0.15])
+        axs[0].set_ylim([0, 50])
+        axs[1].set_ylim([0, 1500])
+        axs[2].set_ylim([0, 3.5])
+        axs[3].set_ylim([0, 3.5])
+        axs[4].set_ylim([0, 0.005])
 
 
         for i in range(len(maxY)):
