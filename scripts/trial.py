@@ -354,16 +354,16 @@ class Trial:
         # command = f'{sshPrefix} \"sudo sysctl net.ipv4.tcp_moderate_rcvbuf=1\"'
         # self.commandsRun.append((self.getTimeStamp(), command))
         # os.system(command)
-        os.system('echo Please enable the Proxy NOW!')
-        self.sleep(90)
+        os.system('echo Proxy should be enabled')
+        # self.sleep(90)
 
     def disableTuning(self):
         # sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
         # command = f'{sshPrefix} \"sudo sysctl net.ipv4.tcp_moderate_rcvbuf=0\"'
         # self.commandsRun.append((self.getTimeStamp(), command))
         # os.system(command)
-        os.system('echo Please disable the Proxy NOW!')
-        self.sleep(90)
+        os.system('echo Proxy should be disabled!')
+        # self.sleep(90)
 
     def start(self):
         os.chdir(os.path.expanduser("~/Research"))
@@ -383,6 +383,9 @@ class Trial:
             if i < self.numToRun/2:
                 print(f"Trial Num: {i}\nEnabling tuning")
                 self.enableTuning()
+            if i == self.numToRun/2:
+                os.system('echo Please disable the Proxy NOW!')
+                self.sleep(90)
             else:
                 print(f"Trial Num: {i}\nDisabling tuning")
                 self.disableTuning()
