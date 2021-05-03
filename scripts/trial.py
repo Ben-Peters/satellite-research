@@ -383,7 +383,7 @@ class Trial:
             if i < self.numToRun/2:
                 print(f"Trial Num: {i}\nEnabling tuning")
                 self.enableTuning()
-            if i == self.numToRun/2:
+            elif i == self.numToRun/2:
                 os.system('echo Please disable the Proxy NOW!')
                 self.sleep(90)
             else:
