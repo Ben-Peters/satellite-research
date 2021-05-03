@@ -350,18 +350,20 @@ class Trial:
         plot.plotTput()
 
     def enableTuning(self):
-        sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
-        command = f'{sshPrefix} \"sudo sysctl net.ipv4.tcp_moderate_rcvbuf=1\"'
-        self.commandsRun.append((self.getTimeStamp(), command))
-        os.system(command)
-        self.sleep(3)
+        # sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
+        # command = f'{sshPrefix} \"sudo sysctl net.ipv4.tcp_moderate_rcvbuf=1\"'
+        # self.commandsRun.append((self.getTimeStamp(), command))
+        # os.system(command)
+        os.system('echo Please enable the Proxy NOW!')
+        self.sleep(90)
 
     def disableTuning(self):
-        sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
-        command = f'{sshPrefix} \"sudo sysctl net.ipv4.tcp_moderate_rcvbuf=0\"'
-        self.commandsRun.append((self.getTimeStamp(), command))
-        os.system(command)
-        self.sleep(3)
+        # sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
+        # command = f'{sshPrefix} \"sudo sysctl net.ipv4.tcp_moderate_rcvbuf=0\"'
+        # self.commandsRun.append((self.getTimeStamp(), command))
+        # os.system(command)
+        os.system('echo Please disable the Proxy NOW!')
+        self.sleep(90)
 
     def start(self):
         os.chdir(os.path.expanduser("~/Research"))
