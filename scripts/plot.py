@@ -461,6 +461,16 @@ class PlotAllData(Plot):
         processes = []
         parentPipes = []
         # Create threads
+        sortedData = []
+        for df, i in zip(self.data, range(len(self.data))):
+            if i % 2 == 0:
+                # is even (tuning enabled)
+                sortedData.append(df)
+        for df, i in zip(self.data, range(len(self.data))):
+            if i % 2 == 1:
+                # is odd (tuning disabled)
+                sortedData.append(df)
+        self.data = sortedData
         for df, i in zip(self.data, range(len(self.data))):
             self.throughput.append([])
             self.rtt.append([])

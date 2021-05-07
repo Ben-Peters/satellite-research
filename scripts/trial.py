@@ -350,20 +350,19 @@ class Trial:
         plot.plotTput()
 
     def enableTuning(self):
-        # sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
-        # command = f'{sshPrefix} \"sudo sysctl net.ipv4.tcp_moderate_rcvbuf=1\"'
-        # self.commandsRun.append((self.getTimeStamp(), command))
-        # os.system(command)
-        os.system('echo Proxy should be enabled')
+        sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
+        command = f'{sshPrefix} \"sudo sysctl net.ipv4.tcp_moderate_rcvbuf=1\"'
+        self.commandsRun.append((self.getTimeStamp(), command))
+        os.system(command)
+        # os.system('echo Proxy should be enabled')
         # self.sleep(90)
 
     def disableTuning(self):
-        # sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
-        # command = f'{sshPrefix} \"sudo sysctl net.ipv4.tcp_moderate_rcvbuf=0\"'
-        # self.commandsRun.append((self.getTimeStamp(), command))
-        # os.system(command)
-        os.system('echo Proxy should be disabled!')
-        # self.sleep(90)
+        sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
+        command = f'{sshPrefix} \"sudo sysctl net.ipv4.tcp_moderate_rcvbuf=0\"'
+        self.commandsRun.append((self.getTimeStamp(), command))
+        os.system(command)
+        # os.system('echo Proxy should be disabled!')
 
     def start(self):
         os.chdir(os.path.expanduser("~/Research"))
@@ -380,12 +379,12 @@ class Trial:
 
         # run downloads
         for i in range(self.numToRun):
-            if i < self.numToRun/2:
+            if i % 2 == 0:
                 print(f"Trial Num: {i}\nEnabling tuning")
                 self.enableTuning()
-            elif i == self.numToRun/2:
-                os.system('echo Please disable the Proxy NOW!')
-                self.sleep(90)
+            # elif i == self.numToRun/2:
+                # os.system('echo Please disable the Proxy NOW!')
+                # self.sleep(90)
             else:
                 print(f"Trial Num: {i}\nDisabling tuning")
                 self.disableTuning()
