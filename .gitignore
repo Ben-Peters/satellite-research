@@ -17,3 +17,5 @@ pcaps/
 *.pdf
 *.bat
 *.pcap
+*.keys
+*.pem

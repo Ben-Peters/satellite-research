@@ -1,0 +1,20 @@
+## how to build the latest version of tshark (to decrypt quic)
+
+# Clone the git repo: https://gitlab.com/wireshark/wireshark/
+git clone https://gitlab.com/wireshark/wireshark.git
+cd wireshark
+git checkout release-3.4
+
+# Install dependencies
+sudo apt update
+sudo apt install debhelper po-debconf python3-ply xsltproc dh-python docbook-xsl libxml2-utils libcap-dev quilt libparse-yapp-perl libgnutls28-dev libkrb5-dev liblua5.2-dev libsmi2-dev libmaxminddb-dev libnl-genl-3-dev libnl-route-3-dev asciidoctor libsbc-dev libnghttp2-dev libssh-gcrypt-dev liblz4-dev libsnappy-dev libzstd-dev libspandsp-dev libxml2-dev libbrotli-dev libspeexdsp-dev libc-ares-dev qtbase5-dev qtbase5-dev-tools qttools5-dev qttools5-dev-tools qtmultimedia5-dev libpcap0.8-dev libsystemd-dev 
+
+#Otherwise make
+cmake -DBUILD_wireshark=OFF .
+make
+sudo make install
+#Executables are now in ./run
+
+#Verify version is correct (should be 3.4.6 or so)
+./run/tshark --version
+
