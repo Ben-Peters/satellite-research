@@ -48,10 +48,10 @@ if args.tcpSettings is not None:
 
 def getData():
     try:
-        os.mkdir(f'G:/satellite-research/csvs/Trial_{args.batch}')
+        os.mkdir(f'C:/satellite-research/csvs/Trial_{args.batch}')
     except:
         print('Folder not created')
-    getCSVs = f'scp btpeters@andromeda.dyn.wpi.edu:~/Research/Trial_{args.batch}/csvs/* G:/satellite-research/csvs/Trial_{args.batch}'
+    getCSVs = f'scp btpeters@andromeda.dyn.wpi.edu:~/Research/Trial_{args.batch}/csvs/* C:/satellite-research/csvs/Trial_{args.batch}'
     os.system(getCSVs)
 
 
@@ -62,9 +62,9 @@ def plotData():
         cc.append(c)
     for c in cc:
         hosts.append(dictionary.get(c))
-    files = os.listdir(f'G:/satellite-research/csvs/Trial_{args.batch}')
+    files = os.listdir(f'C:/satellite-research/csvs/Trial_{args.batch}')
     try:
-        os.mkdir(f'G:/satellite-research/plots/Trial_{args.batch}')
+        os.mkdir(f'C:/satellite-research/plots/Trial_{args.batch}')
     except:
         print("Folder not created")
 
@@ -72,7 +72,7 @@ def plotData():
     csvs = []
     legend = ['With Proxy', 'Without Proxy']
     for file, i in zip(files, range(len(files))):
-        csvFilename = f'G:/satellite-research/csvs/Trial_{args.batch}/' + file
+        csvFilename = f'C:/satellite-research/csvs/Trial_{args.batch}/' + file
         csvs.append(csvFilename)
         # legend.append(hosts[i].split('.')[0])
     plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", "_TPUT.png")
@@ -97,7 +97,7 @@ def main():
                      f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\'\" "
     print("Running command: " + startTrial)
     try:
-        os.listdir(f'G:/satellite-research/csvs/Trial_{args.batch}')
+        os.listdir(f'C:/satellite-research/csvs/Trial_{args.batch}')
         print("This trial has already been run, just creating plots")
     except:
         subprocess.call(startTrial, shell=True)

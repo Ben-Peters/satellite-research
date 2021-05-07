@@ -798,11 +798,11 @@ class PlotAllData(Plot):
 
 
 if __name__ == "__main__":
-    plot = PlotTputOneFlow("hybla", "G:\satellite-research/cubic_2021_04_13-20-28-37.csv", "G:/satellite-research/cubicTput")
+    plot = PlotTputOneFlow("hybla", "C:\satellite-research/cubic_2021_04_13-20-28-37.csv", "C:/satellite-research/cubicTput")
     plot.plotTput()
-    # plot = PlotRTTOneFlow("hybla", "G:/research/hybla_2021_04_12-23-07-43.csv", "G:/research/hyblaRTT")
+    # plot = PlotRTTOneFlow("hybla", "C:/research/hybla_2021_04_12-23-07-43.csv", "C:/research/hyblaRTT")
     # plot.plotRTT()
-    # csvs = ["G:/research/hybla_2021_04_12-23-07-43.csv", "G:/research/hybla_2021_04_12-23-07-46.csv"]
+    # csvs = ["C:/research/hybla_2021_04_12-23-07-43.csv", "C:/research/hybla_2021_04_12-23-07-46.csv"]
     # legend = ["Server", "Client"]
-    # plot = PlotTputCompare("hybla", legend, csvs, "G:/research/hyblaCompareTput")
+    # plot = PlotTputCompare("hybla", legend, csvs, "C:/research/hyblaCompareTput")
     # plot.plotTput()

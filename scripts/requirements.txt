@@ -1,4 +1,4 @@
 paramiko~=2.7.2
-pandas~=1.2.3
+pandas
 matplotlib~=3.4.1
 scipy~=1.6.3
