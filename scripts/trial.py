@@ -352,17 +352,18 @@ class Trial:
     def enableTuning(self):
         sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
         command = f'{sshPrefix} \"sudo sysctl net.ipv4.tcp_moderate_rcvbuf=1\"'
-        self.commandsRun.append((self.getTimeStamp(), command))
-        os.system(command)
-        # os.system('echo Proxy should be enabled')
-        # self.sleep(90)
+        # self.commandsRun.append((self.getTimeStamp(), command))
+        # os.system(command)
+        os.system('echo Proxy should be enabled')
+        self.sleep(30)
 
     def disableTuning(self):
         sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
         command = f'{sshPrefix} \"sudo sysctl net.ipv4.tcp_moderate_rcvbuf=0\"'
         self.commandsRun.append((self.getTimeStamp(), command))
-        os.system(command)
-        # os.system('echo Proxy should be disabled!')
+        # os.system(command)
+        os.system('echo Proxy should be disabled!')
+        self.sleep(30)
 
     def start(self):
         os.chdir(os.path.expanduser("~/Research"))

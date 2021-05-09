@@ -37,8 +37,9 @@ tcpSettings = [["4096 131072 6291456", "4096 16384 4194304", "382185 509580 7643
                ["4096 60000000 6291456", "60000000 60000000 60000000", "382185 509580 764370", "Default at 60MB"],      # 8
                ["4096 131072 60000000", "60000000 60000000 60000000", "382185 509580 764370", "Max at 60MB"],           # 9
                ["4096 3145728 6291456", "60000000 60000000 60000000", "382185 509580 764370", "Default value half of Max"],  # 10
-               ["4096 131072 6291456", "4096 16384 4194304", "382185 509580 764370", "Default wmem"],  # 11
-               ["4096 131072 6291456", "60000000 60000000 60000000", "382185 509580 764370", "Large wmem"]]  # 12
+               ["4096 131072 6291456", "4096 16384 4194304", "382185 509580 764370", "Default wmem"],                   # 11
+               ["4096 131072 6291456", "60000000 60000000 60000000", "382185 509580 764370", "Large wmem"],             # 12
+               ["4096 3145728 6291456", "4096 16384 4194304", "382185 509580 764370", "Default value half of Max"]]     # 13
 
 if args.tcpSettings is not None:
     args.rmem = tcpSettings[args.tcpSettings][0]
@@ -70,14 +71,14 @@ def plotData():
 
     hosts += ["glomma.cs.wpi.edu"]
     csvs = []
-    legend = ['With Proxy', 'Without Proxy']
+    legend = ['With Tuning', 'Without Tuning']
     for file, i in zip(files, range(len(files))):
         csvFilename = f'C:/satellite-research/csvs/Trial_{args.batch}/' + file
         csvs.append(csvFilename)
         # legend.append(hosts[i].split('.')[0])
     plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", "_TPUT.png")
     plot = PlotAllData(protocol=cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend,
-                       numRuns=int(args.numToRun / 2), title=f'{args.plotName}\nwmem={args.wmem}')
+                       numRuns=int(args.numToRun / 2), title=f'{args.plotName}\nrmem={args.rmem}')
     # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
     plot.plotALL()
     # plot.plotStartTput(20)

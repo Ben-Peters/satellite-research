@@ -219,7 +219,7 @@ class Plot:
                     'tcp.time_relative': float}
         for csv in csvFiles:
             # memory mapping can be enabled to improve performance but at the expense of memory usage for large files
-            self.data.append(pandas.read_csv(csv, memory_map=False))
+            self.data.append(pandas.read_csv(csv, memory_map=True))
         self.timesRaw = []  # pandas.to_datetime(self.df['frame.time'], infer_datetime_format=True)
         self.frameTime = []
         self.throughput = []
@@ -485,9 +485,9 @@ class PlotAllData(Plot):
             processes.append(p)
         # Get results from threads
         for conn in parentPipes:
-            self.consumerSem.acquire()
+            # self.consumerSem.acquire()
             results.append(conn.recv())
-            self.consumerSem.release()
+            # self.consumerSem.release()
         # wait for threads to finish and join them
         for p in processes:
             p.join()
@@ -652,7 +652,7 @@ class PlotAllData(Plot):
 
         maxY = max(self.rwndAVG[0][0:seconds+1])
         #axs[0].set_ylim([0, max(self.throughputAVG[0][0:seconds+1])])
-        axs[0].set_ylim([0,75])
+        axs[0].set_ylim([0,150])
         axs[0].set_xlim([0, seconds])
         #axs[1].set_ylim([0, maxY])
         axs[1].set_ylim([0, 3])
@@ -752,9 +752,9 @@ class PlotAllData(Plot):
 
         axs[0].set_ylim([0, 150])
         axs[1].set_ylim([0, 1500])
-        axs[2].set_ylim([0, 3.5])
-        axs[3].set_ylim([0, 3.5])
-        axs[4].set_ylim([0, 0.5])
+        axs[2].set_ylim([0, 3])
+        axs[3].set_ylim([0, 3])
+        axs[4].set_ylim([0, 0.1])
 
 
         for i in range(len(maxY)):
