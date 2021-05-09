@@ -354,16 +354,21 @@ class Trial:
         command = f'{sshPrefix} \"sudo sysctl net.ipv4.tcp_moderate_rcvbuf=1\"'
         # self.commandsRun.append((self.getTimeStamp(), command))
         # os.system(command)
+        # Proxy Mode
+        command = f'{sshPrefix} \"./setProxyMode 1\"'
+        os.system(command)
         os.system('echo Proxy should be enabled')
-        self.sleep(30)
+        # self.sleep(30)
 
     def disableTuning(self):
         sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
         command = f'{sshPrefix} \"sudo sysctl net.ipv4.tcp_moderate_rcvbuf=0\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         # os.system(command)
+        command = f'{sshPrefix} \"./setProxyMode 3\"'
+        os.system(command)
         os.system('echo Proxy should be disabled!')
-        self.sleep(30)
+        # self.sleep(30)
 
     def start(self):
         os.chdir(os.path.expanduser("~/Research"))
@@ -403,7 +408,8 @@ class Trial:
             print('Killing tcpdump and iperf3')
             self.terminateCommands()
 
-        self.enableTuning()
+        # self.enableTuning()
+        self.disableTuning()
         print("Getting pcaps")
         self.getPcaps()
         print("Running pcapToCsv()")
