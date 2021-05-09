@@ -71,7 +71,7 @@ def plotData():
 
     hosts += ["glomma.cs.wpi.edu"]
     csvs = []
-    legend = ['With Tuning', 'Without Tuning']
+    legend = ['With Proxy', 'Without Proxy']
     for file, i in zip(files, range(len(files))):
         csvFilename = f'C:/satellite-research/csvs/Trial_{args.batch}/' + file
         csvs.append(csvFilename)

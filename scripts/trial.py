@@ -355,7 +355,7 @@ class Trial:
         # self.commandsRun.append((self.getTimeStamp(), command))
         # os.system(command)
         # Proxy Mode
-        command = f'{sshPrefix} \"./setProxyMode 1\"'
+        command = f'{sshPrefix} \"./setProxyMode.sh 1\"'
         os.system(command)
         os.system('echo Proxy should be enabled')
         # self.sleep(30)
@@ -365,7 +365,7 @@ class Trial:
         command = f'{sshPrefix} \"sudo sysctl net.ipv4.tcp_moderate_rcvbuf=0\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         # os.system(command)
-        command = f'{sshPrefix} \"./setProxyMode 3\"'
+        command = f'{sshPrefix} \"./setProxyMode.sh 3\"'
         os.system(command)
         os.system('echo Proxy should be disabled!')
         # self.sleep(30)
