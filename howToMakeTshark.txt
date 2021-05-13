@@ -1,4 +1,4 @@
-## how to build the latest version of tshark (to decrypt quic)
+## how to build version 3.4 of tshark (to decrypt quic)
 
 # Clone the git repo: https://gitlab.com/wireshark/wireshark/
 git clone https://gitlab.com/wireshark/wireshark.git
