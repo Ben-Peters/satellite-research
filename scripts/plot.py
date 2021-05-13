@@ -430,7 +430,7 @@ class PlotAllData(Plot):
                         rwnd.append(rwndSum/clientCount)
                         # if cutOffTime == 11:
                             # print(rwndSum/clientCount)
-                    retransmissions.append(retransmissionsCount / (j - startFrame + 1))
+                    retransmissions.append((retransmissionsCount / (j - startFrame + 1))*100)
 
                     bytesSent = 0
                     RTTSum = 0
@@ -652,7 +652,7 @@ class PlotAllData(Plot):
 
         maxY = max(self.rwndAVG[0][0:seconds+1])
         #axs[0].set_ylim([0, max(self.throughputAVG[0][0:seconds+1])])
-        axs[0].set_ylim([0,150])
+        axs[0].set_ylim([0,20])
         axs[0].set_xlim([0, seconds])
         #axs[1].set_ylim([0, maxY])
         axs[1].set_ylim([0, 3])
@@ -750,11 +750,11 @@ class PlotAllData(Plot):
 
         axs[4].plot(self.seconds[minIndex], self.retransmissionsAVG[1], color='tab:blue')
 
-        axs[0].set_ylim([0, 150])
+        axs[0].set_ylim([0, 40])
         axs[1].set_ylim([0, 1500])
-        axs[2].set_ylim([0, 3])
-        axs[3].set_ylim([0, 3])
-        axs[4].set_ylim([0, 0.1])
+        axs[2].set_ylim([0, 6])
+        axs[3].set_ylim([0, 6])
+        axs[4].set_ylim([0, 2])
 
 
         for i in range(len(maxY)):

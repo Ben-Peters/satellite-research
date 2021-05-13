@@ -38,8 +38,8 @@ tcpSettings = [["4096 131072 6291456", "4096 16384 4194304", "382185 509580 7643
                ["4096 131072 60000000", "60000000 60000000 60000000", "382185 509580 764370", "Max at 60MB"],           # 9
                ["4096 3145728 6291456", "60000000 60000000 60000000", "382185 509580 764370", "Default value half of Max"],  # 10
                ["4096 131072 6291456", "4096 16384 4194304", "382185 509580 764370", "Default wmem"],                   # 11
-               ["4096 131072 6291456", "60000000 60000000 60000000", "382185 509580 764370", "Large wmem"],             # 12
-               ["4096 3145728 6291456", "4096 16384 4194304", "382185 509580 764370", "Default value half of Max"]]     # 13
+               ["4096 131072 6291456", "60000000 60000000 60000000", "382185 509580 764370", "60MB wmem"],              # 12
+               ["4096 3145728 6291456", "4096 16384 4194304", "382185 509580 764370", "Default value half of max"]]     # 13
 
 if args.tcpSettings is not None:
     args.rmem = tcpSettings[args.tcpSettings][0]
@@ -71,7 +71,7 @@ def plotData():
 
     hosts += ["glomma.cs.wpi.edu"]
     csvs = []
-    legend = ['With Proxy', 'Without Proxy']
+    legend = ['With Auto-Tune', 'Without Auto-Tune']
     for file, i in zip(files, range(len(files))):
         csvFilename = f'C:/satellite-research/csvs/Trial_{args.batch}/' + file
         csvs.append(csvFilename)
