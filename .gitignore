@@ -19,3 +19,10 @@ pcaps/
 *.pcap
 *.keys
 *.pem
+boringssl/*
+decrypted.txt
+lsquic-tutorial/*
+lsquic/*
+quiche/*
+sslSecrets.log
+ssldebug.log
