@@ -11,6 +11,10 @@ from datetime import datetime
 from plot import PlotTputOneFlow, PlotTputCompare
 
 
+#  TODO: Convert this all over to use ssh proxy
+
+glomma = "glomma.cs.wpi.edu"
+
 class Trial:
 
     def __init__(self, cc, batchNum, runNum, time, numToRun,
@@ -48,7 +52,20 @@ class Trial:
             f'sudo sysctl -w net.ipv4.tcp_rmem=\"{self.tcp_rmem}\"',
             # 'sudo sysctl -p'
         ]
+        self.sshProxyHost = 'cs.wpi.edu'
         self.graphCommand = ''
+
+    #  This function takes a host and a command and runs a ssh proxy through the proxy host to run the command on a
+    #  machine not reachable from outside the network
+    def sshProxy(self, command, host):
+        #  TODO: add usage sshProxy.py to this method
+
+        #  All commands that contain quotes must use double quotes as outer most level
+        sshPrefix = f''
+        command = f'ssh {self.user}@{host} \'{command}\''
+        os.system(f'ssh {self.user}@{self.sshProxyHost} \'python3 ~/sshProxy.py --run \"{command}\"\'')
+        pass
+
 
     def setHosts(self):
         self.dictionary = {
@@ -71,18 +88,23 @@ class Trial:
         print(self.hosts)
 
     def setUpLocal(self):
-        sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
-        hystart = f'{sshPrefix} \"sudo sh -c \'echo 1 > /sys/module/tcp_cubic/parameters/hystart\'\"'
-        os.system(hystart)
+        # sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
+        hystart = f'sudo sh -c \"echo 1 > /sys/module/tcp_cubic/parameters/hystart\"'
+        self.sshProxy(hystart, glomma)
+        # os.system(hystart)
 
         for command in self.setupCommand:
-            os.system(f'{sshPrefix} \'{command}\'')
+            self.sshProxy(command, glomma)
+            # os.system(f'{sshPrefix} \'{command}\'')
         filePrefix = f'Trial_{self.batchNum}'
         os.system(f'mkdir {filePrefix}')
-        os.system(f'{sshPrefix} \"mkdir {filePrefix}\"')
-        os.system(f'{sshPrefix} \"./setup_routes.sh\"')
+        self.sshProxy(f'mkdir {filePrefix}', glomma)
+        self.sshProxy(f'./setup_routes.sh', glomma)
+        # os.system(f'{sshPrefix} \"mkdir {filePrefix}\"')
+        # os.system(f'{sshPrefix} \"./setup_routes.sh\"')
         for host in self.hosts:
-            os.system(f'ssh {self.user}@{host} \"mkdir {filePrefix}\"')
+            self.sshProxy(f'mkdir {filePrefix}', host)
+            # os.system(f'ssh {self.user}@{host} \"mkdir {filePrefix}\"')
         os.system(f'mkdir {filePrefix}/pcaps')
         os.system(f'mkdir {filePrefix}/csvs')
         os.system(f'mkdir {filePrefix}/plots')
@@ -94,15 +116,18 @@ class Trial:
         # hosts = ['mlcneta', 'mlcnetb', 'mlcnetc', 'mlcnetd']
         protocols = ['cubic', 'hybla', 'bbr', 'pcc']
         for host in self.hosts:
-            sshPrefix = f'ssh {self.user}@{host}'
+            # sshPrefix = f'ssh {self.user}@{host}'
             for command in self.setupCommand:
-                os.system(f'{sshPrefix} \'{command}\'')
-            hystart = f'{sshPrefix} \"sudo sh -c \'echo 1 > /sys/module/tcp_cubic/parameters/hystart\'\"'
-            os.system(hystart)
+                self.sshProxy(command, host)
+                # os.system(f'{sshPrefix} \'{command}\'')
+            hystart = f'sudo sh -c \"echo 1 > /sys/module/tcp_cubic/parameters/hystart\"'
+            self.sshProxy(hystart, host)
+            # os.system(hystart)
         for i in range(len(self.hosts)):
             protocol = list(self.dictionary.keys())[list(self.dictionary.values()).index(self.hosts[i])]
-            command = f'ssh {self.user}@{self.hosts[i]} \"sudo sysctl -w net.ipv4.tcp_congestion_control=\'{protocol}\'\"'
-            os.system(command)
+            command = f'sudo sysctl -w net.ipv4.tcp_congestion_control=\"{protocol}\"'
+            self.sshProxy(command, self.hosts[i])
+            # os.system(command)
             self.commandsRun.append(command)
         return
 
@@ -116,11 +141,12 @@ class Trial:
 
     def startIperf3Server(self):
         for host in self.hosts:
-            iperf3ServerStart = f"ssh {self.user}@{host} \"iperf3 -s\"&"
+            iperf3ServerStart = f"iperf3 -s &"
             self.serversRunning += 1
             print(f'\trunning command: \n {iperf3ServerStart}')
             timeStamp = self.getTimeStamp()
-            os.system(iperf3ServerStart)
+            self.sshProxy(iperf3ServerStart, host)
+            # os.system(iperf3ServerStart)
             self.commandsRun.append((timeStamp, iperf3ServerStart))
             # self.sleep(1)
 
@@ -131,13 +157,14 @@ class Trial:
             # exitCodes.append(subprocess.Popen(["ssh", f"{self.user}@glomma.cs.wpi.edu", "iperf3", "--reverse", "-i", "\"eno2\"",
             #                                    "-c", f"{host}", f"-n{self.data}", f"-p{self.ports[self.clientsRunning]}"], stdout=subprocess.DEVNULL))
             if self.data is not None:
-                iperf3ClientStartCommand = f'ssh {self.user}@glomma.cs.wpi.edu \'iperf3 -R -c {host} -n {self.data}\''
+                iperf3ClientStartCommand = f'iperf3 -R -c {host} -n {self.data}'
             else:
-                iperf3ClientStartCommand = f'ssh {self.user}@glomma.cs.wpi.edu \'iperf3 -R -c {host} -t {self.time}\''
+                iperf3ClientStartCommand = f'iperf3 -R -c {host} -t {self.time}'
             self.clientsRunning += 1
             print(f'\trunning command: \n{iperf3ClientStartCommand}')
             timeStamp = self.getTimeStamp()
-            os.system(iperf3ClientStartCommand)
+            self.sshProxy(iperf3ClientStartCommand, glomma)
+            # os.system(iperf3ClientStartCommand)
             self.commandsRun.append((timeStamp, iperf3ClientStartCommand))
         self.sleep(5)
         # self.sleep(self.timeout)
@@ -151,10 +178,11 @@ class Trial:
             timeStamp = self.getTimeStamp()
             filename = f'Trial_{self.batchNum}/{self.cc[self.tcpdumpsRunning]}_{timeStamp}.pcap'
             # tcpdump = f"ssh {self.user}@{host} \"sudo tcpdump -s 96 port {self.ports[self.tcpdumpsRunning]} -w '{filename}'\"&"
-            tcpdump = f"ssh {self.user}@{host} \"sudo tcpdump -s 96 port {self.ports[0]} -w '{filename}'\"&"
+            tcpdump = f"sudo tcpdump -s 96 port {self.ports[0]} -w {filename} &"
             self.tcpdumpsRunning += 1
             print(f'\trunning command: \n{tcpdump}')
-            os.system(tcpdump)
+            self.sshProxy(tcpdump, host)
+            # os.system(tcpdump)
             self.commandsRun.append((timeStamp, tcpdump))
             self.pcaps.append(filename)
             self.sleep(3)
@@ -163,10 +191,11 @@ class Trial:
         timestamp = self.getTimeStamp()
         filename = f'Trial_{self.batchNum}/{self.cc[self.clientDumpsRunning]}_{timestamp}.pcap'
         # tcpdump = f'ssh {self.user}@glomma.cs.wpi.edu \"sudo tcpdump -i 2 -w {filename} port {self.ports[self.clientsRunning]} -s 96\"&'
-        tcpdump = f'ssh {self.user}@glomma.cs.wpi.edu \"sudo tcpdump -i 2 -w {filename} port {self.ports[0]} -s 96\"&'
+        tcpdump = f'sudo tcpdump -i 2 -w {filename} port {self.ports[0]} -s 96 &'
         self.clientDumpsRunning += 1
         print(f'\trunning command: \n{tcpdump}')
-        os.system(tcpdump)
+        self.sshProxy(tcpdump, glomma)
+        # os.system(tcpdump)
         self.commandsRun.append((timestamp, tcpdump))
         self.clientPcaps.append(filename)
         self.sleep(3)
@@ -175,11 +204,15 @@ class Trial:
         for file in self.pcaps:
             # host = self.hosts[self.pcapsSent]
             host = self.hosts[0]
-            scpFromServer = f'scp -i ~/.ssh/id_rsa {self.user}@{host}:~/{file} ~/Research/Trial_{self.batchNum}/pcaps&'
-            print(f'\trunning command: \n{scpFromServer}')
+            #  TODO: make SCP to CS then SCP to Local machine
+            scpToProxy = f'scp -i ~/.ssh/id_rsa {self.user}@{host}:~/{file} ~/tmp/{file.split("/")[-1]}'
+            os.system(f'ssh {self.user}@{self.sshProxyHost} \'python3 ~/sshProxy.py --run \"{scpToProxy}\"\'')
+            scpFromProxy = f'scp -i ~/.ssh/id_rsa {self.user}@{self.sshProxyHost}:~/tmp/{file.split("/")[-1]} ' \
+                            f'~/Research/Trial_{self.batchNum}/pcaps&'
+            print(f'\trunning command: \n{scpFromProxy}')
             timeStamp = self.getTimeStamp()
-            os.system(scpFromServer)
-            self.commandsRun.append((timeStamp, scpFromServer))
+            os.system(scpFromProxy)
+            self.commandsRun.append((timeStamp, scpFromProxy))
             self.sleep(3)
             # scpToCS = f'scp {self.user}@{host}:~/{file} ~/SatelliteCode/trial-{self.batchNum}'
             # scpFromCS = f'scp ~/SatelliteCode/trial-{self.batchNum}/{file} {self.user}@glomma.cs.wpi.edu:~/{host[:7]}/pcap/trial-{self.batchNum}/{file}'
@@ -195,11 +228,15 @@ class Trial:
             self.pcapsSent += 1
         for file in self.clientPcaps:
             host = "glomma.cs.wpi.edu"
-            scpFromClient = f'scp -i ~/.ssh/id_rsa {self.user}@{host}:~/{file} ~/Research/Trial_{self.batchNum}/pcaps&'
-            print(f'\trunning command: \n{scpFromClient}')
+            scpToProxy = f'scp -i ~/.ssh/id_rsa {self.user}@{host}:~/{file} ~/tmp/{file.split("/")[-1]}'
+            os.system(f'ssh {self.user}@{self.sshProxyHost} \'python3 ~/sshProxy.py --run \"{scpToProxy}\"\'')
+            scpFromProxy = f'scp -i ~/.ssh/id_rsa {self.user}@{self.sshProxyHost}:~/tmp/{file.split("/")[-1]} ' \
+                           f'~/Research/Trial_{self.batchNum}/pcaps&'
+            # scpFromProxy = f'scp -i ~/.ssh/id_rsa {self.user}@{host}:~/{file} ~/Research/Trial_{self.batchNum}/pcaps&'
+            print(f'\trunning command: \n{scpFromProxy}')
             timeStamp = self.getTimeStamp()
-            os.system(scpFromClient)
-            self.commandsRun.append((timeStamp, scpFromClient))
+            os.system(scpFromProxy)
+            self.commandsRun.append((timeStamp, scpFromProxy))
             self.sleep(3)
 
     def pcapToCsv(self):
@@ -265,17 +302,19 @@ class Trial:
         commands = ['iperf3', 'tcpdump']
         for host in self.hosts:
             for command in commands:
-                pkill = f'ssh {self.user}@{host} \"sudo pkill -2 {command}\"'
+                pkill = f'sudo pkill -2 {command}'
                 timeStamp = self.getTimeStamp()
-                os.system(pkill)
+                self.sshProxy(pkill, host)
+                # os.system(pkill)
                 self.commandsRun.append((timeStamp, pkill))
             self.tcpdumpsRunning -= 1
             self.serversRunning -= 1
             self.clientsRunning -= 1
             self.clientDumpsRunning -= 1
-        pkill = f'ssh {self.user}@glomma.cs.wpi.edu \"sudo pkill -2 tcpdump\"'
+        pkill = f'sudo pkill -2 tcpdump'
         timeStamp = self.getTimeStamp()
-        os.system(pkill)
+        self.sshProxy(pkill, glomma)
+        # os.system(pkill)
         self.commandsRun.append((timeStamp, pkill))
 
     def cleanUp(self):
@@ -283,10 +322,13 @@ class Trial:
         if self.done:
             os.system(f'rm -r pcaps')
             for host in self.hosts:
-                remove = f'ssh {self.user}@{host} \'sudo rm -r Trial_{self.batchNum}\''
-                os.system(remove)
-            remove = f'ssh {self.user}@glomma.cs.wpi.edu \'sudo rm -r Trial_{self.batchNum}\''
-            os.system(remove)
+                remove = f'sudo rm -r Trial_{self.batchNum}'
+                self.sshProxy(remove, host)
+                # os.system(remove)
+            remove = f'sudo rm -r Trial_{self.batchNum}'
+            self.sshProxy(remove, glomma)
+            # os.system(remove)
+            os.system(f'ssh {self.user}@{self.sshProxyHost} \"rm ~/tmp/*\"')
             self.enableTuning()
             if self.log:
                 self.makeLogFile()
@@ -350,10 +392,11 @@ class Trial:
         plot.plotTput()
 
     def enableTuning(self):
-        sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
-        command = f'{sshPrefix} \"sudo sysctl net.ipv4.tcp_moderate_rcvbuf=1\"'
+        # sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
+        command = f'sudo sysctl net.ipv4.tcp_moderate_rcvbuf=1'
         self.commandsRun.append((self.getTimeStamp(), command))
-        os.system(command)
+        self.sshProxy(command, glomma)
+        # os.system(command)
         # Proxy Mode
         # command = f'{sshPrefix} \"./setProxyMode.sh 1\"'
         # os.system(command)
@@ -361,10 +404,11 @@ class Trial:
         # self.sleep(30)
 
     def disableTuning(self):
-        sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
-        command = f'{sshPrefix} \"sudo sysctl net.ipv4.tcp_moderate_rcvbuf=0\"'
+        # sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
+        command = f'sudo sysctl net.ipv4.tcp_moderate_rcvbuf=0'
         self.commandsRun.append((self.getTimeStamp(), command))
-        os.system(command)
+        self.sshProxy(command, glomma)
+        # os.system(command)
         # command = f'{sshPrefix} \"./setProxyMode.sh 3\"'
         # os.system(command)
         # os.system('echo Proxy should be disabled!')
