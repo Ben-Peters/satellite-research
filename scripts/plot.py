@@ -107,7 +107,7 @@ class PlotTputOneFlow:
 
         pyplot.plot(self.seconds, self.throughput)
         pyplot.xlabel("Time (seconds)")
-        pyplot.ylabel("Throughput (Mbits)")
+        pyplot.ylabel("Throughput (Mb/s)")
         pyplot.legend([self.protocol])
         pyplot.title('Throughput vs Time')
         pyplot.savefig(self.plotFilepath)
@@ -299,7 +299,7 @@ class Plot:
         for time, tput in zip(self.secondsAVG, self.throughputAVG):
             pyplot.plot(time, tput)
         pyplot.xlabel("Time (seconds)")
-        pyplot.ylabel("Throughput (Mbits)")
+        pyplot.ylabel("Throughput (Mb/s)")
         pyplot.legend(self.legend)
         pyplot.title(f'{self.protocol} Throughput vs Time')
         pyplot.savefig(self.plotFilepath)
@@ -641,7 +641,7 @@ class PlotAllData(Plot):
         axs[2].fill_between(time, numpy.array(self.rwndCI[1][0][0:seconds + 1])/1048576,
                                   numpy.array(self.rwndCI[1][1][0:seconds + 1])/1048576, color='tab:blue', alpha=.2)
 
-        axs[0].set_ylabel("Throughput (Mbits)")
+        axs[0].set_ylabel("Throughput (Mb/s)")
         axs[1].set_ylabel("CWND (MBytes)")
         axs[2].set_ylabel("RWND (MBytes)")
 
@@ -683,15 +683,20 @@ class PlotAllData(Plot):
                 theoreticalTput[i] = theoreticalTput[i - 1] * 2
         time = numpy.arange(0., seconds+1, 1)
         pyplot.clf()
-        pyplot.plot(theoreticalTime, theoreticalTput, 'k--')
+        # pyplot.plot(theoreticalTime, theoreticalTput, 'k--')
         pyplot.plot(time, self.throughputAVG[0][0:seconds+1], color='tab:orange')
         pyplot.plot(time, self.throughputAVG[1][0:seconds+1], color='tab:blue')
-        pyplot.ylabel("Throughput (Mbits)")
+        pyplot.ylabel("Throughput (Mb/s)")
         pyplot.xlabel("Time (seconds)")
         legend = ['Theoretical'] + self.legend
-        pyplot.legend(legend)
-        pyplot.ylim([0, 19])
+        # pyplot.legend(legend)
+        pyplot.suptitle(self.title)
+        pyplot.ylim([0, 20])
         pyplot.xlim([0, seconds])
+        pyplot.fill_between(time, self.throughputCI[0][0][0:seconds + 1],
+                            self.throughputCI[0][1][0:seconds + 1], color='tab:orange', alpha=.2)
+        pyplot.fill_between(time, self.throughputCI[1][0][0:seconds + 1],
+                            self.throughputCI[1][1][0:seconds + 1], color='tab:blue', alpha=.2)
 
         pyplot.savefig(self.plotFilepath.replace('.png', '_Start_TPUT.png'))
 
@@ -752,9 +757,9 @@ class PlotAllData(Plot):
 
         axs[0].set_ylim([0, 140])
         axs[1].set_ylim([0, 2000])
-        axs[2].set_ylim([0, 30])
-        axs[3].set_ylim([0, 30])
-        axs[4].set_ylim([0, 10])
+        axs[2].set_ylim([0, 6])
+        axs[3].set_ylim([0, 6])
+        axs[4].set_ylim([0, 15])
 
 
         for i in range(len(maxY)):
@@ -763,9 +768,9 @@ class PlotAllData(Plot):
             axs[i].set_xlim([0, len(self.seconds[minIndex])])
 
         fig.suptitle(self.title)
-        fig.legend(self.legend)
+        # fig.legend(self.legend)
 
-        axs[0].set_ylabel("Throughput (Mbits)")
+        axs[0].set_ylabel("Throughput (Mb/s)")
         axs[1].set_ylabel("RTT (ms)")
         axs[2].set_ylabel("RWND (MB)")
         axs[3].set_ylabel("CWND (MB)")

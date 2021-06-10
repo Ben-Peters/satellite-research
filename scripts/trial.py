@@ -61,9 +61,9 @@ class Trial:
         #  TODO: add usage sshProxy.py to this method
 
         #  All commands that contain quotes must use double quotes as outer most level
-        sshPrefix = f''
-        command = f'ssh {self.user}@{host} \'{command}\''
-        os.system(f'ssh {self.user}@{self.sshProxyHost} \'python3 ~/sshProxy.py --run \"{command}\"\'')
+        # command = f'ssh {self.user}@{host} \"{command}\"'
+        # os.system(f'ssh {self.user}@{self.sshProxyHost} \'python3 ~/sshProxy.py --run \"{command}\"\'')
+        os.system(f'ssh {self.user}@{host} command')
         pass
 
 
