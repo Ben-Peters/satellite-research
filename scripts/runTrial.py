@@ -52,7 +52,7 @@ def getData():
         os.mkdir(f'C:/satellite-research/csvs/Trial_{args.batch}')
     except:
         print('Folder not created')
-    getCSVs = f'scp btpeters@Andromeda:~/Research/Trial_{args.batch}/csvs/* C:/satellite-research/csvs/Trial_{args.batch}'
+    getCSVs = f'scp btpeters@andromeda.dyn.wpi.edu:~/Research/Trial_{args.batch}/csvs/* C:/satellite-research/csvs/Trial_{args.batch}'
     os.system(getCSVs)
 
 
@@ -87,12 +87,12 @@ def plotData():
 
 def main():
     if args.time is not None:
-        startTrial = f"ssh btpeters@Andromeda \" python3 ~/Research/scripts/trial.py " \
+        startTrial = f"ssh btpeters@Andromeda.dyn.wpi.edu \" python3 ~/Research/scripts/trial.py " \
                      f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
                      f"--time {args.time} --numToRun {args.numToRun} " \
                      f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\'\" "
     else:
-        startTrial = f"ssh btpeters@Andromeda \" python3 ~/Research/scripts/trial.py " \
+        startTrial = f"ssh btpeters@Andromeda.dyn.wpi.edu \" python3 ~/Research/scripts/trial.py " \
                      f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
                      f"--size {args.size} --numToRun {args.numToRun}" \
                      f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\'\" "
