@@ -756,18 +756,24 @@ class PlotAllData(Plot):
         axs[4].plot(self.seconds[minIndex], self.retransmissionsAVG[1], color='tab:blue')
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         axs[0].set_ylim([0, 140])
         axs[1].set_ylim([0, 2000])
         axs[2].set_ylim([0, 6])
         axs[3].set_ylim([0, 6])
         axs[4].set_ylim([0, 15])
 =======
+=======
+>>>>>>> parent of 1c1e8dc... add sshProxy script
         axs[0].set_ylim([0, 40])
         axs[1].set_ylim([0, 1500])
         axs[2].set_ylim([0, 6])
         axs[3].set_ylim([0, 6])
         axs[4].set_ylim([0, 2])
+<<<<<<< HEAD
 >>>>>>> parent of 1c1e8dc (add sshProxy script)
+=======
+>>>>>>> parent of 1c1e8dc... add sshProxy script
 
 
         for i in range(len(maxY)):
