@@ -9,14 +9,15 @@ parser.add_argument('--batch', type=int, help='What batch number is this', requi
 
 args = parser.parse_args()
 
-def sleep(self, sec):
+def sleep(sec):
     for i in range(1, sec + 1):
         print(f'\tTime left to sleep {sec + 1 - i} seconds')
         time.sleep(1)
 
-def pcapToCsv(self):
-    files = os.listdir("pcaps")
+def pcapToCsv(files):
     # files = [f for f in os.listdir("pcaps") if os.path.isfile("pcaps/".join(f))]
+    csvsGenerated = 0
+    numToRun = 5
     for file in files:
         # host = f'{self.hosts[self.csvsGenerated][:7]}'
         csvFilename = file.split('.')[0] + '.csv'
@@ -37,7 +38,7 @@ def pcapToCsv(self):
                 -E quote=d \
                 -E separator=, \
                 -E occurrence=f \
-                >> csvs/{csvFilename} 2> /dev/null'
+                > csvs/{csvFilename} 2> /dev/null'
 
         """
         -e frame.number \
@@ -54,39 +55,24 @@ def pcapToCsv(self):
         -E occurrence=f \
         """
         # fullCommand = f'ssh {self.user}@glomma.cs.wpi.edu \'{tshark}\''
-        self.csvs.append(csvFilename)
         print(f'\trunning command: \n{tshark}')
-        timeStamp = self.getTimeStamp()
-        if self.csvsGenerated == self.numToRun * 2 - 1:
+        if csvsGenerated == numToRun * 2 - 1:
             subprocess.Popen(tshark, shell=True).wait()
         else:
             subprocess.Popen(tshark, shell=True)
-        self.commandsRun.append((timeStamp, tshark))
-        self.csvsGenerated += 1
-    self.sleep(60)
+    sleep(60)
 
     def getData():
-        os.system(f'ssh btpeters@')
+        os.system(f'mkdir Trial_{args.batch}')
+        os.system(f'mkdir csvs pcaps')
+        os.system(f'scp -i ~/.ssh/id_rsa btpeters@cs.wpi.edu:~/tmp/Trial_{args.batch}/pcaps/* ~/Research/Trial_{args.batch}/pcaps&')
 
     def main():
-        if args.time is not None:
-            startTrial = f"ssh btpeters@cs.wpi.edu \" python3 ~/Research/scripts/trialTrimmed.py " \
-                         f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
-                         f"--time {args.time} --numToRun {args.numToRun} " \
-                         f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\'\" "
-        else:
-            startTrial = f"ssh btpeters@cs.wpi.edu \" python3 ~/Research/scripts/trialTrimmed.py " \
-                         f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
-                         f"--size {args.size} --numToRun {args.numToRun}" \
-                         f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\'\" "
-        print("Running command: " + startTrial)
-        try:
-            os.listdir(f'C:/satellite-research/csvs/Trial_{args.batch}')
-            print("This trial has already been run, just creating plots")
-        except:
-            subprocess.call(startTrial, shell=True)
-            getData()
-        pcapToCsv()
+        os.chdir(f'Research')
+        # os.listdir(f'C:/satellite-research/csvs/Trial_{args.batch}')
+        getData()
+        os.chdir(f'Trial_{args.batch}')
+        pcapToCsv(files=os.listdir(f'pcaps'))
 
     if __name__ == "__main__":
         main()
