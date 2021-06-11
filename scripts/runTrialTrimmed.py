@@ -66,7 +66,32 @@ tcpSettings = [["4096 131072 6291456", "4096 16384 4194304", "382185 509580 7643
                 "60MB wmem"],                                                                                   # 12
 
                ["4096 3145728 6291456", "4096 16384 4194304", "382185 509580 764370",
-                "Default value half of max", [140, 2, 6.5, 6.5, 15]]]                                        # 13
+                "Default value half of max", [140, 2, 6.5, 6.5, 15]],                                        # 13
+
+               ["4096 131072 6291456", "4096 16384 4194304", "382185 509580 764370",
+                "Default settings\n"+r"wmem=4096 16384 4194304", [140, 2, 6.5, 6.5, 15]],                    # 14
+
+               ["4096 131072 6291456", "4096 32768 4194304", "382185 509580 764370",
+                "Default Value Doubled\n" + r"wmem=4096 $\bf{32768}$ 4194304", [140, 2, 6.5, 6.5, 15]],     # 15
+
+               ["4096 131072 6291456", "4096 16384 8388608", "382185 509580 764370",
+                "Max Value Doubled\n" + r"wmem=4096 16384 $\bf{8388608}$", [140, 2, 6.5, 6.5, 15]],           # 16
+
+               ["4096 131072 6291456", "60000000 60000000 60000000", "382185 509580 764370",
+                "All at 60MB\n" + r"wmem=$\bf{60000000\:60000000\:60000000}$", [140, 2, 6.5, 6.5, 15]],     # 17
+
+               ["60000000 60000000 60000000", "4096 16384 4194304", "382185 509580 764370",
+                "Default settings\n"+r"wmem=4096 16384 4194304", [140, 2, 6.5, 6.5, 15]],                    # 18
+
+               ["60000000 60000000 60000000", "4096 32768 4194304", "382185 509580 764370",
+                "Default Value Doubled\n" + r"wmem=4096 $\bf{32768}$ 4194304", [140, 2, 6.5, 6.5, 15]],           # 19
+
+               ["60000000 60000000 60000000", "4096 16384 8388608", "382185 509580 764370",
+                "Max Value Doubled\n" + r"wmem=4096 16384 $\bf{8388608}$", [140, 2, 6.5, 6.5, 15]],            # 20
+
+               ["60000000 60000000 60000000", "60000000 60000000 60000000", "382185 509580 764370",
+                "All at 60MB\n" + r"wmem=$\bf{60000000\:60000000\:60000000}$", [140, 2, 6.5, 6.5, 15]]        # 21
+               ]
 
 if args.tcpSettings is not None:
     args.rmem = tcpSettings[args.tcpSettings][0]
@@ -87,14 +112,8 @@ def getData():
     makeCSVs = f'ssh btpeters@Andromeda \"python3 ~/Research/scripts/makeCSVs.py --batch {args.batch}\"'
     subprocess.call(makeCSVs, shell=True)
 
-    while True:
-        try:
-            getCSVs = f'scp btpeters@Andromeda:~/Research/Trial_{args.batch}/csvs/* C:/satellite-research/csvs/Trial_{args.batch}'
-            os.system(getCSVs)
-        except:
-            pass
-        if len(os.listdir(f'C:/satellite-research/csvs/Trial_{args.batch}')) == args.numToRun * 2:
-            break
+    getCSVs = f'scp btpeters@Andromeda:~/Research/Trial_{args.batch}/csvs/* C:/satellite-research/csvs/Trial_{args.batch}'
+    os.system(getCSVs)
 
 
 def plotData():
