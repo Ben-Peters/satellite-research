@@ -615,7 +615,7 @@ class PlotAllData(Plot):
                 theoreticalTput[i] = theoreticalTput[i - 1] * 2
 
         pyplot.clf()
-        fig, axs = pyplot.subplots(3, gridspec_kw={'height_ratios': [2, 2, 2]})
+        fig, axs = pyplot.subplots(4, gridspec_kw={'height_ratios': [2, 1, 1, 1]})
         fig.set_figheight(8)
 
         axs[0].plot(theoreticalTime, theoreticalTput, 'k--')
@@ -640,14 +640,17 @@ class PlotAllData(Plot):
         axs[2].plot(time, self.rwndAVG[1][0:seconds + 1], color='tab:blue')
         axs[2].fill_between(time, numpy.array(self.rwndCI[1][0][0:seconds + 1])/1048576,
                                   numpy.array(self.rwndCI[1][1][0:seconds + 1])/1048576, color='tab:blue', alpha=.2)
+        axs[3].plot(time, self.retransmissionsAVG[0][0:seconds + 1], color='tab:orange')
+        axs[3].plot(time, self.retransmissionsAVG[1][0:seconds + 1], color='tab:blue')
 
         axs[0].set_ylabel("Throughput (Mb/s)")
         axs[1].set_ylabel("CWND (MBytes)")
         axs[2].set_ylabel("RWND (MBytes)")
+        axs[3].set_ylabel('Retrans. (%)')
 
         axs[2].set_xlabel("Time (seconds)")
         legend = ['Theoretical'] + self.legend
-        fig.legend(legend)
+        # fig.legend(legend)
         fig.suptitle(self.title)
 
         maxY = max(self.rwndAVG[0][0:seconds+1])
@@ -660,6 +663,8 @@ class PlotAllData(Plot):
         #axs[2].set_ylim([0, maxY])
         axs[2].set_ylim([0, 3])
         axs[2].set_xlim([0, seconds])
+        axs[3].set_ylim([0,2])
+        axs[3].set_xlim([0, seconds])
 
         pyplot.savefig(self.plotFilepath.replace('.png', '_Start_CWND.png'))
         pyplot.show()

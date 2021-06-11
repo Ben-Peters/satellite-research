@@ -54,7 +54,7 @@ tcpSettings = [["4096 131072 6291456", "4096 16384 4194304", "382185 509580 7643
                 "Default at 60MB\n"+r"rmem=4096 $\bf{60000000}$ 6291456", [140, 2, 30, 30, 15]],             # 8
 
                ["4096 131072 60000000", "60000000 60000000 60000000", "382185 509580 764370",
-                "Max at 60MB\n"+r"rmem=4096 131072 $\bf{60000000}$", [140, 2, 6.5, 6.5, 15]],                # 9
+                "Max at 60MB\n"+r"rmem=4096 131072 $\bf{60000000}$", [140, 2, 30, 30, 15]],                # 9
 
                ["4096 3145728 6291456", "60000000 60000000 60000000", "382185 509580 764370",
                 "Default value half of Max\n"+r"rmem=4096 $\bf{3145728}$ 6291456", [140, 2, 6.5, 6.5, 15]],  # 10
@@ -113,7 +113,7 @@ def plotData():
     # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
     plot.plotALL(maxY=maxY)
     plot.plotStartTput(15)
-    # plot.plotStart(15)
+    plot.plotStart(15)
 
 
 def main():
