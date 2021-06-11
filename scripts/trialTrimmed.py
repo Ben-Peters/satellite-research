@@ -233,7 +233,7 @@ class Trial:
     def cleanUp(self):
         self.terminateCommands()
         if self.done:
-            os.system(f'rm -r pcaps')
+            # os.system(f'rm -r pcaps')
             for host in self.hosts:
                 remove = f'ssh {self.user}@{host} \'sudo rm -r Trial_{self.batchNum}\''
                 os.system(remove)

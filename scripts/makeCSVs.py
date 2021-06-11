@@ -68,6 +68,7 @@ def getData():
     os.system(f'mkdir csvs pcaps')
     os.system(f'scp -i ~/.ssh/id_rsa btpeters@cs.wpi.edu:~/Research/tmp/Trial_{args.batch}/pcaps/* ~/Research/Trial_{args.batch}/pcaps&')
 
+
 def main():
     os.chdir(f'Research')
     print("in Research")
