@@ -7,7 +7,7 @@ import statistics
 from scipy import stats
 from multiprocessing import Process, Lock, Pipe
 
-
+pyplot.rcParams.update({'font.size': 11})
 class PlotRTTOneFlow:
     # TODO: Remove this
     def __init__(self, protocol, csvFilepath, plotFilepath):
@@ -56,7 +56,7 @@ class PlotRTTOneFlow:
 
         pyplot.plot(self.seconds, self.RTT)
         pyplot.xlabel("Time (seconds)")
-        pyplot.ylabel("RTT (ms)")
+        pyplot.ylabel("RTT (s)")
         pyplot.legend([self.protocol])
         pyplot.title('RTT vs Time')
         pyplot.savefig(self.plotFilepath)
@@ -419,7 +419,7 @@ class PlotAllData(Plot):
                     if RTTCount == 0:
                         rtt.append(0)
                     else:
-                        rtt.append((RTTSum/RTTCount)*1000)
+                        rtt.append((RTTSum/RTTCount))
                     if cwndCount == 0:
                         cwnd.append(0)
                     else:
@@ -567,14 +567,14 @@ class PlotAllData(Plot):
                 # print(numpy.mean(rwndValues))
             ciTput[0].append(calculateConfidenceInterval(tputValues, 0.95)[0])
             ciTput[1].append(calculateConfidenceInterval(tputValues, 0.95)[1])
-            ciRTT[0].append(calculateConfidenceInterval(rttValues, 0.95)[0])
-            ciRTT[1].append(calculateConfidenceInterval(rttValues, 0.95)[1])
+            # ciRTT[0].append(calculateConfidenceInterval(rttValues, 0.95)[0])
+            # ciRTT[1].append(calculateConfidenceInterval(rttValues, 0.95)[1])
             ciCwnd[0].append(calculateConfidenceInterval(cwndValues, 0.95)[0])
             ciCwnd[1].append(calculateConfidenceInterval(cwndValues, 0.95)[1])
             ciRwnd[0].append(calculateConfidenceInterval(rwndValues, 0.95)[0])
             ciRwnd[1].append(calculateConfidenceInterval(rwndValues, 0.95)[1])
-            ciRetrans[0].append(calculateConfidenceInterval(retransValues, 0.95)[0])
-            ciRetrans[1].append(calculateConfidenceInterval(retransValues, 0.95)[1])
+            # ciRetrans[0].append(calculateConfidenceInterval(retransValues, 0.95)[0])
+            # ciRetrans[1].append(calculateConfidenceInterval(retransValues, 0.95)[1])
 
         self.throughputAVG.append(avgTput)
         self.rttAVG.append(avgRTT)
@@ -674,7 +674,7 @@ class PlotAllData(Plot):
         for i in range(len(self.rttAVG)):
             avgRTT += sum(self.rttAVG[i][0:seconds])
         avgRTT /= seconds * len(self.rttAVG)
-        theoreticalTime = numpy.arange(0., seconds+1, avgRTT/1000)
+        theoreticalTime = numpy.arange(0., seconds+1, avgRTT)
         theoreticalTput = numpy.copy(theoreticalTime)
         for i in range(len(theoreticalTime)):
             if i == 0:
@@ -755,25 +755,11 @@ class PlotAllData(Plot):
 
         axs[4].plot(self.seconds[minIndex], self.retransmissionsAVG[1], color='tab:blue')
 
-<<<<<<< HEAD
-<<<<<<< HEAD
         axs[0].set_ylim([0, 140])
-        axs[1].set_ylim([0, 2000])
-        axs[2].set_ylim([0, 6])
-        axs[3].set_ylim([0, 6])
-        axs[4].set_ylim([0, 15])
-=======
-=======
->>>>>>> parent of 1c1e8dc... add sshProxy script
-        axs[0].set_ylim([0, 40])
-        axs[1].set_ylim([0, 1500])
+        axs[1].set_ylim([0, 1.5])
         axs[2].set_ylim([0, 6])
         axs[3].set_ylim([0, 6])
         axs[4].set_ylim([0, 2])
-<<<<<<< HEAD
->>>>>>> parent of 1c1e8dc (add sshProxy script)
-=======
->>>>>>> parent of 1c1e8dc... add sshProxy script
 
 
         for i in range(len(maxY)):
@@ -785,7 +771,7 @@ class PlotAllData(Plot):
         # fig.legend(self.legend)
 
         axs[0].set_ylabel("Throughput (Mb/s)")
-        axs[1].set_ylabel("RTT (ms)")
+        axs[1].set_ylabel("RTT (s)")
         axs[2].set_ylabel("RWND (MB)")
         axs[3].set_ylabel("CWND (MB)")
         axs[4].set_ylabel("Retrans. (%)")
