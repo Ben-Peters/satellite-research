@@ -62,17 +62,19 @@ def pcapToCsv(files):
             subprocess.Popen(tshark, shell=True)
     sleep(60)
 
-    def getData():
-        os.system(f'mkdir Trial_{args.batch}')
-        os.system(f'mkdir csvs pcaps')
-        os.system(f'scp -i ~/.ssh/id_rsa btpeters@cs.wpi.edu:~/tmp/Trial_{args.batch}/pcaps/* ~/Research/Trial_{args.batch}/pcaps&')
+def getData():
+    print("getting data")
+    os.system(f'mkdir Trial_{args.batch}')
+    os.system(f'mkdir csvs pcaps')
+    os.system(f'scp -i ~/.ssh/id_rsa btpeters@cs.wpi.edu:~/Research/tmp/Trial_{args.batch}/pcaps/* ~/Research/Trial_{args.batch}/pcaps&')
 
-    def main():
-        os.chdir(f'Research')
-        # os.listdir(f'C:/satellite-research/csvs/Trial_{args.batch}')
-        getData()
-        os.chdir(f'Trial_{args.batch}')
-        pcapToCsv(files=os.listdir(f'pcaps'))
+def main():
+    os.chdir(f'Research')
+    print("in Research")
+    # os.listdir(f'C:/satellite-research/csvs/Trial_{args.batch}')
+    getData()
+    os.chdir(f'Trial_{args.batch}')
+    pcapToCsv(files=os.listdir(f'pcaps'))
 
-    if __name__ == "__main__":
-        main()
+if __name__ == "__main__":
+    main()
