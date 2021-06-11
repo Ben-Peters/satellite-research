@@ -176,7 +176,7 @@ class Trial:
         for file in self.pcaps:
             # host = self.hosts[self.pcapsSent]
             host = self.hosts[0]
-            scpFromServer = f'scp -i ~/.ssh/id_rsa {self.user}@{host}:~/{file} ~/Research/Trial_{self.batchNum}/pcaps&'
+            scpFromServer = f'scp -i ~/.ssh/id_rsa {self.user}@{host}:~/{file} /csusers/btpeters/Research/tmp/Trial_{self.batchNum}/pcaps&'
             print(f'\trunning command: \n{scpFromServer}')
             timeStamp = self.getTimeStamp()
             os.system(scpFromServer)
