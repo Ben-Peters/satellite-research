@@ -65,7 +65,7 @@ def pcapToCsv(files):
 def getData():
     print("getting data")
     os.system(f'mkdir Trial_{args.batch}')
-    os.system(f'mkdir csvs pcaps')
+    os.system(f'mkdir Trial_{args.batch}/csvs Trial_{args.batch}/pcaps')
     os.system(f'scp -i ~/.ssh/id_rsa btpeters@cs.wpi.edu:~/Research/tmp/Trial_{args.batch}/pcaps/* ~/Research/Trial_{args.batch}/pcaps&')
 
 
@@ -75,7 +75,8 @@ def main():
     # os.listdir(f'C:/satellite-research/csvs/Trial_{args.batch}')
     getData()
     os.chdir(f'Trial_{args.batch}')
-    pcapToCsv(files=os.listdir(f'pcaps'))
+    print(os.getcwd())
+    pcapToCsv(files=os.listdir(f'./pcaps'))
 
 if __name__ == "__main__":
     main()
