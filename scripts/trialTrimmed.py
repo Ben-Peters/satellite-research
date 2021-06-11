@@ -107,7 +107,10 @@ class Trial:
             self.commandsRun.append(command)
         return
 
-
+    def sleep(self, sec):
+        for i in range(1, sec + 1):
+            print(f'\tTime left to sleep {sec + 1 - i} seconds')
+            time.sleep(1)
 
     def getTimeStamp(self):
         return datetime.now().strftime('%Y_%m_%d-%H-%M-%S')
