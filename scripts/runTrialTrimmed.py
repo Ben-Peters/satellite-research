@@ -85,9 +85,16 @@ def getData():
         print('Folder not created')
 
     makeCSVs = f'ssh btpeters@Andromeda \"python3 ~/Research/scripts/makeCSVs.py --batch {args.batch}\"'
-    os.system(makeCSVs)
-    getCSVs = f'scp btpeters@Andromeda:~/Research/Trial_{args.batch}/csvs/* C:/satellite-research/csvs/Trial_{args.batch}'
-    os.system(getCSVs)
+    subprocess.call(makeCSVs, shell=True)
+
+    while True:
+        try:
+            getCSVs = f'scp btpeters@Andromeda:~/Research/Trial_{args.batch}/csvs/* C:/satellite-research/csvs/Trial_{args.batch}'
+            os.system(getCSVs)
+        except:
+            pass
+        if len(os.listdir(f'C:/satellite-research/csvs/Trial_{args.batch}')) == args.numToRun * 2:
+            break
 
 
 def plotData():
