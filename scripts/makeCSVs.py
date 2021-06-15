@@ -60,7 +60,7 @@ def pcapToCsv(files):
             subprocess.Popen(tshark, shell=True).wait()
         else:
             subprocess.Popen(tshark, shell=True)
-    # sleep(60)
+    sleep(10)
 
 def getData():
     print("getting data")
