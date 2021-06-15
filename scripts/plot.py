@@ -650,7 +650,7 @@ class PlotAllData(Plot):
 
         axs[2].set_xlabel("Time (seconds)")
         legend = ['Theoretical'] + self.legend
-        # fig.legend(legend)
+        #fig.legend(self.legend)
         fig.suptitle(self.title)
 
         maxY = max(self.rwndAVG[0][0:seconds+1])

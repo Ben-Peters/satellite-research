@@ -69,28 +69,31 @@ tcpSettings = [["4096 131072 6291456", "4096 16384 4194304", "382185 509580 7643
                 "Default value half of max", [140, 2, 6.5, 6.5, 15]],                                        # 13
 
                ["4096 131072 6291456", "4096 16384 4194304", "382185 509580 764370",
-                "Default settings\n"+r"wmem=4096 16384 4194304", [140, 2, 6.5, 6.5, 15]],                    # 14
+                "Default settings\n"+r"wmem=4096 16384 4194304", [140, 2, 6.5, 6.5, 10]],                    # 14
 
                ["4096 131072 6291456", "4096 32768 4194304", "382185 509580 764370",
-                "Default Value Doubled\n" + r"wmem=4096 $\bf{32768}$ 4194304", [140, 2, 6.5, 6.5, 15]],     # 15
+                "Default Value Doubled\n" + r"wmem=4096 $\bf{32768}$ 4194304", [140, 2, 6.5, 6.5, 10]],     # 15
 
                ["4096 131072 6291456", "4096 16384 8388608", "382185 509580 764370",
-                "Max Value Doubled\n" + r"wmem=4096 16384 $\bf{8388608}$", [140, 2, 6.5, 6.5, 15]],           # 16
+                "Max Value Doubled\n" + r"wmem=4096 16384 $\bf{8388608}$", [140, 2, 6.5, 6.5, 10]],           # 16
 
                ["4096 131072 6291456", "60000000 60000000 60000000", "382185 509580 764370",
-                "All at 60MB\n" + r"wmem=$\bf{60000000\:60000000\:60000000}$", [140, 2, 6.5, 6.5, 15]],     # 17
+                "All at 60MB\n" + r"wmem=$\bf{60000000\:60000000\:60000000}$", [140, 2, 6.5, 6.5, 10]],     # 17
 
                ["60000000 60000000 60000000", "4096 16384 4194304", "382185 509580 764370",
-                "Default settings\n"+r"wmem=4096 16384 4194304", [140, 2, 6.5, 6.5, 15]],                    # 18
+                "Default settings\n"+r"wmem=4096 16384 4194304", [140, 2, 30, 6.5, 10]],                    # 18
 
                ["60000000 60000000 60000000", "4096 32768 4194304", "382185 509580 764370",
-                "Default Value Doubled\n" + r"wmem=4096 $\bf{32768}$ 4194304", [140, 2, 6.5, 6.5, 15]],           # 19
+                "Default Value Doubled\n" + r"wmem=4096 $\bf{32768}$ 4194304", [140, 2, 30, 6.5, 10]],           # 19
 
                ["60000000 60000000 60000000", "4096 16384 8388608", "382185 509580 764370",
-                "Max Value Doubled\n" + r"wmem=4096 16384 $\bf{8388608}$", [140, 2, 6.5, 6.5, 15]],            # 20
+                "Max Value Doubled\n" + r"wmem=4096 16384 $\bf{8388608}$", [140, 2, 30, 6.5, 10]],            # 20
 
                ["60000000 60000000 60000000", "60000000 60000000 60000000", "382185 509580 764370",
-                "All at 60MB\n" + r"wmem=$\bf{60000000\:60000000\:60000000}$", [140, 2, 6.5, 6.5, 15]]        # 21
+                "All at 60MB\n" + r"wmem=$\bf{60000000\:60000000\:60000000}$", [140, 2, 30, 30, 10]],        # 21
+
+               ["4096 131072 6291456", "4096 16384 4194304", "382185 509580 764370",
+                "iperf testing\n"+r"rmem=4096 131072 6291456", [140, 2, 6.5, 6.5, 10]]                       # 22
                ]
 
 if args.tcpSettings is not None:
@@ -131,7 +134,7 @@ def plotData():
 
     hosts += ["glomma.cs.wpi.edu"]
     csvs = []
-    legend = ['With Auto-Tune', 'Without Auto-Tune']
+    legend = ['With Receiver Auto-Tune', 'Without Receiver Auto-Tune']
     for file, i in zip(files, range(len(files))):
         csvFilename = f'C:/satellite-research/csvs/Trial_{args.batch}/' + file
         csvs.append(csvFilename)
@@ -142,7 +145,7 @@ def plotData():
     # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
     plot.plotALL(maxY=maxY)
     plot.plotStartTput(15)
-    # plot.plotStart(15)
+    plot.plotStart(15)
 
 
 def main():
