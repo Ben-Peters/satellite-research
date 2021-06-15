@@ -60,14 +60,14 @@ def pcapToCsv(files):
             subprocess.Popen(tshark, shell=True).wait()
         else:
             subprocess.Popen(tshark, shell=True)
-    sleep(60)
+    # sleep(60)
 
 def getData():
     print("getting data")
     os.system(f'mkdir Trial_{args.batch}')
     os.system(f'mkdir Trial_{args.batch}/csvs Trial_{args.batch}/pcaps')
     os.system(f'scp -i ~/.ssh/id_rsa btpeters@cs.wpi.edu:~/Research/tmp/Trial_{args.batch}/pcaps/* ~/Research/Trial_{args.batch}/pcaps&')
-    sleep(60)
+    # sleep(60)
 
 
 def main():
