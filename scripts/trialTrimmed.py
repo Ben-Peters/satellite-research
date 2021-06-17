@@ -402,7 +402,7 @@ def main():
     #          batchNum=111, timeout=100, log=True)
     os.system(f'echo {args.rmem}')
     if args.window:
-        args.wmem = f'{args.window} {args.window} {args.window}'
+        args.wmem = f'4096 16384 {args.window}'
     t = Trial(data=args.size, batchNum=args.batch, timeout=100, log=args.log, cc=cc, runNum=args.runNum,
               numToRun=args.numToRun, time=args.time, tcp_rmem=args.rmem,
               tcp_mem=args.mem, tcp_wmem=args.wmem, ports=['5201', '5201'], iperf_w_arg=args.window)
