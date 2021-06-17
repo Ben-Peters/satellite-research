@@ -45,7 +45,7 @@ import subprocess
 # f.wait()
 #g = subprocess.Popen("python3 ./runTrialTrimmed.py --batch 116 --cc cubic --time 100 --tcpSettings 20")
 # g.wait()
-h = subprocess.Popen("python3 ./runTrialTrimmed.py --batch 127 --cc cubic --time 30 --tcpSettings 22")
+h = subprocess.Popen("python3 ./runTrialTrimmed.py --batch 129 --cc cubic --time 30 --tcpSettings 22")
 # h.wait()
 
 #a.wait()

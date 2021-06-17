@@ -104,6 +104,7 @@ if args.tcpSettings is not None:
     args.plotName = tcpSettings[args.tcpSettings][3]
     try:
         maxY = tcpSettings[args.tcpSettings][4]
+        args.window = tcpSettings[args.tcpSettings][5]
     except:
         maxY = None
 

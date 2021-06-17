@@ -352,11 +352,10 @@ class Trial:
                 # self.startTcpdumpClient()
                 print("Running startIperf3Client()")
                 self.startIperf3Client()
-
-            # print("Sleeping")
-            # self.sleep(self.timeout)
-            print('Killing tcpdump and iperf3')
-            self.terminateCommands()
+                # print("Sleeping")
+                # self.sleep(self.timeout)
+                print('Killing tcpdump and iperf3')
+                self.terminateCommands()
 
         self.enableTuning()
         # self.disableTuning()
