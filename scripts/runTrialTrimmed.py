@@ -17,6 +17,7 @@ parser.add_argument('--rmem', type=str, help='Value for rmem', default="4096 131
 parser.add_argument('--wmem', type=str, help='Value for wmem', default="4096 16384 4194304")
 parser.add_argument('--mem', type=str, help='Value for mem', default="382185 509580 764370")
 parser.add_argument('--plotName', type=str, help='Name for plots created', default="TCP Performance")
+parser.add_argument('--window', type=int, help='Specify size of wmem to be set by iperf', default=0)
 args = parser.parse_args()
 
 dictionary = {
@@ -25,39 +26,39 @@ dictionary = {
     "bbr": "mlcnetc.cs.wpi.edu",
     "pcc": "mlcnetd.cs.wpi.edu"
 }
-# Settings for quick recalls format is (rmem, wmem, mem, title, maxY)
+# Settings for quick recalls format is (rmem, wmem, mem, title, maxY, window)
 tcpSettings = [["4096 131072 6291456", "4096 16384 4194304", "382185 509580 764370",
-                "Default Settings\n"+r"rmem=4096 131072 6291456", [140, 1.5, 6, 6, 2]],                        # 0
+                "Default Settings\n"+r"rmem=4096 131072 6291456", [140, 1.5, 6, 6, 2], 0],                        # 0
 
                ["4096 262144 6291456", "4096 16384 4194304", "382185 509580 764370",
-                "Default Value Doubled\n"+r"rmem=4096 $\bf{262144}$ 6291456", [140, 1.5, 6, 6, 2]],            # 1
+                "Default Value Doubled\n"+r"rmem=4096 $\bf{262144}$ 6291456", [140, 1.5, 6, 6, 2], 0],            # 1
 
                ["4096 131072 12582912", "4096 16384 4194304", "382185 509580 764370",
-                "Max Value Doubled\n"+r"rmem=4096 131072 $\bf{12582912}$", [140, 1.5, 6, 6, 2]],               # 2
+                "Max Value Doubled\n"+r"rmem=4096 131072 $\bf{12582912}$", [140, 1.5, 6, 6, 2], 0],               # 2
 
                ["60000000 60000000 60000000", "4096 16384 4194304", "382185 509580 764370",
-                "All at 60MB\n"+r"rmem=$\bf{60000000\:60000000\:60000000}$", [140, 1.5, 30, 6, 2]],            # 3
+                "All at 60MB\n"+r"rmem=$\bf{60000000\:60000000\:60000000}$", [140, 1.5, 30, 6, 2], 0],            # 3
 
                ["4096 131072 6291456", "60000000 60000000 60000000", "382185 509580 764370",
-                "Default Settings\n"+r"rmem=4096 131072 6291456", [140, 2, 6.5, 6.5, 15]],                   # 4
+                "Default Settings\n"+r"rmem=4096 131072 6291456", [140, 2, 6.5, 6.5, 15], 0],                   # 4
 
                ["4096 262144 6291456", "60000000 60000000 60000000", "382185 509580 764370",
-                "Default Value Doubled\n"+r"rmem=4096 $\bf{262144}$ 6291456", [140, 2, 6.5, 6.5, 15]],       # 5
+                "Default Value Doubled\n"+r"rmem=4096 $\bf{262144}$ 6291456", [140, 2, 6.5, 6.5, 15], 0],       # 5
 
                ["4096 131072 12582912", "60000000 60000000 60000000", "382185 509580 764370",
-                "Max Value Doubled\n"+r"rmem=4096 131072 $\bf{12582912}$", [140, 2, 6.5, 6.5, 15]],          # 6
+                "Max Value Doubled\n"+r"rmem=4096 131072 $\bf{12582912}$", [140, 2, 6.5, 6.5, 15], 0],          # 6
 
                ["60000000 60000000 60000000", "60000000 60000000 60000000", "382185 509580 764370",
-                "All at 60MB\n"+r"rmem=$\bf{60000000\:60000000\:60000000}$", [140, 2, 30, 30, 15]],          # 7
+                "All at 60MB\n"+r"rmem=$\bf{60000000\:60000000\:60000000}$", [140, 2, 30, 30, 15], 0],          # 7
 
                ["4096 60000000 6291456", "60000000 60000000 60000000", "382185 509580 764370",
-                "Default at 60MB\n"+r"rmem=4096 $\bf{60000000}$ 6291456", [140, 2, 30, 30, 15]],             # 8
+                "Default at 60MB\n"+r"rmem=4096 $\bf{60000000}$ 6291456", [140, 2, 30, 30, 15], 0],             # 8
 
                ["4096 131072 60000000", "60000000 60000000 60000000", "382185 509580 764370",
-                "Max at 60MB\n"+r"rmem=4096 131072 $\bf{60000000}$", [140, 2, 6.5, 6.5, 15]],                # 9
+                "Max at 60MB\n"+r"rmem=4096 131072 $\bf{60000000}$", [140, 2, 6.5, 6.5, 15], 0],                # 9
 
                ["4096 3145728 6291456", "60000000 60000000 60000000", "382185 509580 764370",
-                "Default value half of Max\n"+r"rmem=4096 $\bf{3145728}$ 6291456", [140, 2, 6.5, 6.5, 15]],  # 10
+                "Default value half of Max\n"+r"rmem=4096 $\bf{3145728}$ 6291456", [140, 2, 6.5, 6.5, 15], 0],  # 10
 
                ["4096 131072 6291456", "4096 16384 4194304", "382185 509580 764370",
                 "Default wmem"],                                                                                # 11
@@ -66,34 +67,34 @@ tcpSettings = [["4096 131072 6291456", "4096 16384 4194304", "382185 509580 7643
                 "60MB wmem"],                                                                                   # 12
 
                ["4096 3145728 6291456", "4096 16384 4194304", "382185 509580 764370",
-                "Default value half of max", [140, 2, 6.5, 6.5, 15]],                                        # 13
+                "Default value half of max", [140, 2, 6.5, 6.5, 15], 0],                                        # 13
 
                ["4096 131072 6291456", "4096 16384 4194304", "382185 509580 764370",
-                "Default settings\n"+r"wmem=4096 16384 4194304", [140, 2, 6.5, 6.5, 10]],                    # 14
+                "Default settings\n"+r"wmem=4096 16384 4194304", [140, 2, 6.5, 6.5, 10], 0],                    # 14
 
                ["4096 131072 6291456", "4096 32768 4194304", "382185 509580 764370",
-                "Default Value Doubled\n" + r"wmem=4096 $\bf{32768}$ 4194304", [140, 2, 6.5, 6.5, 10]],     # 15
+                "Default Value Doubled\n" + r"wmem=4096 $\bf{32768}$ 4194304", [140, 2, 6.5, 6.5, 10], 0],     # 15
 
                ["4096 131072 6291456", "4096 16384 8388608", "382185 509580 764370",
-                "Max Value Doubled\n" + r"wmem=4096 16384 $\bf{8388608}$", [140, 2, 6.5, 6.5, 10]],           # 16
+                "Max Value Doubled\n" + r"wmem=4096 16384 $\bf{8388608}$", [140, 2, 6.5, 6.5, 10], 0],           # 16
 
                ["4096 131072 6291456", "60000000 60000000 60000000", "382185 509580 764370",
-                "All at 60MB\n" + r"wmem=$\bf{60000000\:60000000\:60000000}$", [140, 2, 6.5, 6.5, 10]],     # 17
+                "All at 60MB\n" + r"wmem=$\bf{60000000\:60000000\:60000000}$", [140, 2, 6.5, 6.5, 10], 0],     # 17
 
                ["60000000 60000000 60000000", "4096 16384 4194304", "382185 509580 764370",
-                "Default settings\n"+r"wmem=4096 16384 4194304", [140, 2, 30, 6.5, 10]],                    # 18
+                "Default settings\n"+r"wmem=4096 16384 4194304", [140, 2, 30, 6.5, 10], 0],                    # 18
 
                ["60000000 60000000 60000000", "4096 32768 4194304", "382185 509580 764370",
-                "Default Value Doubled\n" + r"wmem=4096 $\bf{32768}$ 4194304", [140, 2, 30, 6.5, 10]],           # 19
+                "Default Value Doubled\n" + r"wmem=4096 $\bf{32768}$ 4194304", [140, 2, 30, 6.5, 10], 0],           # 19
 
                ["60000000 60000000 60000000", "4096 16384 8388608", "382185 509580 764370",
-                "Max Value Doubled\n" + r"wmem=4096 16384 $\bf{8388608}$", [140, 2, 30, 6.5, 10]],            # 20
+                "Max Value Doubled\n" + r"wmem=4096 16384 $\bf{8388608}$", [140, 2, 30, 6.5, 10], 0],            # 20
 
                ["60000000 60000000 60000000", "60000000 60000000 60000000", "382185 509580 764370",
-                "All at 60MB\n" + r"wmem=$\bf{60000000\:60000000\:60000000}$", [140, 2, 30, 30, 10]],        # 21
+                "All at 60MB\n" + r"wmem=$\bf{60000000\:60000000\:60000000}$", [140, 2, 30, 30, 10], 0],        # 21
 
-               ["4096 131072 6291456", "4096 16384 4194304", "382185 509580 764370",
-                "iperf testing\n"+r"rmem=4096 131072 6291456", [140, 2, 65, 30, 10]]                       # 22
+               ["60000000 60000000 60000000", "4096 16384 4194304", "382185 509580 764370",
+                "iperf testing\n"+r"rmem=4096 131072 6291456", [140, 2, 65, 30, 10], ]                       # 22
                ]
 
 if args.tcpSettings is not None:
@@ -153,12 +154,12 @@ def main():
         startTrial = f"ssh btpeters@cs.wpi.edu \" python3 ~/Research/scripts/trialTrimmed.py " \
                      f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
                      f"--time {args.time} --numToRun {args.numToRun} " \
-                     f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\'\" "
+                     f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\' --window {args.window}\" "
     else:
         startTrial = f"ssh btpeters@cs.wpi.edu \" python3 ~/Research/scripts/trialTrimmed.py " \
                      f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
                      f"--size {args.size} --numToRun {args.numToRun}" \
-                     f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\'\" "
+                     f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\' --window {args.window}\" "
     print("Running command: " + startTrial)
     try:
         os.listdir(f'C:/satellite-research/csvs/Trial_{args.batch}')

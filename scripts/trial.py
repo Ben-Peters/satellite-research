@@ -15,7 +15,7 @@ class Trial:
 
     def __init__(self, cc, batchNum, runNum, time, numToRun,
                  user='btpeters', data='20M', timeout=600, log=False, ports=['5201', '5202'],
-                 tcp_mem="60000000", tcp_wmem="60000000", tcp_rmem="60000000"):
+                 tcp_mem="60000000", tcp_wmem="60000000", tcp_rmem="60000000", iperf_w_arg=0):
         self.dictionary = {}
         self.hosts = []
         self.cc = cc
@@ -42,6 +42,7 @@ class Trial:
         self.tcp_mem = tcp_mem
         self.tcp_wmem = tcp_wmem
         self.tcp_rmem = tcp_rmem
+        self.iperf_w_arg = iperf_w_arg
         self.setupCommand = [
             f'sudo sysctl -w net.ipv4.tcp_mem=\"{self.tcp_mem}\"',
             f'sudo sysctl -w net.ipv4.tcp_wmem=\"{self.tcp_wmem}\"',
@@ -124,6 +125,40 @@ class Trial:
             self.commandsRun.append((timeStamp, iperf3ServerStart))
             # self.sleep(1)
 
+    def startIperf3ClientTuneOff(self):
+        time1 = time.time()
+        exitCodes = []
+        for host in self.hosts:
+            # exitCodes.append(subprocess.Popen(["ssh", f"{self.user}@glomma.cs.wpi.edu", "iperf3", "--reverse", "-i", "\"eno2\"",
+            #                                    "-c", f"{host}", f"-n{self.data}", f"-p{self.ports[self.clientsRunning]}"], stdout=subprocess.DEVNULL))
+            if self.data is not None:
+                iperf3ClientStartCommand = f'ssh {self.user}@glomma.cs.wpi.edu \'~/iperf/src/iperf3 -R -c {host} -n {self.data} -w {self.iperf_w_arg} -V\''
+            else:
+                iperf3ClientStartCommand = f'ssh {self.user}@glomma.cs.wpi.edu \'~/iperf/src/iperf3 -R -c {host} -t {self.time} -w {self.iperf_w_arg} -V\''
+            self.clientsRunning += 1
+            print(f'\trunning command: \n{iperf3ClientStartCommand}')
+            timeStamp = self.getTimeStamp()
+            os.system(iperf3ClientStartCommand)
+            self.commandsRun.append((timeStamp, iperf3ClientStartCommand))
+        self.sleep(5)
+
+    def startIperf3ClientTuneOn(self):
+        time1 = time.time()
+        exitCodes = []
+        for host in self.hosts:
+            # exitCodes.append(subprocess.Popen(["ssh", f"{self.user}@glomma.cs.wpi.edu", "iperf3", "--reverse", "-i", "\"eno2\"",
+            #                                    "-c", f"{host}", f"-n{self.data}", f"-p{self.ports[self.clientsRunning]}"], stdout=subprocess.DEVNULL))
+            if self.data is not None:
+                iperf3ClientStartCommand = f'ssh {self.user}@glomma.cs.wpi.edu \'~/iperf/src/iperf3 -R -c {host} -n {self.data}\''
+            else:
+                iperf3ClientStartCommand = f'ssh {self.user}@glomma.cs.wpi.edu \'~/iperf/src/iperf3 -R -c {host} -t {self.time}\''
+            self.clientsRunning += 1
+            print(f'\trunning command: \n{iperf3ClientStartCommand}')
+            timeStamp = self.getTimeStamp()
+            os.system(iperf3ClientStartCommand)
+            self.commandsRun.append((timeStamp, iperf3ClientStartCommand))
+        self.sleep(5)
+
     def startIperf3Client(self):
         time1 = time.time()
         exitCodes = []
@@ -131,9 +166,9 @@ class Trial:
             # exitCodes.append(subprocess.Popen(["ssh", f"{self.user}@glomma.cs.wpi.edu", "iperf3", "--reverse", "-i", "\"eno2\"",
             #                                    "-c", f"{host}", f"-n{self.data}", f"-p{self.ports[self.clientsRunning]}"], stdout=subprocess.DEVNULL))
             if self.data is not None:
-                iperf3ClientStartCommand = f'ssh {self.user}@glomma.cs.wpi.edu \'~/iperf/src/iperf3 -R -c {host} -n {self.data} -w 60M -V\''
+                iperf3ClientStartCommand = f'ssh {self.user}@glomma.cs.wpi.edu \'~/iperf/src/iperf3 -R -c {host} -n {self.data}\''
             else:
-                iperf3ClientStartCommand = f'ssh {self.user}@glomma.cs.wpi.edu \'~/iperf/src/iperf3 -R -c {host} -t {self.time} -w 60M -V\''
+                iperf3ClientStartCommand = f'ssh {self.user}@glomma.cs.wpi.edu \'~/iperf/src/iperf3 -R -c {host} -t {self.time}\''
             self.clientsRunning += 1
             print(f'\trunning command: \n{iperf3ClientStartCommand}')
             timeStamp = self.getTimeStamp()
@@ -384,25 +419,48 @@ class Trial:
             self.setProtocolsRemote()
 
         # run downloads
-        for i in range(self.numToRun):
-            if i % 2 == 0:
-                print(f"Trial Num: {i}\nEnabling tuning")
-                self.enableTuning()
-            # elif i == self.numToRun/2:
-                # os.system('echo Please disable the Proxy NOW!')
-                # self.sleep(90)
-            else:
-                print(f"Trial Num: {i}\nDisabling tuning")
-                self.disableTuning()
+        if self.iperf_w_arg:
+            # Use w arg in iperf to set wmem
+            for i in range(self.numToRun):
+                if i % 2 == 0:
+                    os.system(f"echo \"Trial Num: {i}\nEnabling tuning\"")
+                    self.enableTuning()
+                    print("Running startIperf3Server()")
+                    self.startIperf3Server()
+                    print("Running startTcpdumpServer()")
+                    self.startTcpdumpServer()
+                    print("Running startIperf3Client()")
+                    self.startIperf3ClientTuneOn()
+                else:
+                    os.system(f"echo \"Trial Num: {i}\nDisabling tuning\"")
+                    self.disableTuning()
+                    print("Running startIperf3Server()")
+                    self.startIperf3Server()
+                    print("Running startTcpdumpServer()")
+                    self.startTcpdumpServer()
+                    print("Running startIperf3Client()")
+                    self.startIperf3ClientTuneOff()
+        else:
+            # Set wmem the traditional way
+            for i in range(self.numToRun):
+                if i % 2 == 0:
+                    print(f"Trial Num: {i}\nEnabling tuning")
+                    self.enableTuning()
+                # elif i == self.numToRun/2:
+                    # os.system('echo Please disable the Proxy NOW!')
+                    # self.sleep(90)
+                else:
+                    print(f"Trial Num: {i}\nDisabling tuning")
+                    self.disableTuning()
 
-            print("Running startIperf3Server()")
-            self.startIperf3Server()
-            print("Running startTcpdumpServer()")
-            self.startTcpdumpServer()
-            # print("Running startTcpdumpClient()")
-            # self.startTcpdumpClient()
-            print("Running startIperf3Client()")
-            self.startIperf3Client()
+                print("Running startIperf3Server()")
+                self.startIperf3Server()
+                print("Running startTcpdumpServer()")
+                self.startTcpdumpServer()
+                # print("Running startTcpdumpClient()")
+                # self.startTcpdumpClient()
+                print("Running startIperf3Client()")
+                self.startIperf3Client()
             # print("Sleeping")
             # self.sleep(self.timeout)
             print('Killing tcpdump and iperf3')
@@ -438,6 +496,7 @@ def main():
     parser.add_argument('--rmem', type=str, help='Value for rmem', default="4096 131072 6291456")
     parser.add_argument('--wmem', type=str, help='Value for wmem', default="4096 16384 4194304")
     parser.add_argument('--mem', type=str, help='Value for mem', default="382185 509580 764370")
+    parser.add_argument('--window', type=int, help='Specify size of wmem to be set by iperf', default=0)
     args = parser.parse_args()
 
     cc = []
@@ -451,9 +510,11 @@ def main():
     # t = Trial(data='1G', cc=['cubic', 'hybla'],
     #          batchNum=111, timeout=100, log=True)
     os.system(f'echo {args.rmem}')
+    if args.window:
+        args.wmem = args.window
     t = Trial(data=args.size, batchNum=args.batch, timeout=100, log=args.log, cc=cc, runNum=args.runNum,
               numToRun=args.numToRun, time=args.time, tcp_rmem=args.rmem,
-              tcp_mem=args.mem, tcp_wmem=args.wmem, ports=['5201', '5201'])
+              tcp_mem=args.mem, tcp_wmem=args.wmem, ports=['5201', '5201'], iperf_w_arg=args.window)
     t.start()
     print("All done")
 
