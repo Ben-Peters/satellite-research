@@ -329,6 +329,8 @@ class Trial:
                     os.system(f"echo \"Trial Num: {i}\nDisabling tuning\"")
                     print("Running startIperf3Client()")
                     self.startIperf3ClientTuneOff()
+                print('Killing tcpdump and iperf3')
+                self.terminateCommands()
         else:
             # Set wmem the traditional way
             for i in range(self.numToRun):
