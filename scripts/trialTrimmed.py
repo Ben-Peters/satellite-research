@@ -332,7 +332,7 @@ class Trial:
 
         # run downloads
         if self.iperf_w_arg:
-            self.enableTuning()
+            #self.enableTuning()
             # Use w arg in iperf to set wmem for disabled trials
             for i in range(self.numToRun):
                 print("Running startIperf3Server()")
