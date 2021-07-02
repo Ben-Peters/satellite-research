@@ -332,11 +332,14 @@ class PlotAllData(Plot):
         self.rwndAVG = []
         self.retransmissions = []
         self.retransmissionsAVG = []
+        self.timeDelta = []
+        self.timeDeltaAVG = []
         self.rttCI = []
         self.throughputCI = []
         self.cwndCI = []
         self.rwndCI = []
         self.retransmissionsCI = []
+        self.timeDeltaCI = []
         self.producerSem = Lock()
         self.consumerSem = Lock()
 
@@ -364,6 +367,12 @@ class PlotAllData(Plot):
             # serverCount = 0
             clientCount = 0
 
+            timeDelta = []
+            avgTD = 0
+            TDsum = 0
+            TDcount = 0
+            prevTime = 0
+
             retransmissions = []
             retransmissionsCount = 0
             startFrame = 1
@@ -389,6 +398,11 @@ class PlotAllData(Plot):
                 # only packets from the Client
                 if df['tcp.dstport'].iloc[j] == 5201:
                     clientCount += 1
+
+                    if not pandas.isnull(df['tcp.time_relative'].iloc[j]):
+                        TDsum += df['tcp.time_relative'].iloc[j] - prevTime
+                        TDcount += 1
+                        prevTime = df['tcp.time_relative'].iloc[j]
 
                     if not pandas.isnull(df['tcp.analysis.ack_rtt'].iloc[j]):
                         RTTCount += 1
@@ -431,6 +445,10 @@ class PlotAllData(Plot):
                         # if cutOffTime == 11:
                             # print(rwndSum/clientCount)
                     retransmissions.append((retransmissionsCount / (j - startFrame + 1))*100)
+                    if TDcount == 0:
+                        timeDelta.append(0)
+                    else:
+                        timeDelta.append((TDsum/TDcount))
 
                     bytesSent = 0
                     RTTSum = 0
@@ -442,14 +460,17 @@ class PlotAllData(Plot):
                     retransmissionsCount = 0
                     startFrame = j
                     cutOffTime += 1
+                    TDsum = 0
+                    TDcount = 0
 
-            results = (count, throughput, rtt, cwnd, rwnd, retransmissions, seconds)
+            results = (count, throughput, rtt, cwnd, rwnd, retransmissions, seconds, timeDelta)
             self.throughput.append(throughput)
             self.rtt.append(rtt)
             self.cwnd.append(cwnd)
             self.rwnd.append(rwnd)
             self.retransmissions.append(retransmissions)
             self.seconds.append(seconds)
+            self.timeDelta.append(timeDelta)
             print(f"{count}: Results Ready")
             # pSem.acquire()
             pipe.send(results)
@@ -478,6 +499,7 @@ class PlotAllData(Plot):
             self.rwnd.append([])
             self.retransmissions.append([])
             self.seconds.append([])
+            self.timeDelta.append([])
             parentPipe, childPipe = Pipe()
             parentPipes.append(parentPipe)
             p = Process(target=self.calculateStats, args=(df, childPipe, self.producerSem, i))
@@ -500,12 +522,14 @@ class PlotAllData(Plot):
             rwnd = result[4]
             retransmissions = result[5]
             seconds = result[6]
+            timeDelta = result[7]
             self.throughput[i] = throughput
             self.rtt[i] = rtt
             self.cwnd[i] = cwnd
             self.rwnd[i] = rwnd
             self.retransmissions[i] = retransmissions
             self.seconds[i] = seconds
+            self.timeDelta[i] = timeDelta
 
     def avgAllData(self, startPos):
         minLength = len(self.throughput[0])
@@ -515,12 +539,14 @@ class PlotAllData(Plot):
         avgCwnd = []
         avgRwnd = []
         avgRetrans = []
+        avgTD = []
 
         ciTput = [[], []]
         ciRTT = [[], []]
         ciCwnd = [[], []]
         ciRwnd = [[], []]
         ciRetrans = [[], []]
+        ciTD = [[], []]
         for i in range(int(self.numRuns * 2)):
             if minLength > len(self.throughput[i]):
                 minLength = len(self.throughput[i])
@@ -530,12 +556,14 @@ class PlotAllData(Plot):
             cwndSum = 0
             rwndSum = 0
             retransSum = 0
+            TDsum = 0
 
             tputValues = []
             rttValues = []
             cwndValues = []
             rwndValues = []
             retransValues = []
+            TDvalues = []
             num = 0
             for i in range(self.numRuns):
                 if len(self.throughput[i]) > t:
@@ -544,12 +572,14 @@ class PlotAllData(Plot):
                     cwndSum += self.cwnd[i+minPos][t]
                     rwndSum += self.rwnd[i+minPos][t]
                     retransSum += self.retransmissions[i+minPos][t]
+                    TDsum += self.timeDelta[i+minPos][t]
 
                     tputValues.append(self.throughput[i+minPos][t])
                     rttValues.append(self.rtt[i + minPos][t])
                     cwndValues.append(self.cwnd[i + minPos][t])
                     rwndValues.append(float(self.rwnd[i + minPos][t]))
                     retransValues.append(float(self.retransmissions[i + minPos][t]))
+                    TDvalues.append(float(self.timeDelta[i + minPos][t]))
 
                     num += 1
 
@@ -563,6 +593,7 @@ class PlotAllData(Plot):
             avgCwnd.append(numpy.mean(cwndValues) / 1048576)  # Bytes to MBytes
             avgRwnd.append(numpy.mean(rwndValues) / 1048576)  # Bytes to MBytes
             avgRetrans.append(numpy.mean(retransValues))
+            avgTD.append(numpy.mean(TDvalues))
             # if t == 10:
                 # print(numpy.mean(rwndValues))
             ciTput[0].append(calculateConfidenceInterval(tputValues, 0.95)[0])
@@ -573,6 +604,8 @@ class PlotAllData(Plot):
             ciCwnd[1].append(calculateConfidenceInterval(cwndValues, 0.95)[1])
             ciRwnd[0].append(calculateConfidenceInterval(rwndValues, 0.95)[0])
             ciRwnd[1].append(calculateConfidenceInterval(rwndValues, 0.95)[1])
+            ciTD[0].append(calculateConfidenceInterval(TDvalues, 0.95)[0])
+            ciTD[1].append(calculateConfidenceInterval(TDvalues, 0.95)[1])
             # ciRetrans[0].append(calculateConfidenceInterval(retransValues, 0.95)[0])
             # ciRetrans[1].append(calculateConfidenceInterval(retransValues, 0.95)[1])
 
@@ -581,12 +614,14 @@ class PlotAllData(Plot):
         self.cwndAVG.append(avgCwnd)
         self.rwndAVG.append(avgRwnd)
         self.retransmissionsAVG.append(avgRetrans)
+        self.timeDeltaAVG.append(avgTD)
 
         self.throughputCI.append(ciTput)
         self.rttCI.append(ciRTT)
         self.cwndCI.append(ciCwnd)
         self.rwndCI.append(ciRwnd)
         self.retransmissionsCI.append(ciRetrans)
+        self.timeDeltaCI.append(ciTD)
 
     def plotStart(self, seconds):
         if not self.retransmissionsAVG:
@@ -707,11 +742,37 @@ class PlotAllData(Plot):
 
         pyplot.show()
 
+    def plotTimeDelta(self):
+        # self.filterCSVs()
+        # self.removeTimeOffset()
+        if not self.retransmissionsAVG:
+            self.analyzeThreaded()
+            # self.calculateStats()
+            self.avgAllData(0)
+            self.avgAllData(1)
+
+        pyplot.clf()
+
+        minLength = len(self.seconds[0])
+        minIndex = 0
+        for i in range(int(self.numRuns * 2)):
+            if minLength > len(self.seconds[i]):
+                minIndex = i
+                minLength = len(self.seconds[i])
+        pyplot.plot(self.seconds[minIndex], numpy.array(self.timeDeltaAVG[0])*1000, color='tab:orange')
+        pyplot.plot(self.seconds[minIndex], numpy.array(self.timeDeltaAVG[1])*1000, color='tab:blue')
+
+        pyplot.ylim([0, 50])
+
+        pyplot.savefig(self.plotFilepath.replace('.png', '_time_delta.png'))
+        pyplot.show()
+
+
     def plotALL(self, maxY=None, minRTT=550):
         # self.filterCSVs()
         # self.removeTimeOffset()
         if maxY is None:
-            maxY = [None, None, None, None, None]
+            maxY = [None, None, None, None, None, None]
         self.analyzeThreaded()
         # self.calculateStats()
         self.avgAllData(0)
@@ -744,6 +805,10 @@ class PlotAllData(Plot):
                                                     numpy.array(self.cwndCI[0][1])/1048576, color='tab:orange', alpha=.2)
         axs[4].plot(self.seconds[minIndex], self.retransmissionsAVG[0], color='tab:orange')
 
+        #axs[5].plot(self.seconds[minIndex], self.timeDeltaAVG[0], color='tab:orange')
+        #axs[5].fill_between(self.seconds[minIndex], self.timeDeltaCI[0][0],
+        #                    self.timeDeltaCI[0][1], color='tab:orange', alpha=.2)
+
         axs[0].plot(self.seconds[minIndex], self.throughputAVG[1], color='tab:blue')
         axs[0].fill_between(self.seconds[minIndex], self.throughputCI[1][0],
                                                     self.throughputCI[1][1], color='tab:blue', alpha=.2)
@@ -760,11 +825,16 @@ class PlotAllData(Plot):
 
         axs[4].plot(self.seconds[minIndex], self.retransmissionsAVG[1], color='tab:blue')
 
+        #axs[5].plot(self.seconds[minIndex], self.timeDeltaAVG[1], color='tab:blue')
+        #axs[5].fill_between(self.seconds[minIndex], self.timeDeltaCI[1][0],
+        #                                            self.timeDeltaCI[1][1], color='tab:blue', alpha=.2)
+
         axs[0].set_ylim([0, 140])
         axs[1].set_ylim([0, 1.5])
         axs[2].set_ylim([0, 6])
         axs[3].set_ylim([0, 6])
         axs[4].set_ylim([0, 2])
+        #axs[5].set_ylim([0, 1])
 
 
         for i in range(len(maxY)):
@@ -780,8 +850,10 @@ class PlotAllData(Plot):
         axs[2].set_ylabel("RWND (MB)")
         axs[3].set_ylabel("CWND (MB)")
         axs[4].set_ylabel("Retrans. (%)")
+        #axs[5].set_ylabel("Time between frames")
 
         axs[4].set_xlabel("Time (seconds)")
+        #axs[4].set_xlabel("Time (seconds)")
 
         pyplot.savefig(self.plotFilepath)
         pyplot.show()
@@ -794,6 +866,7 @@ class PlotAllData(Plot):
             print(f'Max cwnd: {max(self.cwndAVG[0])}')
             print(f'Max rwnd: {max(self.rwndAVG[0])}')
             print(f'Max retransmission rate: {max(self.retransmissionsAVG[0])}')
+            print(f'Max time between frames: {max(self.timeDeltaAVG[0])}')
 
         for i in range(len(self.throughputAVG)):
             if i == 0:
@@ -805,6 +878,7 @@ class PlotAllData(Plot):
             print(f'Avg rwnd size: {sum(self.rwndAVG[i]) / len(self.rwndAVG[i])}')
             print(f'Avg cwnd size: {sum(self.cwndAVG[i]) / len(self.cwndAVG[i])}')
             print(f'Avg Retransmission rate: {sum(self.retransmissionsAVG[i]) / len(self.retransmissionsAVG[i])}')
+            print(f'Avg time between frames: {sum(self.timeDeltaAVG[i])/len(self.timeDeltaAVG[i])}')
 
 
 if __name__ == "__main__":

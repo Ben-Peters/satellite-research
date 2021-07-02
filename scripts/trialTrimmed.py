@@ -82,7 +82,7 @@ class Trial:
         filePrefix = f'Trial_{self.batchNum}'
         os.system(f'mkdir {filePrefix}')
         os.system(f'{sshPrefix} \"mkdir {filePrefix}\"')
-        os.system(f'{sshPrefix} \"./setup_routes.sh\"')
+        os.system(f'{sshPrefix} \"./setup_routes.sh vorma\"') # TODO: make changing between vorma and satellite easier
         for host in self.hosts:
             os.system(f'ssh {self.user}@{host} \"mkdir {filePrefix}\"')
         os.system(f'mkdir {filePrefix}/pcaps')
@@ -299,6 +299,24 @@ class Trial:
         # os.system('echo Proxy should be disabled!')
         # self.sleep(30)
 
+    def limitWithTBF(self):
+        sshPrefix = f'ssh {self.user}@vorma.cs.wpi.edu'
+        command = f'{sshPrefix} \"sudo ~/tbf.sh'
+        self.commandsRun.append((self.getTimeStamp(), command))
+        os.system(command)
+
+    def limitWithRate(self):
+        sshPrefix = f'ssh {self.user}@vorma.cs.wpi.edu'
+        command = f'{sshPrefix} \"sudo ~/rate.sh'
+        self.commandsRun.append((self.getTimeStamp(), command))
+        os.system(command)
+
+    def removeLimit(self):
+        sshPrefix = f'ssh {self.user}@vorma.cs.wpi.edu'
+        command = f'{sshPrefix} \"sudo ~/remove.sh'
+        self.commandsRun.append((self.getTimeStamp(), command))
+        os.system(command)
+
     def start(self):
         os.chdir(os.path.expanduser("~/Research"))
         os.system('clear')
@@ -336,20 +354,22 @@ class Trial:
             for i in range(self.numToRun):
                 if i % 2 == 0:
                     print(f"Trial Num: {i}\nEnabling tuning")
-                    self.enableTuning()
+                    #self.enableTuning()
+                    self.limitWithTBF()
                 # elif i == self.numToRun/2:
                     # os.system('echo Please disable the Proxy NOW!')
                     # self.sleep(90)
                 else:
                     print(f"Trial Num: {i}\nDisabling tuning")
-                    self.disableTuning()
+                    #self.disableTuning()
+                    self.limitWithRate()
 
                 print("Running startIperf3Server()")
                 self.startIperf3Server()
-                print("Running startTcpdumpServer()")
-                self.startTcpdumpServer()
-                # print("Running startTcpdumpClient()")
-                # self.startTcpdumpClient()
+                #print("Running startTcpdumpServer()")
+                #self.startTcpdumpServer()
+                print("Running startTcpdumpClient()")
+                self.startTcpdumpClient()
                 print("Running startIperf3Client()")
                 self.startIperf3Client()
                 # print("Sleeping")
@@ -357,7 +377,8 @@ class Trial:
                 print('Killing tcpdump and iperf3')
                 self.terminateCommands()
 
-        self.enableTuning()
+        #self.enableTuning()
+        self.removeLimit()
         # self.disableTuning()
         print("Getting pcaps")
         self.getPcaps()
