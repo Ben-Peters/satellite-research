@@ -301,19 +301,19 @@ class Trial:
 
     def limitWithTBF(self):
         sshPrefix = f'ssh {self.user}@vorma.cs.wpi.edu'
-        command = f'{sshPrefix} \"sudo ~/tbf.sh'
+        command = f'{sshPrefix} \"sudo ~/tbf.sh\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
     def limitWithRate(self):
         sshPrefix = f'ssh {self.user}@vorma.cs.wpi.edu'
-        command = f'{sshPrefix} \"sudo ~/rate.sh'
+        command = f'{sshPrefix} \"sudo ~/rate.sh\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
     def removeLimit(self):
         sshPrefix = f'ssh {self.user}@vorma.cs.wpi.edu'
-        command = f'{sshPrefix} \"sudo ~/remove.sh'
+        command = f'{sshPrefix} \"sudo ~/remove.sh\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
