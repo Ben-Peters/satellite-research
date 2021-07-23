@@ -322,7 +322,7 @@ class Trial:
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
         command = f'{sshPrefix} \"sudo sh -c \'echo 1 >> /sys/module/tcp_cubic/parameters/hystart'
         self.commandsRun.append((self.getTimeStamp(), command))
-        os.system()
+        os.system(command)
 
     def enableMaxCap(self):
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
@@ -340,7 +340,7 @@ class Trial:
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
         command = f'{sshPrefix} \"sudo sh -c \'echo 0 >> /sys/module/tcp_cubic/parameters/hystart'
         self.commandsRun.append((self.getTimeStamp(), command))
-        os.system()
+        os.system(command)
 
     def start(self):
         os.chdir(os.path.expanduser("~/Research"))
