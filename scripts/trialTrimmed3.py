@@ -168,9 +168,9 @@ class Trial:
             # exitCodes.append(subprocess.Popen(["ssh", f"{self.user}@glomma.cs.wpi.edu", "iperf3", "--reverse", "-i", "\"eno2\"",
             #                                    "-c", f"{host}", f"-n{self.data}", f"-p{self.ports[self.clientsRunning]}"], stdout=subprocess.DEVNULL))
             if self.data is not None:
-                iperf3ClientStartCommand = f'ssh {self.user}@glomma.cs.wpi.edu \'~/iperf/src/iperf3 -R -c {host} -n {self.data}\''
+                iperf3ClientStartCommand = f'ssh {self.user}@glomma.cs.wpi.edu \'iperf3 -R -c {host} -n {self.data}\''
             else:
-                iperf3ClientStartCommand = f'ssh {self.user}@glomma.cs.wpi.edu \'~/iperf/src/iperf3 -R -c {host} -t {self.time}\''
+                iperf3ClientStartCommand = f'ssh {self.user}@glomma.cs.wpi.edu \'iperf3 -R -c {host} -t {self.time}\''
             self.clientsRunning += 1
             print(f'\trunning command: \n{iperf3ClientStartCommand}')
             timeStamp = self.getTimeStamp()
@@ -356,60 +356,38 @@ class Trial:
             self.setProtocolsRemote()
 
         # run downloads
-        if self.iperf_w_arg:
-            #self.enableTuning()
-            # Use w arg in iperf to set wmem for disabled trials
-            for i in range(self.numToRun):
-                print("Running startIperf3Server()")
-                self.startIperf3Server()
-                print("Running startTcpdumpServer()")
-                self.startTcpdumpServer()
-                if i % 2 == 0:
-                    os.system(f"echo \"Trial Num: {i}\nEnabling tuning\"")
-                    print("Running startIperf3Client()")
-                    self.startIperf3ClientTuneOn()
-                else:
-                    os.system(f"echo \"Trial Num: {i}\nDisabling tuning\"")
-                    print("Running startIperf3Client()")
-                    self.startIperf3ClientTuneOff()
-                print('Killing tcpdump and iperf3')
-                self.terminateCommands()
-        else:
-            # Set wmem the traditional way
-            for i in range(self.numToRun):
-                if i % 3 == 0:
-                    print(f"Trial Num: {i}\nRunning with delay max")
-                    #self.enableTuning()
-                    #self.limitWithTBF()
-                    self.enableHystart()
-                    self.enableMaxCap()
-                # elif i == self.numToRun/2:
-                    # os.system('echo Please disable the Proxy NOW!')
-                    # self.sleep(90)
-                elif i % 3 == 1:
-                    print(f"Trial Num: {i}\nRunning without delay max")
-                    #self.disableTuning()
-                    #self.limitWithRate()
-                    self.enableHystart()
-                    self.disableMaxCap()
-                else:
-                    print(f"Trial Num: {i}\nRunning without hystart")
-                    # self.disableTuning()
-                    # self.limitWithRate()
-                    self.disableHystart()
+        # Set wmem the traditional way
+        for i in range(self.numToRun):
+            if i % 3 == 0:
+                print(f"Trial Num: {i}\nRunning with delay max")
+                #self.enableTuning()
+                #self.limitWithTBF()
+                self.enableHystart()
+                self.enableMaxCap()
+            elif i % 3 == 1:
+                print(f"Trial Num: {i}\nRunning without delay max")
+                #self.disableTuning()
+                #self.limitWithRate()
+                self.enableHystart()
+                self.disableMaxCap()
+            else:
+                print(f"Trial Num: {i}\nRunning without hystart")
+                # self.disableTuning()
+                # self.limitWithRate()
+                self.disableHystart()
 
-                print("Running startIperf3Server()")
-                self.startIperf3Server()
-                #print("Running startTcpdumpServer()")
-                #self.startTcpdumpServer()
-                print("Running startTcpdumpClient()")
-                self.startTcpdumpClient()
-                print("Running startIperf3Client()")
-                self.startIperf3Client()
-                # print("Sleeping")
-                # self.sleep(self.timeout)
-                print('Killing tcpdump and iperf3')
-                self.terminateCommands()
+            print("Running startIperf3Server()")
+            self.startIperf3Server()
+            #print("Running startTcpdumpServer()")
+            #self.startTcpdumpServer()
+            print("Running startTcpdumpClient()")
+            self.startTcpdumpClient()
+            print("Running startIperf3Client()")
+            self.startIperf3Client()
+            # print("Sleeping")
+            # self.sleep(self.timeout)
+            print('Killing tcpdump and iperf3')
+            self.terminateCommands()
 
         #self.enableTuning()
         #self.removeLimit()
