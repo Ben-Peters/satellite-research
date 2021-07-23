@@ -141,7 +141,7 @@ def plotData():
 
     hosts += ["glomma.cs.wpi.edu"]
     csvs = []
-    legend = ['With 16ms max', 'Max', 'HyStart disabled']
+    legend = ['With 16ms max', 'Max removed', 'HyStart disabled']
     for file, i in zip(files, range(len(files))):
         csvFilename = f'C:/satellite-research/csvs/Trial_{args.batch}/' + file
         csvs.append(csvFilename)

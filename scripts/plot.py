@@ -605,7 +605,7 @@ class PlotAllData(Plot):
         ciRwnd = [[], []]
         ciRetrans = [[], []]
         ciTD = [[], []]
-        for i in range(int(self.numRuns * 2)):
+        for i in range(len(self.throughput)):
             if minLength > len(self.throughput[i]):
                 minLength = len(self.throughput[i])
         for t in range(minLength):
@@ -701,7 +701,7 @@ class PlotAllData(Plot):
         # axs[0].plot(self.secondsAVG[i], self.throughputAVG[i], '.', color='tab:blue')
         minLength = len(self.seconds[0])
         minIndex = 0
-        for i in range(int(self.numRuns * 2)):
+        for i in range(len(self.seconds)):
             if minLength > len(self.seconds[i]):
                 minIndex = i
                 minLength = len(self.seconds[i])
@@ -773,7 +773,7 @@ class PlotAllData(Plot):
             axs[i].set_xlim([0, len(self.seconds[minIndex])])
 
         fig.suptitle(self.title)
-        # fig.legend(self.legend)
+        fig.legend(self.legend)
 
         axs[0].set_ylabel("Throughput (Mb/s)")
         axs[1].set_ylabel("RTT (s)")
