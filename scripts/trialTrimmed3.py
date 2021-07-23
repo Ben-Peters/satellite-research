@@ -330,7 +330,7 @@ class Trial:
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
-    def diableMaxCap(self):
+    def disableMaxCap(self):
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
         command = f'{sshPrefix} \"sudo sh -c \'echo 0 >> /sys/module/tcp_cubic/parameters/hystart_delay_max'
         self.commandsRun.append((self.getTimeStamp(), command))
@@ -377,17 +377,26 @@ class Trial:
         else:
             # Set wmem the traditional way
             for i in range(self.numToRun):
-                if i % 2 == 0:
-                    print(f"Trial Num: {i}\nEnabling tuning")
+                if i % 3 == 0:
+                    print(f"Trial Num: {i}\nRunning with delay max")
                     #self.enableTuning()
-                    self.limitWithTBF()
+                    #self.limitWithTBF()
+                    self.enableHystart()
+                    self.enableMaxCap()
                 # elif i == self.numToRun/2:
                     # os.system('echo Please disable the Proxy NOW!')
                     # self.sleep(90)
-                else:
-                    print(f"Trial Num: {i}\nDisabling tuning")
+                elif i % 3 == 1:
+                    print(f"Trial Num: {i}\nRunning without delay max")
                     #self.disableTuning()
-                    self.limitWithRate()
+                    #self.limitWithRate()
+                    self.enableHystart()
+                    self.disableMaxCap()
+                else:
+                    print(f"Trial Num: {i}\nRunning without hystart")
+                    # self.disableTuning()
+                    # self.limitWithRate()
+                    self.disableHystart()
 
                 print("Running startIperf3Server()")
                 self.startIperf3Server()
@@ -403,8 +412,10 @@ class Trial:
                 self.terminateCommands()
 
         #self.enableTuning()
-        self.removeLimit()
+        #self.removeLimit()
         # self.disableTuning()
+        self.enableHystart()
+        self.enableMaxCap()
         print("Getting pcaps")
         self.getPcaps()
         #print("Running pcapToCsv()")

@@ -477,6 +477,64 @@ class PlotAllData(Plot):
             pipe.close()
             # pSem.release()
 
+    def analyzeThreaded3(self):
+        results = []
+        processes = []
+        parentPipes = []
+        # Create threads
+        sortedData = []
+        for df, i in zip(self.data, range(len(self.data))):
+            if i % 3 == 0:
+                # (cap enabled)
+                sortedData.append(df)
+        for df, i in zip(self.data, range(len(self.data))):
+            if i % 3 == 1:
+                # (cap disabled)
+                sortedData.append(df)
+        for df, i in zip(self.data, range(len(self.data))):
+            if i % 3 == 2:
+                # (hystart disabled)
+                sortedData.append(df)
+        self.data = sortedData
+        for df, i in zip(self.data, range(len(self.data))):
+            self.throughput.append([])
+            self.rtt.append([])
+            self.cwnd.append([])
+            self.rwnd.append([])
+            self.retransmissions.append([])
+            self.seconds.append([])
+            self.timeDelta.append([])
+            parentPipe, childPipe = Pipe()
+            parentPipes.append(parentPipe)
+            p = Process(target=self.calculateStats, args=(df, childPipe, self.producerSem, i))
+            p.start()
+            processes.append(p)
+        # Get results from threads
+        for conn in parentPipes:
+            # self.consumerSem.acquire()
+            results.append(conn.recv())
+            # self.consumerSem.release()
+        # wait for threads to finish and join them
+        for p in processes:
+            p.join()
+        # put results in the right order
+        for result in results:
+            i = result[0]
+            throughput = result[1]
+            rtt = result[2]
+            cwnd = result[3]
+            rwnd = result[4]
+            retransmissions = result[5]
+            seconds = result[6]
+            timeDelta = result[7]
+            self.throughput[i] = throughput
+            self.rtt[i] = rtt
+            self.cwnd[i] = cwnd
+            self.rwnd[i] = rwnd
+            self.retransmissions[i] = retransmissions
+            self.seconds[i] = seconds
+            self.timeDelta[i] = timeDelta
+
     def analyzeThreaded(self):
         results = []
         processes = []
@@ -623,6 +681,135 @@ class PlotAllData(Plot):
         self.retransmissionsCI.append(ciRetrans)
         self.timeDeltaCI.append(ciTD)
 
+    def plot3Tests(self, maxY=None):
+        # self.filterCSVs()
+        # self.removeTimeOffset()
+        if maxY is None:
+            # maxY = [None, None, None, None, None, None]
+            maxY = [None, None, None, None, None]
+        self.analyzeThreaded()
+        # self.calculateStats()
+        self.avgAllData(0)
+        self.avgAllData(1)
+        self.avgAllData(2)
+
+        # Setup formatting of plots
+        fig, axs = pyplot.subplots(5, gridspec_kw={'height_ratios': [2, 1, 1, 1, 1]})
+        fig.set_figheight(8)
+
+        # for i in range(len(self.throughputAVG)):
+        # axs[0].plot(self.secondsAVG[i], self.throughputAVG[i], '.', color='tab:blue')
+        minLength = len(self.seconds[0])
+        minIndex = 0
+        for i in range(int(self.numRuns * 2)):
+            if minLength > len(self.seconds[i]):
+                minIndex = i
+                minLength = len(self.seconds[i])
+        axs[0].plot(self.seconds[minIndex], self.throughputAVG[0], color='tab:orange')
+        axs[0].fill_between(self.seconds[minIndex], self.throughputCI[0][0],
+                            self.throughputCI[0][1], color='tab:orange', alpha=.2)
+
+        axs[1].plot(self.seconds[minIndex], self.rttAVG[0], color='tab:orange')
+
+        axs[2].plot(self.seconds[minIndex], self.rwndAVG[0], color='tab:orange')
+        axs[2].fill_between(self.seconds[minIndex], numpy.array(self.rwndCI[0][0]) / 1048576,
+                            numpy.array(self.rwndCI[0][1]) / 1048576, color='tab:orange', alpha=.2)
+
+        axs[3].plot(self.seconds[minIndex], self.cwndAVG[0], color='tab:orange')
+        axs[3].fill_between(self.seconds[minIndex], numpy.array(self.cwndCI[0][0]) / 1048576,
+                            numpy.array(self.cwndCI[0][1]) / 1048576, color='tab:orange', alpha=.2)
+        axs[4].plot(self.seconds[minIndex], self.retransmissionsAVG[0], color='tab:orange')
+
+        # axs[5].plot(self.seconds[minIndex], self.timeDeltaAVG[0], color='tab:orange')
+        # axs[5].fill_between(self.seconds[minIndex], self.timeDeltaCI[0][0],
+        #                    self.timeDeltaCI[0][1], color='tab:orange', alpha=.2)
+
+        axs[0].plot(self.seconds[minIndex], self.throughputAVG[1], color='tab:blue')
+        axs[0].fill_between(self.seconds[minIndex], self.throughputCI[1][0],
+                            self.throughputCI[1][1], color='tab:blue', alpha=.2)
+
+        axs[1].plot(self.seconds[minIndex], self.rttAVG[1], color='tab:blue')
+
+        axs[2].plot(self.seconds[minIndex], self.rwndAVG[1], color='tab:blue')
+        axs[2].fill_between(self.seconds[minIndex], numpy.array(self.rwndCI[1][0]) / 1048576,
+                            numpy.array(self.rwndCI[1][1]) / 1048576, color='tab:blue', alpha=.2)
+
+        axs[3].plot(self.seconds[minIndex], self.cwndAVG[1], color='tab:blue')
+        axs[3].fill_between(self.seconds[minIndex], numpy.array(self.cwndCI[1][0]) / 1048576,
+                            numpy.array(self.cwndCI[1][1]) / 1048576, color='tab:blue', alpha=.2)
+
+        axs[4].plot(self.seconds[minIndex], self.retransmissionsAVG[1], color='tab:blue')
+
+        axs[0].plot(self.seconds[minIndex], self.throughputAVG[2], color='tab:green')
+        axs[0].fill_between(self.seconds[minIndex], self.throughputCI[2][0],
+                            self.throughputCI[2][1], color='tab:green', alpha=.2)
+
+        axs[1].plot(self.seconds[minIndex], self.rttAVG[2], color='tab:green')
+
+        axs[2].plot(self.seconds[minIndex], self.rwndAVG[2], color='tab:green')
+        axs[2].fill_between(self.seconds[minIndex], numpy.array(self.rwndCI[2][0]) / 1048576,
+                            numpy.array(self.rwndCI[2][1]) / 1048576, color='tab:green', alpha=.2)
+
+        axs[3].plot(self.seconds[minIndex], self.cwndAVG[2], color='tab:green')
+        axs[3].fill_between(self.seconds[minIndex], numpy.array(self.cwndCI[2][0]) / 1048576,
+                            numpy.array(self.cwndCI[2][1]) / 1048576, color='tab:green', alpha=.2)
+
+        axs[4].plot(self.seconds[minIndex], self.retransmissionsAVG[2], color='tab:green')
+
+        # axs[5].plot(self.seconds[minIndex], self.timeDeltaAVG[2], color='tab:green')
+        # axs[5].fill_between(self.seconds[minIndex], self.timeDeltaCI[2][0],
+        #                                            self.timeDeltaCI[2][1], color='tab:green', alpha=.2)
+
+        axs[0].set_ylim([0, 10.1])
+        axs[1].set_ylim([0, 1.5])
+        axs[2].set_ylim([0, 6])
+        axs[3].set_ylim([0, 6])
+        axs[4].set_ylim([0, 2])
+        # axs[5].set_ylim([0, 1])
+
+        for i in range(len(maxY)):
+            if maxY[i] is not None:
+                axs[i].set_ylim([0, maxY[i]])
+            axs[i].set_xlim([0, len(self.seconds[minIndex])])
+
+        fig.suptitle(self.title)
+        # fig.legend(self.legend)
+
+        axs[0].set_ylabel("Throughput (Mb/s)")
+        axs[1].set_ylabel("RTT (s)")
+        axs[2].set_ylabel("RWND (MB)")
+        axs[3].set_ylabel("CWND (MB)")
+        axs[4].set_ylabel("Retrans. (%)")
+        # axs[5].set_ylabel("Time between frames")
+
+        axs[4].set_xlabel("Time (seconds)")
+        # axs[4].set_xlabel("Time (seconds)")
+
+        pyplot.savefig(self.plotFilepath)
+        pyplot.show()
+
+        flag = True
+        if flag:
+            print(f'Max Tput: {max(self.throughputAVG[0])}')
+            print(f'Min RTT: {min(self.rttAVG[1])}')
+            print(f'Max RTT: {max(self.rttAVG[0])}')
+            print(f'Max cwnd: {max(self.cwndAVG[0])}')
+            print(f'Max rwnd: {max(self.rwndAVG[0])}')
+            print(f'Max retransmission rate: {max(self.retransmissionsAVG[0])}')
+            print(f'Max time between frames: {max(self.timeDeltaAVG[1])}')
+
+        for i in range(len(self.throughputAVG)):
+            if i == 0:
+                print("With Tuning")
+            else:
+                print("Without Tuning")
+            print(f'Avg Throughput: {sum(self.throughputAVG[i]) / len(self.throughputAVG[i])}')
+            print(f'Avg rtt: {sum(self.rttAVG[i]) / len(self.rttAVG[i])}')
+            print(f'Avg rwnd size: {sum(self.rwndAVG[i]) / len(self.rwndAVG[i])}')
+            print(f'Avg cwnd size: {sum(self.cwndAVG[i]) / len(self.cwndAVG[i])}')
+            print(f'Avg Retransmission rate: {sum(self.retransmissionsAVG[i]) / len(self.retransmissionsAVG[i])}')
+            print(f'Avg time between frames: {sum(self.timeDeltaAVG[i]) / len(self.timeDeltaAVG[i])}')
+
     def plotStart(self, seconds):
         if not self.retransmissionsAVG:
             self.analyzeThreaded()
@@ -752,17 +939,19 @@ class PlotAllData(Plot):
             self.avgAllData(1)
 
         pyplot.clf()
-
+        pyplot.suptitle(self.title)
         minLength = len(self.seconds[0])
         minIndex = 0
         for i in range(int(self.numRuns * 2)):
             if minLength > len(self.seconds[i]):
                 minIndex = i
                 minLength = len(self.seconds[i])
+
+
         pyplot.plot(self.seconds[minIndex], numpy.array(self.timeDeltaAVG[0])*1000, color='tab:orange')
         pyplot.plot(self.seconds[minIndex], numpy.array(self.timeDeltaAVG[1])*1000, color='tab:blue')
-
-        pyplot.ylim([0, 50])
+        pyplot.legend(['double TBF filter', 'Rate arg'])
+        pyplot.ylim([0, 20])
 
         pyplot.savefig(self.plotFilepath.replace('.png', '_time_delta.png'))
         pyplot.show()
@@ -772,7 +961,8 @@ class PlotAllData(Plot):
         # self.filterCSVs()
         # self.removeTimeOffset()
         if maxY is None:
-            maxY = [None, None, None, None, None, None]
+            #maxY = [None, None, None, None, None, None]
+            maxY = [None, None, None, None, None]
         self.analyzeThreaded()
         # self.calculateStats()
         self.avgAllData(0)
@@ -829,7 +1019,7 @@ class PlotAllData(Plot):
         #axs[5].fill_between(self.seconds[minIndex], self.timeDeltaCI[1][0],
         #                                            self.timeDeltaCI[1][1], color='tab:blue', alpha=.2)
 
-        axs[0].set_ylim([0, 140])
+        axs[0].set_ylim([0, 10.1])
         axs[1].set_ylim([0, 1.5])
         axs[2].set_ylim([0, 6])
         axs[3].set_ylim([0, 6])
@@ -866,7 +1056,7 @@ class PlotAllData(Plot):
             print(f'Max cwnd: {max(self.cwndAVG[0])}')
             print(f'Max rwnd: {max(self.rwndAVG[0])}')
             print(f'Max retransmission rate: {max(self.retransmissionsAVG[0])}')
-            print(f'Max time between frames: {max(self.timeDeltaAVG[0])}')
+            print(f'Max time between frames: {max(self.timeDeltaAVG[1])}')
 
         for i in range(len(self.throughputAVG)):
             if i == 0:
