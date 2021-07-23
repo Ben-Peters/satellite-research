@@ -687,7 +687,7 @@ class PlotAllData(Plot):
         if maxY is None:
             # maxY = [None, None, None, None, None, None]
             maxY = [None, None, None, None, None]
-        self.analyzeThreaded()
+        self.analyzeThreaded3()
         # self.calculateStats()
         self.avgAllData(0)
         self.avgAllData(1)
