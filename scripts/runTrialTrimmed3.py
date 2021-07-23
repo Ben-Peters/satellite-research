@@ -94,7 +94,10 @@ tcpSettings = [["4096 131072 6291456", "4096 16384 4194304", "382185 509580 7643
                 "All at 60MB\n" + r"wmem=$\bf{60000000\:60000000\:60000000}$", [140, 2, 30, 30, 10], 60000000],        # 21
 
                ["60000000 60000000 60000000", "4096 16384 4194304", "382185 509580 764370",
-                "iperf testing\n"+r"rmem=4096 131072 6291456", [140, 2, 65, 30, 10], 60000000]                  # 22
+                "iperf testing\n"+r"rmem=4096 131072 6291456", [140, 2, 65, 30, 10], 60000000],                  # 22
+
+               ["60000000 60000000 60000000", "60000000 60000000 60000000", "60000000 60000000 60000000",        # 23
+                "Hybla Testing", [140, 2, 65, 30, 10], 0]
                ]
 
 maxY = None
@@ -138,14 +141,14 @@ def plotData():
 
     hosts += ["glomma.cs.wpi.edu"]
     csvs = []
-    legend = ['With Receiver Auto-Tune', 'Without Receiver Auto-Tune']
+    legend = ['With 16ms max', 'Max', 'HyStart disabled']
     for file, i in zip(files, range(len(files))):
         csvFilename = f'C:/satellite-research/csvs/Trial_{args.batch}/' + file
         csvs.append(csvFilename)
         # legend.append(hosts[i].split('.')[0])
     plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", "_TPUT.png")
     plot = PlotAllData(protocol=cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend,
-                       numRuns=int(args.numToRun / 2), title=args.plotName)
+                       numRuns=int(args.numToRun / 3), title=args.plotName)
     # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
     plot.plot3Tests(maxY=maxY)
     #plot.plotStartTput(15)
