@@ -51,7 +51,7 @@ class Trial:
 
     def setHosts(self):
         self.dictionary = {
-            "cubic": "mlcneta.cs.wpi.edu",
+            "cubic": "mlcnetb.cs.wpi.edu",
             "hybla": "mlcnetb.cs.wpi.edu",
             "bbr": "mlcnetc.cs.wpi.edu",
             "pcc": "mlcnetd.cs.wpi.edu"
@@ -320,25 +320,25 @@ class Trial:
 
     def enableHystart(self):
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
-        command = f'{sshPrefix} \"sudo sh -c \'echo 1 >> /sys/module/tcp_cubic/parameters/hystart'
+        command = f'{sshPrefix} \"sudo sh -c \'echo 1 >> /sys/module/tcp_cubic/parameters/hystart\'\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
     def enableMaxCap(self):
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
-        command = f'{sshPrefix} \"sudo sh -c \'echo 1 >> /sys/module/tcp_cubic/parameters/hystart_delay_max'
+        command = f'{sshPrefix} \"sudo sh -c \'echo 1 >> /sys/module/tcp_cubic/parameters/hystart_delay_max\'\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
     def disableMaxCap(self):
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
-        command = f'{sshPrefix} \"sudo sh -c \'echo 0 >> /sys/module/tcp_cubic/parameters/hystart_delay_max'
+        command = f'{sshPrefix} \"sudo sh -c \'echo 0 >> /sys/module/tcp_cubic/parameters/hystart_delay_max\'\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
     def disableHystart(self):
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
-        command = f'{sshPrefix} \"sudo sh -c \'echo 0 >> /sys/module/tcp_cubic/parameters/hystart'
+        command = f'{sshPrefix} \"sudo sh -c \'echo 0 >> /sys/module/tcp_cubic/parameters/hystart\'\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
