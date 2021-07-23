@@ -119,7 +119,7 @@ class Trial:
 
     def startIperf3Server(self):
         for host in self.hosts:
-            iperf3ServerStart = f"ssh {self.user}@{host} \"~/iperf/src/iperf3 -s\"&"
+            iperf3ServerStart = f"ssh {self.user}@{host} \"iperf3 -s\"&"
             self.serversRunning += 1
             print(f'\trunning command: \n {iperf3ServerStart}')
             timeStamp = self.getTimeStamp()
