@@ -362,9 +362,8 @@ class Trial:
                 print(f"Trial Num: {i}\nRunning with delay max")
                 #self.enableTuning()
                 #self.limitWithTBF()
-                #self.enableHystart()
-                #self.enableMaxCap()
-                self.disableHystart()
+                self.enableHystart()
+                self.enableMaxCap()
             elif i % 3 == 1:
                 print(f"Trial Num: {i}\nRunning without delay max")
                 #self.disableTuning()

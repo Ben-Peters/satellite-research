@@ -656,16 +656,16 @@ class PlotAllData(Plot):
                 # print(numpy.mean(rwndValues))
             ciTput[0].append(calculateConfidenceInterval(tputValues, 0.95)[0])
             ciTput[1].append(calculateConfidenceInterval(tputValues, 0.95)[1])
-            # ciRTT[0].append(calculateConfidenceInterval(rttValues, 0.95)[0])
-            # ciRTT[1].append(calculateConfidenceInterval(rttValues, 0.95)[1])
+            ciRTT[0].append(calculateConfidenceInterval(rttValues, 0.95)[0])
+            ciRTT[1].append(calculateConfidenceInterval(rttValues, 0.95)[1])
             ciCwnd[0].append(calculateConfidenceInterval(cwndValues, 0.95)[0])
             ciCwnd[1].append(calculateConfidenceInterval(cwndValues, 0.95)[1])
             ciRwnd[0].append(calculateConfidenceInterval(rwndValues, 0.95)[0])
             ciRwnd[1].append(calculateConfidenceInterval(rwndValues, 0.95)[1])
             ciTD[0].append(calculateConfidenceInterval(TDvalues, 0.95)[0])
             ciTD[1].append(calculateConfidenceInterval(TDvalues, 0.95)[1])
-            # ciRetrans[0].append(calculateConfidenceInterval(retransValues, 0.95)[0])
-            # ciRetrans[1].append(calculateConfidenceInterval(retransValues, 0.95)[1])
+            ciRetrans[0].append(calculateConfidenceInterval(retransValues, 0.95)[0])
+            ciRetrans[1].append(calculateConfidenceInterval(retransValues, 0.95)[1])
 
         self.throughputAVG.append(avgTput)
         self.rttAVG.append(avgRTT)
@@ -710,6 +710,8 @@ class PlotAllData(Plot):
                             self.throughputCI[0][1], color='tab:orange', alpha=.2)
 
         axs[1].plot(self.seconds[minIndex], self.rttAVG[0], color='tab:orange')
+        axs[1].fill_between(self.seconds[minIndex], self.rttCI[0][0],
+                            self.rttCI[0][1], color='tab:orange', alpha=.2)
 
         axs[2].plot(self.seconds[minIndex], self.rwndAVG[0], color='tab:orange')
         axs[2].fill_between(self.seconds[minIndex], numpy.array(self.rwndCI[0][0]) / 1048576,
@@ -719,6 +721,8 @@ class PlotAllData(Plot):
         axs[3].fill_between(self.seconds[minIndex], numpy.array(self.cwndCI[0][0]) / 1048576,
                             numpy.array(self.cwndCI[0][1]) / 1048576, color='tab:orange', alpha=.2)
         axs[4].plot(self.seconds[minIndex], self.retransmissionsAVG[0], color='tab:orange')
+        axs[4].fill_between(self.seconds[minIndex], self.retransmissionsCI[0][0],
+                            self.retransmissionsCI[0][1], color='tab:orange', alpha=.2)
 
         # axs[5].plot(self.seconds[minIndex], self.timeDeltaAVG[0], color='tab:orange')
         # axs[5].fill_between(self.seconds[minIndex], self.timeDeltaCI[0][0],
@@ -729,6 +733,9 @@ class PlotAllData(Plot):
                             self.throughputCI[1][1], color='tab:blue', alpha=.2)
 
         axs[1].plot(self.seconds[minIndex], self.rttAVG[1], color='tab:blue')
+        axs[1].fill_between(self.seconds[minIndex], self.rttCI[1][0],
+                            self.rttCI[1][1], color='tab:blue', alpha=.2)
+
 
         axs[2].plot(self.seconds[minIndex], self.rwndAVG[1], color='tab:blue')
         axs[2].fill_between(self.seconds[minIndex], numpy.array(self.rwndCI[1][0]) / 1048576,
@@ -739,12 +746,16 @@ class PlotAllData(Plot):
                             numpy.array(self.cwndCI[1][1]) / 1048576, color='tab:blue', alpha=.2)
 
         axs[4].plot(self.seconds[minIndex], self.retransmissionsAVG[1], color='tab:blue')
+        axs[4].fill_between(self.seconds[minIndex], self.retransmissionsCI[1][0],
+                            self.retransmissionsCI[1][1], color='tab:blue', alpha=.2)
 
         axs[0].plot(self.seconds[minIndex], self.throughputAVG[2], color='tab:green')
         axs[0].fill_between(self.seconds[minIndex], self.throughputCI[2][0],
                             self.throughputCI[2][1], color='tab:green', alpha=.2)
 
         axs[1].plot(self.seconds[minIndex], self.rttAVG[2], color='tab:green')
+        axs[1].fill_between(self.seconds[minIndex], self.rttCI[2][0],
+                            self.rttCI[2][1], color='tab:green', alpha=.2)
 
         axs[2].plot(self.seconds[minIndex], self.rwndAVG[2], color='tab:green')
         axs[2].fill_between(self.seconds[minIndex], numpy.array(self.rwndCI[2][0]) / 1048576,
@@ -755,6 +766,8 @@ class PlotAllData(Plot):
                             numpy.array(self.cwndCI[2][1]) / 1048576, color='tab:green', alpha=.2)
 
         axs[4].plot(self.seconds[minIndex], self.retransmissionsAVG[2], color='tab:green')
+        axs[4].fill_between(self.seconds[minIndex], self.retransmissionsCI[2][0],
+                            self.retransmissionsCI[2][1], color='tab:green', alpha=.2)
 
         # axs[5].plot(self.seconds[minIndex], self.timeDeltaAVG[2], color='tab:green')
         # axs[5].fill_between(self.seconds[minIndex], self.timeDeltaCI[2][0],
@@ -791,11 +804,11 @@ class PlotAllData(Plot):
         flag = True
         if flag:
             print(f'Max Tput: {max(self.throughputAVG[0])}')
-            print(f'Min RTT: {min(self.rttAVG[1])}')
-            print(f'Max RTT: {max(self.rttAVG[0])}')
+            print(f'Min RTT: {min(self.rttAVG[2])}')
+            print(f'Max RTT: {max(self.rttAVG[2])}')
             print(f'Max cwnd: {max(self.cwndAVG[0])}')
             print(f'Max rwnd: {max(self.rwndAVG[0])}')
-            print(f'Max retransmission rate: {max(self.retransmissionsAVG[0])}')
+            print(f'Max retransmission rate: {max(self.retransmissionsAVG[2])}')
             print(f'Max time between frames: {max(self.timeDeltaAVG[1])}')
 
         for i in range(len(self.throughputAVG)):
