@@ -88,7 +88,7 @@ class Trial:
         os.system(f'mkdir {filePrefix}')
         os.system(f'{sshPrefix} \"mkdir {filePrefix}\"')
         os.system(f'{sshPrefix} \"./setup_routes.sh\"') # TODO: make changing between vorma and satellite easier
-        os.system(f'ssh {self.user}@vorma.cs.wpi.edu \"sudo ./satellite.sh')
+        os.system(f'ssh {self.user}@vorma.cs.wpi.edu \"sudo ./satellite.sh\"')
         for host in self.hosts:
             os.system(f'ssh {self.user}@{host} \"mkdir {filePrefix}\"')
         os.system(f'mkdir {filePrefix}/pcaps')
@@ -362,7 +362,7 @@ class Trial:
         command = f'{sshPrefix} \"sudo sh -c \'echo \"\" > /var/log/kern.log\'\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
-        self.logs.append("Trial_{self.batchNum}/{self.cc[self.clientDumpsRunning]}_{self.getTimeStamp()}.log")
+        self.logs.append(f"Trial_{self.batchNum}/{self.cc[self.clientDumpsRunning]}_{self.getTimeStamp()}.log")
 
     def routeSatellite(self):
         sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
@@ -475,7 +475,8 @@ class Trial:
             self.setUpLocal()
             print("Running setProtocolsRemote()")
             self.setProtocolsRemote()
-
+        print("Running startIperf3Server()")
+        self.startIperf3Server()
         # run downloads
         self.setupKernLog()
         for i in range(self.numToRun):
@@ -483,8 +484,8 @@ class Trial:
                 self.routeSatellite()
             else:
                 self.routeVorma()
-            print("Running startIperf3Server()")
-            self.startIperf3Server()
+            # print("Running startIperf3Server()")
+            # self.startIperf3Server()
             # print("Running startTcpdumpClient()")
             # self.startTcpdumpClient()
             print("Running startIperf3Client()")
@@ -492,7 +493,7 @@ class Trial:
             # print("Sleeping")
             # self.sleep(self.timeout)
             print('Killing tcpdump and iperf3')
-            self.terminateCommands()
+            # self.terminateCommands()
             self.moveKernLog()
         self.enableTuning()
         # self.removeLimit()
