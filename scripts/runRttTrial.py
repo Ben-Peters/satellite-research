@@ -85,7 +85,7 @@ def main():
         print("This trial has already been run, just creating plots")
     except:
         subprocess.call(startTrial, shell=True)
-        getData()
+    getData()
     plotData()
 
 

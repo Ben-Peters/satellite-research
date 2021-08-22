@@ -15,9 +15,9 @@ def sleep(sec):
         time.sleep(1)
 
 
-def logToCsv(files):
+def logToCsv(files, prefix):
     for file in files:
-        log = open(file, 'r')
+        log = open((prefix + file), 'r')
         lines = log.readlines()
         csv = open(f'csvs/{file.replace(".log", ".csv")}', 'w')
         sampleRTT = 0
@@ -82,7 +82,8 @@ def main():
     getData()
     os.chdir(f'Trial_{args.batch}')
     print(os.getcwd())
-    logToCsv(files=os.listdir(f'./logs'))
+    prefix = f'{os.getcwd()}/logs/'
+    logToCsv(files=os.listdir(f'./logs'), prefix)
 
 if __name__ == "__main__":
     main()
