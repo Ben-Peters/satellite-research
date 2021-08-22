@@ -24,6 +24,7 @@ class Trial:
         self.user = user
         self.numToRun = numToRun
         self.pcaps = []
+        self.logs = []
         self.clientPcaps = []
         self.csvs = []
         self.commandsRun = []
@@ -41,6 +42,7 @@ class Trial:
         self.tcp_wmem = tcp_wmem
         self.tcp_rmem = tcp_rmem
         self.iperf_w_arg = iperf_w_arg
+        self.logsSent = 0
         self.setupCommand = [
             f'sudo sysctl -w net.ipv4.tcp_mem=\"{self.tcp_mem}\"',
             f'sudo sysctl -w net.ipv4.tcp_wmem=\"{self.tcp_wmem}\"',
@@ -51,8 +53,8 @@ class Trial:
 
     def setHosts(self):
         self.dictionary = {
-            "cubic": "mlcneta.cs.wpi.edu",
-            "hybla": "mlcnetb.cs.wpi.edu",
+            "hybla": "mlcneta.cs.wpi.edu",
+            "cubic": "mlcnetb.cs.wpi.edu",
             "bbr": "mlcnetc.cs.wpi.edu",
             "pcc": "mlcnetd.cs.wpi.edu"
         }
@@ -75,6 +77,8 @@ class Trial:
         os.chdir(f'tmp')
         sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
         self.enableTuning()
+        self.enableHystart()
+        self.disableMaxCap()
         #hystart = f'{sshPrefix} \"sudo sh -c \'echo 1 > /sys/module/tcp_cubic/parameters/hystart\'\"'
         #os.system(hystart)
 
@@ -89,6 +93,7 @@ class Trial:
         os.system(f'mkdir {filePrefix}/pcaps')
         os.system(f'mkdir {filePrefix}/csvs')
         os.system(f'mkdir {filePrefix}/plots')
+        os.system(f'mkdir {filePrefix}/logs')
         # os.system(f'{sshPrefix} \'mkdir figures/stats/trial-{self.batchNum}\'')
 
         os.chdir(f'{filePrefix}')
@@ -322,7 +327,7 @@ class Trial:
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
         command = f'{sshPrefix} \"sudo sh -c \'echo 1 >> /sys/module/tcp_cubic/parameters/hystart'
         self.commandsRun.append((self.getTimeStamp(), command))
-        os.system()
+        os.system(command)
 
     def enableMaxCap(self):
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
@@ -330,7 +335,7 @@ class Trial:
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
-    def diableMaxCap(self):
+    def disableMaxCap(self):
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
         command = f'{sshPrefix} \"sudo sh -c \'echo 0 >> /sys/module/tcp_cubic/parameters/hystart_delay_max'
         self.commandsRun.append((self.getTimeStamp(), command))
@@ -340,7 +345,47 @@ class Trial:
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
         command = f'{sshPrefix} \"sudo sh -c \'echo 0 >> /sys/module/tcp_cubic/parameters/hystart'
         self.commandsRun.append((self.getTimeStamp(), command))
-        os.system()
+        os.system(command)
+
+    def setupKernLog(self):
+        sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
+        command = f'{sshPrefix} \"sudo sh -c \'echo \"\" > /var/log/kern.log'
+        self.commandsRun.append((self.getTimeStamp(), command))
+        os.system(command)
+
+    def moveKernLog(self):
+        sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
+        command = f'{sshPrefix} \"sudo sh -c \'cp /var/log/kern.log ~/Trial_{self.batchNum}/{self.cc[self.clientDumpsRunning]}_{self.getTimeStamp()}.log'
+        self.commandsRun.append((self.getTimeStamp(), command))
+        os.system(command)
+        command = f'{sshPrefix} \"sudo sh -c \'echo \"\" > /var/log/kern.log'
+        self.commandsRun.append((self.getTimeStamp(), command))
+        os.system(command)
+        self.logs.append("Trial_{self.batchNum}/{self.cc[self.clientDumpsRunning]}_{self.getTimeStamp()}.log")
+
+    def routeSatellite(self):
+        sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
+        command = f'{sshPrefix} \"~/setup_routes.sh'
+        self.commandsRun.append((self.getTimeStamp(), command))
+        os.system(command)
+
+    def routeVorma(self):
+        sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
+        command = f'{sshPrefix} \"~/setup_routes.sh vorma'
+        self.commandsRun.append((self.getTimeStamp(), command))
+        os.system(command)
+
+    def getLogs(self):
+        for file in self.logs:
+            # host = self.hosts[self.pcapsSent]
+            host = self.hosts[0]
+            scpFromServer = f'scp -i ~/.ssh/id_rsa {self.user}@{host}:~/{file} /csusers/btpeters/Research/tmp/Trial_{self.batchNum}/logs&'
+            print(f'\trunning command: \n{scpFromServer}')
+            timeStamp = self.getTimeStamp()
+            os.system(scpFromServer)
+            self.commandsRun.append((timeStamp, scpFromServer))
+            self.sleep(3)
+            self.logsSent += 1
 
     def start(self):
         os.chdir(os.path.expanduser("~/Research"))
@@ -417,6 +462,52 @@ class Trial:
         self.cleanUp()
         return self.graphCommand
 
+    def startRTT(self):
+        os.chdir(os.path.expanduser("~/Research"))
+        os.system('clear')
+        print('Running setHosts()')
+        self.setHosts()
+        print("Running cleanUp()")
+        self.cleanUp()
+        if self.runNum == 0:
+            print("Running setupLocal()")
+            self.setUpLocal()
+            print("Running setProtocolsRemote()")
+            self.setProtocolsRemote()
+
+        # run downloads
+        self.setupKernLog()
+        for i in self.numToRun:
+            if i % 2 == 0:
+                self.routeSatellite()
+            else:
+                self.routeVorma()
+            print("Running startIperf3Server()")
+            self.startIperf3Server()
+            # print("Running startTcpdumpClient()")
+            # self.startTcpdumpClient()
+            print("Running startIperf3Client()")
+            self.startIperf3Client()
+            # print("Sleeping")
+            # self.sleep(self.timeout)
+            print('Killing tcpdump and iperf3')
+            self.terminateCommands()
+            self.moveKernLog()
+        self.enableTuning()
+        # self.removeLimit()
+        # self.disableTuning()
+        print("Getting pcaps")
+        self.getLogs()
+        # print("Running pcapToCsv()")
+        # self.pcapToCsv()
+        # print('Generating graphs')
+        # self.plotTputVTime()
+        # self.generateGraphs()  # move to other file
+        self.done = True
+        print("Running cleanUp()")
+        self.cleanUp()
+        return self.graphCommand
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -434,6 +525,7 @@ def main():
     parser.add_argument('--wmem', type=str, help='Value for wmem', default="4096 16384 4194304")
     parser.add_argument('--mem', type=str, help='Value for mem', default="382185 509580 764370")
     parser.add_argument('--window', type=int, help='Specify size of wmem to be set by iperf', default=0)
+    parser.add_argument('--RTT', type=bool, help='Measure RTT or track all stats', default=False)
     args = parser.parse_args()
 
     cc = []
@@ -452,7 +544,10 @@ def main():
     t = Trial(data=args.size, batchNum=args.batch, timeout=100, log=args.log, cc=cc, runNum=args.runNum,
               numToRun=args.numToRun, time=args.time, tcp_rmem=args.rmem,
               tcp_mem=args.mem, tcp_wmem=args.wmem, ports=['5201', '5201'], iperf_w_arg=args.window)
-    t.start()
+    if args.RTT:
+        t.startRTT()
+    else:
+        t.start()
     print("All done")
 
 

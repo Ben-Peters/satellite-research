@@ -1,4 +1,5 @@
 import math
+import sys
 
 import matplotlib.pyplot as pyplot
 import pandas
@@ -226,6 +227,8 @@ class Plot:
         self.seconds = []
         self.throughputAVG = []
         self.secondsAVG = []
+        self.ssExit = []
+        self.ssExitAVG = 0
 
     def filterCSVs(self):
         for i in range(len(self.data)):
@@ -340,8 +343,12 @@ class PlotAllData(Plot):
         self.rwndCI = []
         self.retransmissionsCI = []
         self.timeDeltaCI = []
+        self.ssExitCI = []
         self.producerSem = Lock()
         self.consumerSem = Lock()
+        self.minRTT = []
+        self.minRTTAVG = 0
+        self.minRTTCI = []
 
     def calculateStats(self, data, pipe, pSem, count):
             df = data
@@ -1082,6 +1089,222 @@ class PlotAllData(Plot):
             print(f'Avg cwnd size: {sum(self.cwndAVG[i]) / len(self.cwndAVG[i])}')
             print(f'Avg Retransmission rate: {sum(self.retransmissionsAVG[i]) / len(self.retransmissionsAVG[i])}')
             print(f'Avg time between frames: {sum(self.timeDeltaAVG[i])/len(self.timeDeltaAVG[i])}')
+
+
+    def calculateStatsRTT(self, data, pipe, pSem, count):
+
+        df = data
+        timeOffset = df['time'][0]
+        df['time'] -= timeOffset
+        cutOffTime = 1
+        seconds = []
+
+        rtt = []
+        avgRTT = 0
+        RTTSum = 0
+        RTTCount = 0
+
+        cwnd = []
+        avgCwnd = 0
+        cwndSum = 0
+        cwndCount = 0
+
+        # serverCount = 0
+        clientCount = 0
+        prevTime = 0
+
+        startFrame = 1
+        minRTT = sys.maxsize
+        ssExit = 0
+        flag = False
+
+        for j in range(len(df)):
+
+            # Only look at packets that have data bout CWND
+            if not pandas.isnull(df['cwnd'].iloc[j]):
+               cwndCount += 1
+               cwndSum += df['cwnd'].iloc[j]
+               # rolling avg for CWND est.
+                # if avgCwnd != 0:
+                   # avgCwnd = (avgCwnd + df['tcp.analysis.bytes_in_flight'].iloc[j]) / 2
+                # else:
+                    # avgCwnd = df['tcp.analysis.bytes_in_flight'].iloc[j]
+
+            if not flag and not pandas.isnull(df['exit'].iloc[j]):
+                if df['exit'].iloc[j]:
+                    ssExit = df['time'].iloc[j]
+                    flag = True
+
+            if not pandas.isnull(df['sampleRTT'].iloc[j]):
+                RTTCount += 1
+                RTTSum += df['sampleRTT'].iloc[j]
+                if df['sampleRTT'].iloc[j] < minRTT:
+                    minRTT = df['sampleRTT'].iloc[j]
+            # rolling avg for RTT est.
+            # if avgRTT != 0:
+               # avgRTT = (avgRTT + df['tcp.analysis.ack_rtt'].iloc[j]) / 2
+            # else:
+               # avgRTT = df['tcp.analysis.ack_rtt'].iloc[j]
+
+            # rolling avg for RWND est.
+            # if avgRwnd != 0:
+                # avgRwnd = (avgRwnd + df['tcp.window_size'].iloc[j]) / 2
+            # else:
+                # avgRwnd = df['tcp.window_size'].iloc[j]
+
+            if df['time'].iloc[j] > float(cutOffTime):
+                seconds.append(cutOffTime)
+                if RTTCount == 0:
+                     rtt.append(0)
+                else:
+                    rtt.append((RTTSum/RTTCount))
+                if cwndCount == 0:
+                    cwnd.append(0)
+                else:
+                     cwnd.append(cwndSum/cwndCount)
+
+                RTTSum = 0
+                RTTCount = 0
+                cwndSum = 0
+                cwndCount = 0
+
+
+        results = (count, rtt, cwnd, minRTT, ssExit)
+        self.rtt.append(rtt)
+        self.cwnd.append(cwnd)
+        self.seconds.append(seconds)
+        self.minRTT.append(minRTT)
+        self.ssExit = ssExit
+        print(f"{count}: Results Ready")
+        # pSem.acquire()
+        pipe.send(results)
+        pipe.close()
+        # pSem.release()
+
+
+    def analyzeThreadedRTT(self):
+        results = []
+        processes = []
+        parentPipes = []
+        # Create threads
+        sortedData = []
+        for df, i in zip(self.data, range(len(self.data))):
+            if i % 2 == 0:
+                # is even (tuning enabled)
+                sortedData.append(df)
+        for df, i in zip(self.data, range(len(self.data))):
+            if i % 2 == 1:
+                # is odd (tuning disabled)
+                sortedData.append(df)
+        self.data = sortedData
+        for df, i in zip(self.data, range(len(self.data))):
+            self.rtt.append([])
+            self.cwnd.append([])
+            self.seconds.append([])
+            parentPipe, childPipe = Pipe()
+            parentPipes.append(parentPipe)
+            p = Process(target=self.calculateStats, args=(df, childPipe, self.producerSem, i))
+            p.start()
+            processes.append(p)
+        # Get results from threads
+        for conn in parentPipes:
+            # self.consumerSem.acquire()
+            results.append(conn.recv())
+            # self.consumerSem.release()
+        # wait for threads to finish and join them
+        for p in processes:
+            p.join()
+        # put results in the right order
+        for result in results:
+            i = result[0]
+            rtt = result[1]
+            cwnd = result[2]
+            minRTT = result[3]
+            ssExit = result[4]
+            self.rtt[i] = rtt
+            self.cwnd[i] = cwnd
+            self.minRTT = minRTT
+            self.ssExit = ssExit
+
+
+    def avgAllDataRTT(self, startPos):
+        minLength = len(self.throughput[0])
+        minPos = startPos * self.numRuns
+        avgRTT = []
+        avgCwnd = []
+
+        ciRTT = [[], []]
+        ciCwnd = [[], []]
+        for i in range(len(self.throughput)):
+            if minLength > len(self.throughput[i]):
+                minLength = len(self.throughput[i])
+        for t in range(minLength):
+            rttSum = 0
+            cwndSum = 0
+
+            rttValues = []
+            cwndValues = []
+            num = 0
+            for i in range(self.numRuns):
+                if len(self.throughput[i]) > t:
+                    rttSum += self.rtt[i+minPos][t]
+                    cwndSum += self.cwnd[i+minPos][t]
+
+                    rttValues.append(self.rtt[i + minPos][t])
+                    cwndValues.append(self.cwnd[i + minPos][t])
+
+                    num += 1
+
+            #avgTput.append(tputSum / num)
+            #avgRTT.append(rttSum / num)
+            #avgCwnd.append(cwndSum / num / 1048576)  # Bytes to MBytes
+            #avgRwnd.append(rwndSum / num / 1048576)  # Bytes to MBytes
+            #avgRetrans.append(retransSum / num)
+            avgRTT.append(numpy.mean(rttValues))
+            avgCwnd.append(numpy.mean(cwndValues) / 1048576)  # Bytes to MBytes
+            # if t == 10:
+                # print(numpy.mean(rwndValues))
+
+            ciRTT[0].append(calculateConfidenceInterval(rttValues, 0.95)[0])
+            ciRTT[1].append(calculateConfidenceInterval(rttValues, 0.95)[1])
+            ciCwnd[0].append(calculateConfidenceInterval(cwndValues, 0.95)[0])
+            ciCwnd[1].append(calculateConfidenceInterval(cwndValues, 0.95)[1])
+
+        self.rttAVG.append(avgRTT)
+        self.cwndAVG.append(avgCwnd)
+
+        self.rttCI.append(ciRTT)
+        self.cwndCI.append(ciCwnd)
+
+
+    def RTT(self, title):
+        self.analyzeThreadedRTT()
+        self.avgAllDataRTT(0)
+        self.avgAllDataRTT(1)
+
+        # Setup formatting of plots
+        fig, axs = pyplot.subplots(2, gridspec_kw={'height_ratios': [3, 3]})
+        fig.set_figheight(6)
+
+        minLength = len(self.seconds[0])
+        minIndex = 0
+        for i in range(int(self.numRuns * 2)):
+            if minLength > len(self.seconds[i]):
+                minIndex = i
+                minLength = len(self.seconds[i])
+
+        axs[0].plot(self.seconds[minIndex], self.rttAVG[0], color='tab:orange')
+        axs[0].fill_between(self.seconds[minIndex], self.rttCI[0][0],
+                            self.rttCI[0][1], color='tab:orange', alpha=.2)
+
+        axs[1].plot(self.seconds[minIndex], self.cwndAVG[0], color='tab:orange')
+        axs[1].fill_between(self.seconds[minIndex], self.cwndCI[0][0],
+                            self.cwndCI[0][1], color='tab:orange', alpha=.2)
+        fig.suptitle(self.title)
+        fig.legend(self.legend)
+        axs[0].set_ylabel("RTT (ms)")
+        axs[1].set_ylabel("CWND (MB)")
+        axs[1].set_xlabel("Time (seconds)")
 
 
 if __name__ == "__main__":
