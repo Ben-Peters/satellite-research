@@ -83,7 +83,7 @@ def main():
     os.chdir(f'Trial_{args.batch}')
     print(os.getcwd())
     prefix = f'{os.getcwd()}/logs/'
-    logToCsv(files=os.listdir(f'./logs'), prefix)
+    logToCsv(files=os.listdir(f'./logs'), prefix=prefix)
 
 if __name__ == "__main__":
     main()
