@@ -124,7 +124,7 @@ class Trial:
 
     def startIperf3Server(self):
         for host in self.hosts:
-            iperf3ServerStart = f"ssh {self.user}@{host} \"~/iperf/src/iperf3 -s\"&"
+            iperf3ServerStart = f"ssh {self.user}@{host} \"iperf3 -s\"&"
             self.serversRunning += 1
             print(f'\trunning command: \n {iperf3ServerStart}')
             timeStamp = self.getTimeStamp()
@@ -173,9 +173,9 @@ class Trial:
             # exitCodes.append(subprocess.Popen(["ssh", f"{self.user}@glomma.cs.wpi.edu", "iperf3", "--reverse", "-i", "\"eno2\"",
             #                                    "-c", f"{host}", f"-n{self.data}", f"-p{self.ports[self.clientsRunning]}"], stdout=subprocess.DEVNULL))
             if self.data is not None:
-                iperf3ClientStartCommand = f'ssh {self.user}@glomma.cs.wpi.edu \'~/iperf/src/iperf3 -R -c {host} -n {self.data}\''
+                iperf3ClientStartCommand = f'ssh {self.user}@glomma.cs.wpi.edu \'iperf3 -R -c {host} -n {self.data}\''
             else:
-                iperf3ClientStartCommand = f'ssh {self.user}@glomma.cs.wpi.edu \'~/iperf/src/iperf3 -R -c {host} -t {self.time}\''
+                iperf3ClientStartCommand = f'ssh {self.user}@glomma.cs.wpi.edu \'iperf3 -R -c {host} -t {self.time}\''
             self.clientsRunning += 1
             print(f'\trunning command: \n{iperf3ClientStartCommand}')
             timeStamp = self.getTimeStamp()
