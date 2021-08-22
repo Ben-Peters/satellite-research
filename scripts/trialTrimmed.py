@@ -355,7 +355,7 @@ class Trial:
 
     def moveKernLog(self):
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
-        command = f'{sshPrefix} \"sudo sh -c \'cp /var/log/kern.log ~/Trial_{self.batchNum}/{self.cc[self.clientDumpsRunning]}_{self.getTimeStamp()}.log\'\"'
+        command = f'{sshPrefix} \"sudo sh -c \'cp /var/log/kern.log ~/Trial_{self.batchNum}/{self.cc[0]}_{self.getTimeStamp()}.log\'\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
         command = f'{sshPrefix} \"sudo sh -c \'echo \"\" > /var/log/kern.log\'\"'
