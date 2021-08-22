@@ -477,7 +477,7 @@ class Trial:
 
         # run downloads
         self.setupKernLog()
-        for i in self.numToRun:
+        for i in range(self.numToRun):
             if i % 2 == 0:
                 self.routeSatellite()
             else:
