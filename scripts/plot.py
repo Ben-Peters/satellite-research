@@ -1096,7 +1096,7 @@ class PlotAllData(Plot):
         df = data
         timeOffset = df['time'][0]
         df['time'] -= timeOffset
-        cutOffTime = 1
+        cutOffTime = 0.01
         seconds = []
 
         rtt = []
@@ -1167,9 +1167,10 @@ class PlotAllData(Plot):
                 RTTCount = 0
                 cwndSum = 0
                 cwndCount = 0
+                cutOffTime += 0.01
 
 
-        results = (count, rtt, cwnd, minRTT, ssExit)
+        results = (count, rtt, cwnd, seconds, minRTT, ssExit)
         self.rtt.append(rtt)
         self.cwnd.append(cwnd)
         self.seconds.append(seconds)
@@ -1203,7 +1204,7 @@ class PlotAllData(Plot):
             self.seconds.append([])
             parentPipe, childPipe = Pipe()
             parentPipes.append(parentPipe)
-            p = Process(target=self.calculateStats, args=(df, childPipe, self.producerSem, i))
+            p = Process(target=self.calculateStatsRTT, args=(df, childPipe, self.producerSem, i))
             p.start()
             processes.append(p)
         # Get results from threads
@@ -1219,25 +1220,27 @@ class PlotAllData(Plot):
             i = result[0]
             rtt = result[1]
             cwnd = result[2]
-            minRTT = result[3]
-            ssExit = result[4]
+            seconds = result[3]
+            minRTT = result[4]
+            ssExit = result[5]
             self.rtt[i] = rtt
             self.cwnd[i] = cwnd
+            self.seconds[i] = seconds
             self.minRTT = minRTT
             self.ssExit = ssExit
 
 
     def avgAllDataRTT(self, startPos):
-        minLength = len(self.throughput[0])
+        minLength = len(self.rtt[0])
         minPos = startPos * self.numRuns
         avgRTT = []
         avgCwnd = []
 
         ciRTT = [[], []]
         ciCwnd = [[], []]
-        for i in range(len(self.throughput)):
-            if minLength > len(self.throughput[i]):
-                minLength = len(self.throughput[i])
+        for i in range(len(self.rtt)):
+            if minLength > len(self.rtt[i]):
+                minLength = len(self.rtt[i])
         for t in range(minLength):
             rttSum = 0
             cwndSum = 0
@@ -1246,7 +1249,7 @@ class PlotAllData(Plot):
             cwndValues = []
             num = 0
             for i in range(self.numRuns):
-                if len(self.throughput[i]) > t:
+                if len(self.rtt[i]) > t:
                     rttSum += self.rtt[i+minPos][t]
                     cwndSum += self.cwnd[i+minPos][t]
 
@@ -1261,7 +1264,7 @@ class PlotAllData(Plot):
             #avgRwnd.append(rwndSum / num / 1048576)  # Bytes to MBytes
             #avgRetrans.append(retransSum / num)
             avgRTT.append(numpy.mean(rttValues))
-            avgCwnd.append(numpy.mean(cwndValues) / 1048576)  # Bytes to MBytes
+            avgCwnd.append(numpy.mean(cwndValues))  # Bytes to MBytes
             # if t == 10:
                 # print(numpy.mean(rwndValues))
 
@@ -1296,15 +1299,23 @@ class PlotAllData(Plot):
         axs[0].plot(self.seconds[minIndex], self.rttAVG[0], color='tab:orange')
         axs[0].fill_between(self.seconds[minIndex], self.rttCI[0][0],
                             self.rttCI[0][1], color='tab:orange', alpha=.2)
+        axs[0].plot(self.seconds[minIndex], self.rttAVG[1], color='tab:blue')
+        axs[0].fill_between(self.seconds[minIndex], self.rttCI[1][0],
+                            self.rttCI[1][1], color='tab:blue', alpha=.2)
 
         axs[1].plot(self.seconds[minIndex], self.cwndAVG[0], color='tab:orange')
         axs[1].fill_between(self.seconds[minIndex], self.cwndCI[0][0],
                             self.cwndCI[0][1], color='tab:orange', alpha=.2)
+        axs[1].plot(self.seconds[minIndex], self.cwndAVG[1], color='tab:blue')
+        axs[1].fill_between(self.seconds[minIndex], self.cwndCI[1][0],
+                            self.cwndCI[1][1], color='tab:blue', alpha=.2)
         fig.suptitle(self.title)
         fig.legend(self.legend)
         axs[0].set_ylabel("RTT (ms)")
         axs[1].set_ylabel("CWND (MB)")
         axs[1].set_xlabel("Time (seconds)")
+        pyplot.savefig(self.plotFilepath)
+        pyplot.show()
 
 
 if __name__ == "__main__":
