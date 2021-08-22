@@ -47,7 +47,7 @@ def logToCsv(files, prefix):
                         csv.write(f'numPackets,time,sampleRTT,cwnd,sampleCount,currRTT,minRTT,delayThresh,exit\n')
                         flag = True
                     numPackets = int(line.split("$")[-1])
-                    time = float(line.split("[ ")[1].split(']')[0])
+                    time = float(line.split("[")[1].split(']')[0])
                 elif "sample RTT:" in line:
                     sampleRTT = int(line.split("$")[-1])
                 elif "cwnd:" in line:
