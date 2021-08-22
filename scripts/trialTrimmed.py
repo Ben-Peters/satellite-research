@@ -380,6 +380,10 @@ class Trial:
         for file in self.logs:
             # host = self.hosts[self.pcapsSent]
             host = self.hosts[0]
+            changeOwnership = f'ssh {self.user}@{self.hosts[0]} \"sudo chown -R btpeters: ~/Trial_{self.batchNum}\"'
+            timeStamp = self.getTimeStamp()
+            os.system(changeOwnership)
+            self.commandsRun.append((timeStamp, changeOwnership))
             scpFromServer = f'scp -i ~/.ssh/id_rsa {self.user}@{host}:~/Trial_{self.batchNum}/* /csusers/btpeters/Research/tmp/Trial_{self.batchNum}/logs&'
             print(f'\trunning command: \n{scpFromServer}')
             timeStamp = self.getTimeStamp()
