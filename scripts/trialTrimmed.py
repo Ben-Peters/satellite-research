@@ -325,53 +325,53 @@ class Trial:
 
     def enableHystart(self):
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
-        command = f'{sshPrefix} \"sudo sh -c \'echo 1 >> /sys/module/tcp_cubic/parameters/hystart'
+        command = f'{sshPrefix} \"sudo sh -c \'echo 1 >> /sys/module/tcp_cubic/parameters/hystart\'\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
     def enableMaxCap(self):
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
-        command = f'{sshPrefix} \"sudo sh -c \'echo 1 >> /sys/module/tcp_cubic/parameters/hystart_delay_max'
+        command = f'{sshPrefix} \"sudo sh -c \'echo 1 >> /sys/module/tcp_cubic/parameters/hystart_delay_max\'\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
     def disableMaxCap(self):
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
-        command = f'{sshPrefix} \"sudo sh -c \'echo 0 >> /sys/module/tcp_cubic/parameters/hystart_delay_max'
+        command = f'{sshPrefix} \"sudo sh -c \'echo 0 >> /sys/module/tcp_cubic/parameters/hystart_delay_max\'\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
     def disableHystart(self):
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
-        command = f'{sshPrefix} \"sudo sh -c \'echo 0 >> /sys/module/tcp_cubic/parameters/hystart'
+        command = f'{sshPrefix} \"sudo sh -c \'echo 0 >> /sys/module/tcp_cubic/parameters/hystart\'\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
     def setupKernLog(self):
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
-        command = f'{sshPrefix} \"sudo sh -c \'echo \"\" > /var/log/kern.log'
+        command = f'{sshPrefix} \"sudo sh -c \'echo \"\" > /var/log/kern.log\'\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
     def moveKernLog(self):
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
-        command = f'{sshPrefix} \"sudo sh -c \'cp /var/log/kern.log ~/Trial_{self.batchNum}/{self.cc[self.clientDumpsRunning]}_{self.getTimeStamp()}.log'
+        command = f'{sshPrefix} \"sudo sh -c \'cp /var/log/kern.log ~/Trial_{self.batchNum}/{self.cc[self.clientDumpsRunning]}_{self.getTimeStamp()}.log\'\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
-        command = f'{sshPrefix} \"sudo sh -c \'echo \"\" > /var/log/kern.log'
+        command = f'{sshPrefix} \"sudo sh -c \'echo \"\" > /var/log/kern.log\'\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
         self.logs.append("Trial_{self.batchNum}/{self.cc[self.clientDumpsRunning]}_{self.getTimeStamp()}.log")
 
     def routeSatellite(self):
         sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
-        command = f'{sshPrefix} \"~/setup_routes.sh'
+        command = f'{sshPrefix} \"~/setup_routes.sh\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
     def routeVorma(self):
         sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
-        command = f'{sshPrefix} \"~/setup_routes.sh vorma'
+        command = f'{sshPrefix} \"~/setup_routes.sh vorma\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
