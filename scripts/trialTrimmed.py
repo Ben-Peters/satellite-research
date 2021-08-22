@@ -362,7 +362,7 @@ class Trial:
         command = f'{sshPrefix} \"sudo sh -c \'echo \"\" > /var/log/kern.log\'\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
-        self.logs.append(f"Trial_{self.batchNum}/{self.cc[self.clientDumpsRunning]}_{self.getTimeStamp()}.log")
+        self.logs.append(f"Trial_{self.batchNum}/{self.cc[0]}_{self.getTimeStamp()}.log")
 
     def routeSatellite(self):
         sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
@@ -495,6 +495,7 @@ class Trial:
             print('Killing tcpdump and iperf3')
             # self.terminateCommands()
             self.moveKernLog()
+            self.sleep(5)
         self.enableTuning()
         # self.removeLimit()
         # self.disableTuning()
