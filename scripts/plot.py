@@ -1175,7 +1175,7 @@ class PlotAllData(Plot):
         self.cwnd.append(cwnd)
         self.seconds.append(seconds)
         self.minRTT.append(minRTT)
-        self.ssExit = ssExit
+        self.ssExit.append(ssExit)
         print(f"{count}: Results Ready")
         # pSem.acquire()
         pipe.send(results)
@@ -1226,8 +1226,8 @@ class PlotAllData(Plot):
             self.rtt[i] = rtt
             self.cwnd[i] = cwnd
             self.seconds[i] = seconds
-            self.minRTT = minRTT
-            self.ssExit = ssExit
+            self.minRTT.append(minRTT)
+            self.ssExit.append(ssExit)
 
 
     def avgAllDataRTT(self, startPos):
@@ -1276,6 +1276,9 @@ class PlotAllData(Plot):
         self.rttAVG.append(avgRTT)
         self.cwndAVG.append(avgCwnd)
 
+        self.ssExitAVG = sum(self.ssExit)/numpy.count_nonzero(self.ssExit)
+        self.minRTTAVG = numpy.mean(self.minRTT)
+
         self.rttCI.append(ciRTT)
         self.cwndCI.append(ciCwnd)
 
@@ -1302,6 +1305,8 @@ class PlotAllData(Plot):
         axs[0].plot(self.seconds[minIndex], self.rttAVG[1], color='tab:blue')
         axs[0].fill_between(self.seconds[minIndex], self.rttCI[1][0],
                             self.rttCI[1][1], color='tab:blue', alpha=.2)
+        axs[0].axvline(x=self.ssExitAVG, color='tab:red', alpha=.5)
+        axs[0].axhline(y=self.minRTTAVG, color='tab:green', alpha=.5)
 
         axs[1].plot(self.seconds[minIndex], self.cwndAVG[0], color='tab:orange')
         axs[1].fill_between(self.seconds[minIndex], self.cwndCI[0][0],
@@ -1309,11 +1314,18 @@ class PlotAllData(Plot):
         axs[1].plot(self.seconds[minIndex], self.cwndAVG[1], color='tab:blue')
         axs[1].fill_between(self.seconds[minIndex], self.cwndCI[1][0],
                             self.cwndCI[1][1], color='tab:blue', alpha=.2)
-        fig.suptitle(self.title)
+        axs[1].axvline(x=self.ssExitAVG, color='tab:red', alpha=.5)
+        fig.suptitle(title)
         fig.legend(self.legend)
         axs[0].set_ylabel("RTT (ms)")
-        axs[1].set_ylabel("CWND (MB)")
+        axs[1].set_ylabel("CWND (Packets)")
         axs[1].set_xlabel("Time (seconds)")
+        axs[0].set_ylim(bottom=0)
+        axs[1].set_ylim(bottom=0)
+        axs[0].set_xlim(xmin=0)
+        axs[0].set_xlim(xmax=self.seconds[minIndex][-1])
+        axs[1].set_xlim(xmin=0)
+        axs[1].set_xlim(xmax=self.seconds[minIndex][-1])
         pyplot.savefig(self.plotFilepath)
         pyplot.show()
 
