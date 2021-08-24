@@ -477,8 +477,12 @@ class Trial:
         if self.runNum == 0:
             print("Running setupLocal()")
             self.setUpLocal()
+            print("Disabling max cap")
+            self.disableMaxCap()
             print("Running setProtocolsRemote()")
             self.setProtocolsRemote()
+        print("Disabling HyStart")
+        self.disableHystart()
         print("Running startIperf3Server()")
         self.startIperf3Server()
         # run downloads
