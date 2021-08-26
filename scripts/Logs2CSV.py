@@ -37,6 +37,8 @@ def logToCsv(files, prefix):
                         csv.write(f"{numPackets},{time},{sampleRTT},{cwnd},{sampleCount},{currRTT},{minRTT},{delayThresh},{exit}\n")
                         sampleRTT = 0
                         cwnd = 0
+                        packets_out = 0
+                        mss = 0
                         currRTT = 0
                         minRTT = 0
                         delayThresh = 0
