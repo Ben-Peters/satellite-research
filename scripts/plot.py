@@ -1216,6 +1216,7 @@ class PlotAllData(Plot):
                 sortedData.append(df)
         self.data = sortedData
         for df, i in zip(self.data, range(len(self.data))):
+            self.throughput.append([])
             self.rtt.append([])
             self.cwnd.append([])
             self.seconds.append([])
