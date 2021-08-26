@@ -1343,7 +1343,7 @@ class PlotAllData(Plot):
         axs[1].plot(self.seconds[minIndex], self.rttAVG[1], color='tab:blue')
         axs[1].fill_between(self.seconds[minIndex], self.rttCI[1][0],
                             self.rttCI[1][1], color='tab:blue', alpha=.2)
-        #axs[1].axvline(x=self.ssExitAVG, color='tab:red', alpha=.5)
+        axs[1].axvline(x=self.ssExitAVG, color='tab:red', alpha=.5)
         axs[1].axhline(y=self.minRTTAVG, color='tab:green', alpha=.5)
 
         axs[2].plot(self.seconds[minIndex], self.cwndAVG[0], color='tab:orange')
@@ -1352,7 +1352,7 @@ class PlotAllData(Plot):
         axs[2].plot(self.seconds[minIndex], self.cwndAVG[1], color='tab:blue')
         axs[2].fill_between(self.seconds[minIndex], self.cwndCI[1][0],
                             self.cwndCI[1][1], color='tab:blue', alpha=.2)
-        #axs[1].axvline(x=self.ssExitAVG, color='tab:red', alpha=.5)
+        axs[2].axvline(x=self.ssExitAVG, color='tab:red', alpha=.5)
         fig.suptitle("Hystart Disabled")
         fig.legend(self.legend)
         axs[0].set_ylabel("Throughput (Mbits/sec")

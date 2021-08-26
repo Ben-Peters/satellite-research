@@ -22,6 +22,8 @@ def logToCsv(files, prefix):
         csv = open(f'csvs/{file.replace(".log", ".csv")}', 'w')
         sampleRTT = 0
         cwnd = 0
+        packets_out = 0
+        mss = 0
         currRTT = 0
         minRTT = 0
         delayThresh = 0
@@ -34,7 +36,7 @@ def logToCsv(files, prefix):
             if "(5201)" in line:
                 if "packets since start:" in line:
                     if flag:
-                        csv.write(f"{numPackets},{time},{sampleRTT},{cwnd},{sampleCount},{currRTT},{minRTT},{delayThresh},{exit}\n")
+                        csv.write(f"{numPackets},{time},{sampleRTT},{cwnd},{packets_out},{mss},{sampleCount},{currRTT},{minRTT},{delayThresh},{exit}\n")
                         sampleRTT = 0
                         cwnd = 0
                         packets_out = 0
