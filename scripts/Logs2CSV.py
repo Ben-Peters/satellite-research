@@ -44,7 +44,7 @@ def logToCsv(files, prefix):
                         numPackets = 0
                         time = 0
                     else:
-                        csv.write(f'numPackets,time,sampleRTT,cwnd,sampleCount,currRTT,minRTT,delayThresh,exit\n')
+                        csv.write(f'numPackets,time,sampleRTT,cwnd,packets_out,mss,sampleCount,currRTT,minRTT,delayThresh,exit\n')
                         flag = True
                     numPackets = int(line.split("$")[-1])
                     time = float(line.split("[")[1].split(']')[0])
@@ -52,6 +52,10 @@ def logToCsv(files, prefix):
                     sampleRTT = int(line.split("$")[-1])
                 elif "cwnd:" in line:
                     cwnd = int(line.split("$")[-1])
+                elif "packets in flight:" in line:
+                    packets_out = int(line.split("$")[-1])
+                elif "mss:" in line:
+                    mss = int(line.split("$")[-1])
                 elif "Sample count:" in line:
                     sampleCount = int(line.split("$")[-1])
                 elif "curr RTT:" in line:
@@ -62,7 +66,7 @@ def logToCsv(files, prefix):
                     delayThresh = int(line.split("$")[-1])
                 elif "Exit due to delay detect" in line:
                     exit = 1
-        csv.write(f"{numPackets},{time},{sampleRTT},{cwnd},{sampleCount},{currRTT},{minRTT},{delayThresh},{exit}\n")
+        csv.write(f"{numPackets},{time},{sampleRTT},{cwnd},{packets_out},{mss},{sampleCount},{currRTT},{minRTT},{delayThresh},{exit}\n")
         log.close()
         csv.close()
 

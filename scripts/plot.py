@@ -1099,6 +1099,11 @@ class PlotAllData(Plot):
         cutOffTime = 0.01
         seconds = []
 
+        throughput = []
+        avgthroughput = 0
+        throughputSum = 0
+        throughputCount = 0
+
         rtt = []
         avgRTT = 0
         RTTSum = 0
@@ -1119,6 +1124,11 @@ class PlotAllData(Plot):
         flag = False
 
         for j in range(len(df)):
+
+            if not pandas.isnull(df['packets_out'].iloc[j]):
+                # Calculate RTT by calculating number of bits in flight (packets*mss*8) and dividing by the RTT im ms
+                throughputSum += (df['packets_out'].iloc[j]*(df['mss'].iloc[j]*8))/(df['sampleRTT'].iloc[j]/1000)
+                throughputCount += 1
 
             # Only look at packets that have data bout CWND
             if not pandas.isnull(df['cwnd'].iloc[j]):
@@ -1154,6 +1164,10 @@ class PlotAllData(Plot):
 
             if df['time'].iloc[j] > float(cutOffTime):
                 seconds.append(cutOffTime)
+                if throughputCount == 0:
+                    throughput.append(0)
+                else:
+                    throughput.append(throughputSum/throughputCount)
                 if RTTCount == 0:
                      rtt.append(0)
                 else:
@@ -1163,6 +1177,8 @@ class PlotAllData(Plot):
                 else:
                      cwnd.append(cwndSum/cwndCount)
 
+                throughputSum = 0
+                throughputCount = 0
                 RTTSum = 0
                 RTTCount = 0
                 cwndSum = 0
@@ -1170,7 +1186,8 @@ class PlotAllData(Plot):
                 cutOffTime += 0.01
 
 
-        results = (count, rtt, cwnd, seconds, minRTT, ssExit)
+        results = (count, throughput, rtt, cwnd, seconds,minRTT, ssExit)
+        self.throughput.append(throughput)
         self.rtt.append(rtt)
         self.cwnd.append(cwnd)
         self.seconds.append(seconds)
@@ -1218,11 +1235,13 @@ class PlotAllData(Plot):
         # put results in the right order
         for result in results:
             i = result[0]
-            rtt = result[1]
-            cwnd = result[2]
-            seconds = result[3]
-            minRTT = result[4]
-            ssExit = result[5]
+            throughput = result[1]
+            rtt = result[2]
+            cwnd = result[3]
+            seconds = result[4]
+            minRTT = result[5]
+            ssExit = result[6]
+            self.throughput[i] = throughput
             self.rtt[i] = rtt
             self.cwnd[i] = cwnd
             self.seconds[i] = seconds
@@ -1233,9 +1252,11 @@ class PlotAllData(Plot):
     def avgAllDataRTT(self, startPos):
         minLength = len(self.rtt[0])
         minPos = startPos * self.numRuns
+        avgTput = []
         avgRTT = []
         avgCwnd = []
 
+        ciTput = [[], []]
         ciRTT = [[], []]
         ciCwnd = [[], []]
         for i in range(len(self.rtt)):
@@ -1244,27 +1265,31 @@ class PlotAllData(Plot):
         for t in range(minLength):
             rttSum = 0
             cwndSum = 0
+            tputSum = 0
 
             rttValues = []
             cwndValues = []
+            tputValues = []
             num = 0
             for i in range(self.numRuns):
                 if len(self.rtt[i]) > t:
                     rttSum += self.rtt[i+minPos][t]
                     cwndSum += self.cwnd[i+minPos][t]
+                    tputSum += self.throughput[i+minPos][t]
 
                     rttValues.append(self.rtt[i + minPos][t])
                     cwndValues.append(self.cwnd[i + minPos][t])
+                    tputValues.append(self.throughput[i + minPos][t])
 
                     num += 1
 
-            #avgTput.append(tputSum / num)
             #avgRTT.append(rttSum / num)
             #avgCwnd.append(cwndSum / num / 1048576)  # Bytes to MBytes
             #avgRwnd.append(rwndSum / num / 1048576)  # Bytes to MBytes
             #avgRetrans.append(retransSum / num)
             avgRTT.append(numpy.mean(rttValues))
             avgCwnd.append(numpy.mean(cwndValues))  # Bytes to MBytes
+            avgTput.append(numpy.mean(tputValues))
             # if t == 10:
                 # print(numpy.mean(rwndValues))
 
@@ -1272,15 +1297,20 @@ class PlotAllData(Plot):
             ciRTT[1].append(calculateConfidenceInterval(rttValues, 0.95)[1])
             ciCwnd[0].append(calculateConfidenceInterval(cwndValues, 0.95)[0])
             ciCwnd[1].append(calculateConfidenceInterval(cwndValues, 0.95)[1])
+            ciTput[0].append(calculateConfidenceInterval(tputValues, 0.95)[0])
+            ciTput[1].append(calculateConfidenceInterval(tputValues, 0.95)[1])
 
         self.rttAVG.append(avgRTT)
         self.cwndAVG.append(avgCwnd)
+        self.throughputAVG.append(avgTput)
 
-        self.ssExitAVG = sum(self.ssExit)/numpy.count_nonzero(self.ssExit)
+        if numpy.count_nonzero(self.ssExit):
+            self.ssExitAVG = sum(self.ssExit)/numpy.count_nonzero(self.ssExit)
         self.minRTTAVG = numpy.mean(self.minRTT)
 
         self.rttCI.append(ciRTT)
         self.cwndCI.append(ciCwnd)
+        self.throughputCI.append(ciTput)
 
 
     def RTT(self, title):
@@ -1289,8 +1319,8 @@ class PlotAllData(Plot):
         self.avgAllDataRTT(1)
 
         # Setup formatting of plots
-        fig, axs = pyplot.subplots(2, gridspec_kw={'height_ratios': [3, 3]})
-        fig.set_figheight(6)
+        fig, axs = pyplot.subplots(3, gridspec_kw={'height_ratios': [3, 3, 3]})
+        fig.set_figheight(8)
 
         minLength = len(self.seconds[0])
         minIndex = 0
@@ -1299,33 +1329,44 @@ class PlotAllData(Plot):
                 minIndex = i
                 minLength = len(self.seconds[i])
 
-        axs[0].plot(self.seconds[minIndex], self.rttAVG[0], color='tab:orange')
-        axs[0].fill_between(self.seconds[minIndex], self.rttCI[0][0],
-                            self.rttCI[0][1], color='tab:orange', alpha=.2)
-        axs[0].plot(self.seconds[minIndex], self.rttAVG[1], color='tab:blue')
-        axs[0].fill_between(self.seconds[minIndex], self.rttCI[1][0],
-                            self.rttCI[1][1], color='tab:blue', alpha=.2)
-        axs[0].axvline(x=self.ssExitAVG, color='tab:red', alpha=.5)
-        axs[0].axhline(y=self.minRTTAVG, color='tab:green', alpha=.5)
+        axs[0].plot(self.seconds[minIndex], self.throughputAVG[0], color='tab:orange')
+        axs[0].fill_between(self.seconds[minIndex], self.throughputCI[0][0],
+                            self.throughputCI[0][1], color='tab:orange', alpha=.2)
+        axs[0].plot(self.seconds[minIndex], self.throughputAVG[1], color='tab:blue')
+        axs[0].fill_between(self.seconds[minIndex], self.throughputCI[1][0],
+                            self.throughputCI[1][1], color='tab:blue', alpha=.2)
 
-        axs[1].plot(self.seconds[minIndex], self.cwndAVG[0], color='tab:orange')
-        axs[1].fill_between(self.seconds[minIndex], self.cwndCI[0][0],
+        axs[1].plot(self.seconds[minIndex], self.rttAVG[0], color='tab:orange')
+        axs[1].fill_between(self.seconds[minIndex], self.rttCI[0][0],
+                            self.rttCI[0][1], color='tab:orange', alpha=.2)
+        axs[1].plot(self.seconds[minIndex], self.rttAVG[1], color='tab:blue')
+        axs[1].fill_between(self.seconds[minIndex], self.rttCI[1][0],
+                            self.rttCI[1][1], color='tab:blue', alpha=.2)
+        #axs[1].axvline(x=self.ssExitAVG, color='tab:red', alpha=.5)
+        axs[1].axhline(y=self.minRTTAVG, color='tab:green', alpha=.5)
+
+        axs[2].plot(self.seconds[minIndex], self.cwndAVG[0], color='tab:orange')
+        axs[2].fill_between(self.seconds[minIndex], self.cwndCI[0][0],
                             self.cwndCI[0][1], color='tab:orange', alpha=.2)
-        axs[1].plot(self.seconds[minIndex], self.cwndAVG[1], color='tab:blue')
-        axs[1].fill_between(self.seconds[minIndex], self.cwndCI[1][0],
+        axs[2].plot(self.seconds[minIndex], self.cwndAVG[1], color='tab:blue')
+        axs[2].fill_between(self.seconds[minIndex], self.cwndCI[1][0],
                             self.cwndCI[1][1], color='tab:blue', alpha=.2)
-        axs[1].axvline(x=self.ssExitAVG, color='tab:red', alpha=.5)
-        fig.suptitle(title)
+        #axs[1].axvline(x=self.ssExitAVG, color='tab:red', alpha=.5)
+        fig.suptitle("Hystart Disabled")
         fig.legend(self.legend)
-        axs[0].set_ylabel("RTT (ms)")
-        axs[1].set_ylabel("CWND (Packets)")
-        axs[1].set_xlabel("Time (seconds)")
+        axs[0].set_ylabel("Throughput (Mbits/sec")
+        axs[1].set_ylabel("RTT (ms)")
+        axs[2].set_ylabel("CWND (Packets)")
+        axs[2].set_xlabel("Time (seconds)")
         axs[0].set_ylim(bottom=0)
         axs[1].set_ylim(bottom=0)
+        axs[2].set_ylim(bottom=0)
         axs[0].set_xlim(xmin=0)
         axs[0].set_xlim(xmax=self.seconds[minIndex][-1])
         axs[1].set_xlim(xmin=0)
         axs[1].set_xlim(xmax=self.seconds[minIndex][-1])
+        axs[2].set_xlim(xmin=0)
+        axs[2].set_xlim(xmax=self.seconds[minIndex][-1])
         pyplot.savefig(self.plotFilepath)
         pyplot.show()
 
