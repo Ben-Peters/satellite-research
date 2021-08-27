@@ -1127,7 +1127,7 @@ class PlotAllData(Plot):
 
             if not pandas.isnull(df['packets_out'].iloc[j]):
                 # Calculate RTT by calculating number of bits in flight (packets*mss*8) and dividing by the RTT im ms
-                throughputSum += (df['packets_out'].iloc[j]*(df['mss'].iloc[j]*8))/(df['sampleRTT'].iloc[j]/1000)
+                throughputSum += ((df['packets_out'].iloc[j]*(df['mss'].iloc[j]*8))/(df['sampleRTT'].iloc[j]/1000))/1024/1024
                 throughputCount += 1
 
             # Only look at packets that have data bout CWND
@@ -1353,9 +1353,9 @@ class PlotAllData(Plot):
         axs[2].fill_between(self.seconds[minIndex], self.cwndCI[1][0],
                             self.cwndCI[1][1], color='tab:blue', alpha=.2)
         axs[2].axvline(x=self.ssExitAVG, color='tab:red', alpha=.5)
-        fig.suptitle("Hystart Disabled")
+        fig.suptitle("Hystart Enabled")
         fig.legend(self.legend)
-        axs[0].set_ylabel("Throughput (Mbits/sec")
+        axs[0].set_ylabel("Throughput (Mbits/s)")
         axs[1].set_ylabel("RTT (ms)")
         axs[2].set_ylabel("CWND (Packets)")
         axs[2].set_xlabel("Time (seconds)")

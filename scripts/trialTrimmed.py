@@ -481,8 +481,8 @@ class Trial:
             self.disableMaxCap()
             print("Running setProtocolsRemote()")
             self.setProtocolsRemote()
-        print("Enabling HyStart")
-        self.enableHystart()
+        print("Disabling HyStart")
+        self.disableHystart()
         print("Running startIperf3Server()")
         self.startIperf3Server()
         # run downloads
