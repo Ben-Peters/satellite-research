@@ -404,7 +404,7 @@ class Trial:
         filename = f'Trial_{self.batchNum}/logs/ping_{self.getTimeStamp()}.csv'
         command = f'{sshPrefix} \"mkdir Trial_{self.batchNum}/logs\"'
         os.system(command)
-        self.comandsRun.append((self.getTimeStamp(), command))
+        self.commandsRun.append((self.getTimeStamp(), command))
         command = f'{sshPrefix} \"~/myUDPing -h {self.hosts[0]} -p 1234 -n 5 -c {filename}\"'
         os.system(f"echo '{command}'")
         self.csvs.append(filename)
