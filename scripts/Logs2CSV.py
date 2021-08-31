@@ -29,10 +29,11 @@ def logToCsv(files, prefix):
         os.system(scp)
         timeStr = ''
         for line, i in open('bootTime.txt', 'r').readlines(), range(2):
-            if not i:
-                timeStr = line
-            else:
-                timeStr = timeStr + (str) (line.split('.')[-1]).split(' ')[0]
+            print(line)
+            #if not i:
+                #timeStr = line
+            #else:
+                #timeStr = timeStr + (str) (line.split('.')[-1]).split(' ')[0]
         bootTime = float(timeStr)
     for file in files:
         log = open((prefix + file), 'r')
@@ -106,7 +107,7 @@ def main():
     os.chdir(f'Research')
     print("in Research")
     # os.listdir(f'C:/satellite-research/csvs/Trial_{args.batch}')
-    getData()
+    #getData()
     os.chdir(f'Trial_{args.batch}')
     print(os.getcwd())
     prefix = f'{os.getcwd()}/logs/'
