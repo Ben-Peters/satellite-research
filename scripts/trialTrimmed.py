@@ -395,16 +395,16 @@ class Trial:
     def startUDPingServer(self):
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
         command = f'{sshPrefix} \"~/sUDPing\"'
-        self.commandsRun.append((self.getTimeStamp(),command))
+        self.commandsRun.append((self.getTimeStamp(), command))
         subprocess.Popen(command, shell=True)
 
     def startUDPingClient(self):
         os.system("echo 'in Start UDP client'")
         sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
-        filename = f'Trial_{self.batchNum}/logs/ping_{self.getTimeStamp()}.csv'
-        command = f'{sshPrefix} \"mkdir Trial_{self.batchNum}/logs\"'
-        os.system(command)
-        self.commandsRun.append((self.getTimeStamp(), command))
+        filename = f'Trial_{self.batchNum}/ping_{self.getTimeStamp()}.csv'
+        # command = f'{sshPrefix} \"mkdir Trial_{self.batchNum}/logs\"'
+        # os.system(command)
+        # self.commandsRun.append((self.getTimeStamp(), command))
         command = f'{sshPrefix} \"~/myUDPing -h {self.hosts[0]} -p 1234 -n 5 -c {filename}\"'
         os.system(f"echo '{command}'")
         self.csvs.append(filename)
@@ -412,13 +412,12 @@ class Trial:
         subprocess.Popen(command, shell=True)
 
     def getCSV(self):
-        # The CSV has already been grabbed in getLogs but I need to move it to the CSV folder
         prefix = f'/csusers/btpeters/Research/tmp/Trial_{self.batchNum}'
+        scpFromServer = f'scp -i ~/.ssh/id_rsa {self.user}@glomma.cs.wpi.edu:~/Trial_{self.batchNum}/* {prefix}/csvs&'
         # os.system(f'mkdir {prefix}/csvs')
-        files = os.listdir(f'{prefix}/logs')
-        for file in files:
-            if 'ping' in file:
-                os.system(f'mv {prefix}/logs/{file} {prefix}/csvs/{file}')
+        self.commandsRun.append((self.getTimeStamp(), scpFromServer))
+        os.system(scpFromServer)
+        self.sleep(3)
 
     def start(self):
         os.chdir(os.path.expanduser("~/Research"))
