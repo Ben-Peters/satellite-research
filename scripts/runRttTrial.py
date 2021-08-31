@@ -92,6 +92,7 @@ def main():
     except:
         ssh = Connection(host='cs.wpi.edu', user='btpeters')
         ssh.run(startTrial)
+        print("getting Data")
         getData()
     plotData()
 
