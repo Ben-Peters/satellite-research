@@ -618,12 +618,12 @@ def main():
     t = Trial(data=args.size, batchNum=args.batch, timeout=100, log=args.log, cc=cc, runNum=args.runNum,
               numToRun=args.numToRun, time=args.time, tcp_rmem=args.rmem,
               tcp_mem=args.mem, tcp_wmem=args.wmem, ports=['5201', '5201'], iperf_w_arg=args.window)
-    if args.RTT:
-        t.startRTT()
-    elif args.Ping:
-        t.startPingRTT()
-    else:
-        t.start()
+    #if args.RTT:
+    #    t.startRTT()
+    #elif args.Ping:
+    t.startPingRTT()
+    #else:
+    #    t.start()
     print("All done")
 
 
