@@ -401,7 +401,7 @@ class Trial:
     def startUDPingClient(self):
         os.system("echo 'in Start UDP client'")
         sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
-        filename = f'Trial_{self.batchNum}/ping_{self.getTimeStamp()}.csv'
+        filename = f'/csusers/btpeters/Research/tmp/Trial_{self.batchNum}/logs/ping_{self.getTimeStamp()}.csv'
         command = f'{sshPrefix} \"~/myUDPing -h {self.hosts[0]} -p 1234 -n 5 -c {filename}\"'
         os.system(f"echo '{command}'")
         self.csvs.append(filename)
@@ -411,7 +411,7 @@ class Trial:
     def getCSV(self):
         # The CSV has already been grabbed in getLogs but I need to move it to the CSV folder
         prefix = f'/csusers/btpeters/Research/tmp/Trial_{self.batchNum}'
-        os.system(f'mkdir {prefix}/csvs')
+        # os.system(f'mkdir {prefix}/csvs')
         files = os.listdir(f'{prefix}/logs')
         for file in files:
             if 'ping' in file:
