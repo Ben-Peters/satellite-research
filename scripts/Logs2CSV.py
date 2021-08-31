@@ -29,7 +29,7 @@ def logToCsv(files, prefix):
         os.system(scp)
         timeStr = ''
         for line, i in open('bootTime.txt', 'r').readlines(), range(2):
-            print(f'i: {line}')
+            print(f'{i}: {line}')
             #if not i:
                 #timeStr = line
             #else:
