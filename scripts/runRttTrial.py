@@ -2,7 +2,7 @@ import argparse
 import os
 from plot import PlotTputOneFlow, PlotTputCompare, PlotAllData
 import subprocess
-import ssh_subprocess
+from fabric2 import Connection
 import time
 
 parser = argparse.ArgumentParser()
@@ -90,8 +90,8 @@ def main():
         os.listdir(f'C:/satellite-research/csvs/Trial_{args.batch}')
         print("This trial has already been run, just creating plots")
     except:
-        ssh = ssh_subprocess.Ssh(host='cs.wpi.edu', user='btpeters', host_key_checking='no')
-        ssh.call(startTrial)
+        ssh = Connection(host='cs.wpi.edu', user='btpeters')
+        ssh.run(startTrial)
         getData()
     plotData()
 

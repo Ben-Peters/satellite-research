@@ -629,6 +629,7 @@ def main():
     #else:
     #    t.start()
     print("All done")
+    exit(0)
 
 
 if __name__ == "__main__":
