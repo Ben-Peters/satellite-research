@@ -2,6 +2,7 @@ import argparse
 import os
 from plot import PlotTputOneFlow, PlotTputCompare, PlotAllData
 import subprocess
+import ssh_subprocess
 import time
 
 parser = argparse.ArgumentParser()
@@ -74,22 +75,23 @@ def plotData():
 
 def main():
     if args.time is not None:
-        startTrial = f"ssh btpeters@cs.wpi.edu \" python3 ~/Research/scripts/trialTrimmed.py " \
+        startTrial = f"python3 ~/Research/scripts/trialTrimmed.py " \
                      f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
                      f"--time {args.time} --numToRun {args.numToRun} " \
-                     f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\' --window {args.window} --RTT 0 --Ping 1\" "
+                     f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\' --window {args.window} --RTT 0 --Ping 1 "
     else:
-        startTrial = f"ssh btpeters@cs.wpi.edu \" python3 ~/Research/scripts/trialTrimmed.py " \
+        startTrial = f"python3 ~/Research/scripts/trialTrimmed.py " \
                      f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
                      f"--size {args.size} --numToRun {args.numToRun}" \
-                     f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\' --window {args.window} --RTT 0 --Ping 1\" "
+                     f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\' --window {args.window} --RTT 0 --Ping 1 "
         #  TODO: Replace this with what it was before (RTT: 1, Ping: 0)
     print("Running command: " + startTrial)
     try:
         os.listdir(f'C:/satellite-research/csvs/Trial_{args.batch}')
         print("This trial has already been run, just creating plots")
     except:
-        subprocess.call(startTrial, shell=True)
+        ssh = ssh_subprocess.Ssh(host='cs.wpi.edu', user='btpeters', host_key_checking='no')
+        ssh.call(startTrial)
         getData()
     plotData()
 
