@@ -396,7 +396,7 @@ class Trial:
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
         command = f'{sshPrefix} \"~/sUDPing\"'
         self.commandsRun.append((self.getTimeStamp(),command))
-        os.system(command)
+        subprocess.Popen(command, shell=True)
 
     def startUDPingClient(self):
         sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
@@ -404,7 +404,7 @@ class Trial:
         command = f'{sshPrefix} \"~/cUDPing -h {self.hosts[0]} -p 1234 -n 5 -c {filename}\"'
         self.csvs.append(filename)
         self.commandsRun.append((self.getTimeStamp(), command))
-        os.system(command)
+        subprocess.Popen(command, shell=True)
 
     def getCSV(self):
         # The CSV has already been grabbed in getLogs but I need to move it to the CSV folder
