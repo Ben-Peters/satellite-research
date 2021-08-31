@@ -29,12 +29,12 @@ def logToCsv(files, prefix):
         os.system(scp)
         timeStr = ''
         for line in open('bootTime.txt', 'r').readlines():
-            line.replace('\n', '')
             print(f"{line}")
-            #if not i:
-                #timeStr = line
-            #else:
-                #timeStr = timeStr + (str) (line.split('.')[-1]).split(' ')[0]
+            if '.' not in line:
+                timeStr = line
+            else:
+                timeStr = timeStr + (line.split('.')[-1]).split(' ')[0]
+        print(timeStr)
         bootTime = float(timeStr)
     for file in files:
         log = open((prefix + file), 'r')
