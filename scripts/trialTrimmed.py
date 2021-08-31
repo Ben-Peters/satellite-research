@@ -599,6 +599,7 @@ def main():
     parser.add_argument('--mem', type=str, help='Value for mem', default="382185 509580 764370")
     parser.add_argument('--window', type=int, help='Specify size of wmem to be set by iperf', default=0)
     parser.add_argument('--RTT', type=bool, help='Measure RTT or track all stats', default=False)
+    parser.add_argument('--Ping', type=bool, help="run UDP at the same time", default=False)
     args = parser.parse_args()
 
     cc = []
@@ -619,6 +620,8 @@ def main():
               tcp_mem=args.mem, tcp_wmem=args.wmem, ports=['5201', '5201'], iperf_w_arg=args.window)
     if args.RTT:
         t.startRTT()
+    elif args.Ping:
+        t.startPingRTT()
     else:
         t.start()
     print("All done")
