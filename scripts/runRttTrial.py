@@ -91,6 +91,7 @@ def main():
         print("This trial has already been run, just creating plots")
     except:
         ssh = Connection(host='cs.wpi.edu', user='btpeters')
+        ssh.run('python3 ~/Research/scripts/trialTrimmed.py')
         ssh.run(startTrial)
         getData()
     plotData()
