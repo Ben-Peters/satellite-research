@@ -108,7 +108,7 @@ def getData():
 def main():
     os.chdir(f'Research')
     print("in Research")
-    os.listdir(f'C:/satellite-research/csvs/Trial_{args.batch}')
+    # os.listdir(f'C:/satellite-research/csvs/Trial_{args.batch}')
     getData()
     os.chdir(f'Trial_{args.batch}')
     print(os.getcwd())
