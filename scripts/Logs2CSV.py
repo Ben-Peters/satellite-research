@@ -32,7 +32,7 @@ def logToCsv(files, prefix):
             if not i:
                 timeStr = line
             else:
-                timeStr = timeStr + line.split('.')[-1].split(' ')[0]
+                timeStr = timeStr + (str) (line.split('.')[-1]).split(' ')[0]
         bootTime = float(timeStr)
     for file in files:
         log = open((prefix + file), 'r')

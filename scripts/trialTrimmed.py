@@ -399,9 +399,11 @@ class Trial:
         subprocess.Popen(command, shell=True)
 
     def startUDPingClient(self):
+        os.system("echo 'in Start UDP client'")
         sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
         filename = f'Trial_{self.batchNum}/ping_{self.getTimeStamp}.csv'
         command = f'{sshPrefix} \"~/cUDPing -h {self.hosts[0]} -p 1234 -n 5 -c {filename}\"'
+        os.system(f"echo '{command}'")
         self.csvs.append(filename)
         self.commandsRun.append((self.getTimeStamp(), command))
         subprocess.Popen(command, shell=True)
