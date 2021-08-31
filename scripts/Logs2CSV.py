@@ -32,9 +32,9 @@ def logToCsv(files, prefix):
             print(f"{line}")
             line.strip()
             if '.' not in line:
-                timeStr = line
+                timeStr = line.strip()
             else:
-                timeStr = timeStr + '.' + (line.split('.')[-1]).split(' ')[0]
+                timeStr = timeStr.strip() + '.' + (line.strip().split('.')[-1]).split(' ')[0]
         print(timeStr)
         bootTime = float(timeStr)
     for file in files:
