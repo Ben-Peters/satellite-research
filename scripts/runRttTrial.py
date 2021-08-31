@@ -18,6 +18,7 @@ parser.add_argument('--wmem', type=str, help='Value for wmem', default="60000000
 parser.add_argument('--mem', type=str, help='Value for mem', default="60000000 60000000 60000000")
 parser.add_argument('--plotName', type=str, help='Name for plots created', default="Measured RTT")
 parser.add_argument('--window', type=int, help='Specify size of wmem to be set by iperf', default=0)
+parser.add_argument('--realtime', type=bool, help='Convert logs to realtime for easier syncing', default=False)
 args = parser.parse_args()
 
 dictionary = {
@@ -34,10 +35,11 @@ def getData():
     except:
         print('Folder not created')
 
-    makeCSVs = f'ssh btpeters@Andromeda \"python3 ~/Research/scripts/Logs2CSV.py --batch {args.batch}\"'
+    makeCSVs = f'ssh btpeters@Andromeda \"python3 ~/Research/scripts/Logs2CSV.py --batch {args.batch} --realtime {args.realtime}\"'
     subprocess.call(makeCSVs, shell=True)
 
     getCSVs = f'scp btpeters@Andromeda:~/Research/Trial_{args.batch}/csvs/* C:/satellite-research/csvs/Trial_{args.batch}'
+    #  The CSVs should be sorted by now (first is log csv second is ping csv)
     os.system(getCSVs)
 
 
@@ -65,7 +67,9 @@ def plotData():
     plot = PlotAllData(protocol=cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend,
                        numRuns=int(args.numToRun / 2), title=args.plotName)
     # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
-    plot.RTT(args.plotName)
+    plot.plotWithPing(args.plotName)
+    # TODO: add this back in
+    #  plot.RTT(args.plotName)
 
 
 def main():

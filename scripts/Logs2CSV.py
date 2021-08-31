@@ -6,6 +6,7 @@ import time
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--batch', type=int, help='What batch number is this', required=True)
+parser.add_argument('--realtime', type=bool, help='Should time be converted to realime', default=False)
 
 args = parser.parse_args()
 
@@ -16,6 +17,23 @@ def sleep(sec):
 
 
 def logToCsv(files, prefix):
+    bootTime = 0
+    if args.realtime:
+        sshProxy = "ssh btpeters@cs.wpi.edu 'ssh btpeters@mlcnetb.cs.wpi.edu \"stat -c %Z /proc/ > bootTime.txt\"'"
+        os.system(sshProxy)
+        sshProxy = "ssh btpeters@cs.wpi.edu 'ssh btpeters@mlcnetb.cs.wpi.edu \"stat -c %z /proc/ >> bootTime.txt\"'"
+        os.system(sshProxy)
+        scp = "ssh btpeters@cs.wpi.edu 'scp btpeters@mlcnetb.cs.wpi.edu:bootTime.txt bootTime.txt'"
+        os.system(scp)
+        scp = "scp btpeters@cs.wpi.edu:bootTime.txt bootTime.txt"
+        os.system(scp)
+        timeStr = ''
+        for line, i in open('bootTime.txt', 'r').readlines(), range(2):
+            if not i:
+                timeStr = line
+            else:
+                timeStr = timeStr + line.split('.')[-1].split(' ')[0]
+        bootTime = float(timeStr)
     for file in files:
         log = open((prefix + file), 'r')
         lines = log.readlines()
@@ -29,14 +47,14 @@ def logToCsv(files, prefix):
         delayThresh = 0
         sampleCount = 0
         numPackets = 0
-        time = 0
+        logTime = 0
         exit = 0
         flag = False
         for line in lines:
             if "(5201)" in line:
                 if "packets since start:" in line:
                     if flag:
-                        csv.write(f"{numPackets},{time},{sampleRTT},{cwnd},{packets_out},{mss},{sampleCount},{currRTT},{minRTT},{delayThresh},{exit}\n")
+                        csv.write(f"{numPackets},{logTime},{sampleRTT},{cwnd},{packets_out},{mss},{sampleCount},{currRTT},{minRTT},{delayThresh},{exit}\n")
                         sampleRTT = 0
                         cwnd = 0
                         packets_out = 0
@@ -46,12 +64,12 @@ def logToCsv(files, prefix):
                         delayThresh = 0
                         sampleCount = 0
                         numPackets = 0
-                        time = 0
+                        logTime = 0
                     else:
                         csv.write(f'numPackets,time,sampleRTT,cwnd,packets_out,mss,sampleCount,currRTT,minRTT,delayThresh,exit\n')
                         flag = True
                     numPackets = int(line.split("$")[-1])
-                    time = float(line.split("[")[1].split(']')[0])
+                    logTime = float(line.split("[")[1].split(']')[0]) + bootTime
                 elif "sample RTT:" in line:
                     sampleRTT = int(line.split("$")[-1])
                 elif "cwnd:" in line:
@@ -70,7 +88,7 @@ def logToCsv(files, prefix):
                     delayThresh = int(line.split("$")[-1])
                 elif "Exit due to delay detect" in line:
                     exit = 1
-        csv.write(f"{numPackets},{time},{sampleRTT},{cwnd},{packets_out},{mss},{sampleCount},{currRTT},{minRTT},{delayThresh},{exit}\n")
+        csv.write(f"{numPackets},{logTime},{sampleRTT},{cwnd},{packets_out},{mss},{sampleCount},{currRTT},{minRTT},{delayThresh},{exit}\n")
         log.close()
         csv.close()
 
@@ -80,6 +98,7 @@ def getData():
     os.system(f'mkdir Trial_{args.batch}')
     os.system(f'mkdir Trial_{args.batch}/csvs Trial_{args.batch}/logs')
     os.system(f'scp -i ~/.ssh/id_rsa btpeters@cs.wpi.edu:~/Research/tmp/Trial_{args.batch}/logs/* ~/Research/Trial_{args.batch}/logs&')
+    os.system(f'scp -i ~/.ssh/id_rsa btpeters@cs.wpi.edu:~/Research/tmp/Trial_{args.batch}/csvs/* ~/Research/Trial_{args.batch}/csvs&')
     sleep(60)
 
 

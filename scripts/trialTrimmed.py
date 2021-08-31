@@ -256,7 +256,7 @@ class Trial:
         f.close()
 
     def terminateCommands(self):
-        commands = ['iperf3', 'tcpdump']
+        commands = ['iperf3', 'tcpdump', 'UDPing']
         for host in self.hosts:
             for command in commands:
                 pkill = f'ssh {self.user}@{host} \"sudo pkill -2 {command}\"'
@@ -392,6 +392,29 @@ class Trial:
             self.sleep(3)
             self.logsSent += 1
 
+    def startUDPingServer(self):
+        sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
+        command = f'{sshPrefix} \"~/sUDPing\"'
+        self.commandsRun.append((self.getTimeStamp(),command))
+        os.system(command)
+
+    def startUDPingClient(self):
+        sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
+        filename = f'Trial_{self.batchNum}/ping_{self.getTimeStamp}.csv'
+        command = f'{sshPrefix} \"~/cUDPing -h {self.hosts[0]} -p 1234 -n 5 -c {filename}\"'
+        self.csvs.append(filename)
+        self.commandsRun.append((self.getTimeStamp(), command))
+        os.system(command)
+
+    def getCSV(self):
+        # The CSV has already been grabbed in getLogs but I need to move it to the CSV folder
+        prefix = f'/csusers/btpeters/Research/tmp/Trial_{self.batchNum}'
+        os.system(f'mkdir {prefix}/csvs')
+        files = os.listdir(f'{prefix}/logs')
+        for file in files:
+            if 'ping' in file:
+                os.system(f'mv {prefix}/logs/{file} {prefix}/csvs/{file}')
+
     def start(self):
         os.chdir(os.path.expanduser("~/Research"))
         os.system('clear')
@@ -467,6 +490,45 @@ class Trial:
         self.cleanUp()
         return self.graphCommand
 
+    def startPingRTT(self):
+        os.chdir(os.path.expanduser("~/Research"))
+        os.system('clear')
+        print('Running setHosts()')
+        self.setHosts()
+        print("Running cleanUp()")
+        self.cleanUp()
+        if self.runNum == 0:
+            print("Running setupLocal()")
+            self.setUpLocal()
+            print("Disabling max cap")
+            self.disableMaxCap()
+            print("Running setProtocolsRemote()")
+            self.setProtocolsRemote()
+        print("Enabling Hystart")
+        self.enableHystart()
+        print('setting Routes')
+        self.routeSatellite()
+        print('starting iperf3 server')
+        self.startIperf3Server()
+        print('Starting ping server')
+        self.startUDPingServer()
+        print('Starting ping client')
+        self.startUDPingClient()
+        self.sleep(5)
+        print('Starting Iperf3 client')
+        self.startIperf3Client()
+        print('moving kern log')
+        self.moveKernLog()
+        print('killing iperf and UDPing')
+        self.terminateCommands()
+        print('getting logs')
+        self.getLogs()
+        print('geting CSV')
+        self.getCSV()
+        self.done = True
+        self.cleanUp()
+        return self.graphCommand
+
     def startRTT(self):
         os.chdir(os.path.expanduser("~/Research"))
         os.system('clear')
@@ -500,7 +562,7 @@ class Trial:
             self.startIperf3Client()
             # print("Sleeping")
             # self.sleep(self.timeout)
-            print('Killing tcpdump and iperf3')
+            # print('Killing tcpdump and iperf3')
             # self.terminateCommands()
             self.moveKernLog()
             self.sleep(5)

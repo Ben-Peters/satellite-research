@@ -1249,6 +1249,12 @@ class PlotAllData(Plot):
             self.minRTT.append(minRTT)
             self.ssExit.append(ssExit)
 
+    def removeTimeOffsetPing(self):
+        minTime = self.data[1]['tSent_abs'].iloc[0]
+        print(f'minTime is: {minTime}')
+        self.data[1]['tSent_abs'] = self.data[1]['tSent_abs'] - minTime
+        self.data[0]['time'] = self.data[0]['time'] - minTime
+
 
     def avgAllDataRTT(self, startPos):
         minLength = len(self.rtt[0])
@@ -1313,6 +1319,36 @@ class PlotAllData(Plot):
         self.cwndCI.append(ciCwnd)
         self.throughputCI.append(ciTput)
 
+    def plotWithPing(self, title):
+        self.removeTimeOffsetPing()
+        fig, axs = pyplot.subplots(3, gridspec_kw={'height_ratios': [3, 3, 3]})
+        fig.set_figheight(8)
+
+        throughput = (self.data[0]['packets_out'] * (self.data[0]['mss'] * 8)) / (self.data[0]['sampleRTT'] / 1000) / 1024 / 1024
+        axs[0].plot(self.data[0]['time'], throughput, color='tab:orange')
+        axs[1].plot(self.data[1]['tSent_abs'], self.data[1]['rtt'], color='tab:blue')
+        axs[1].plot(self.data[0]['time'], self.data[0]['sampleRTT'], color='tab:orange')
+        axs[2].plot(self.data[0]['time'], self.data[0]['cwnd'], color='tab:orange')
+
+        fig.suptitle("UDP Ping with download")
+        fig.legend(['satellite', 'UDP Ping'])
+
+        axs[0].set_ylabel("Throughput (Mbits/s)")
+        axs[1].set_ylabel("RTT (ms)")
+        axs[2].set_ylabel("CWND (Packets)")
+        axs[2].set_xlabel("Time (seconds)")
+
+        axs[0].set_ylim(bottom=0)
+        axs[1].set_ylim(bottom=0)
+        axs[2].set_ylim(bottom=0)
+        axs[0].set_xlim(xmin=0)
+        axs[1].set_xlim(xmin=0)
+        axs[2].set_xlim(xmin=0)
+
+        pyplot.savefig(self.plotFilepath)
+        pyplot.show()
+
+
 
     def RTT(self, title):
         self.analyzeThreadedRTT()
@@ -1353,7 +1389,7 @@ class PlotAllData(Plot):
         axs[2].fill_between(self.seconds[minIndex], self.cwndCI[1][0],
                             self.cwndCI[1][1], color='tab:blue', alpha=.2)
         axs[2].axvline(x=self.ssExitAVG, color='tab:red', alpha=.5)
-        fig.suptitle("Hystart Enabled")
+        fig.suptitle("Hystart Disabled")
         fig.legend(self.legend)
         axs[0].set_ylabel("Throughput (Mbits/s)")
         axs[1].set_ylabel("RTT (ms)")
