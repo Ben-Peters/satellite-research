@@ -28,7 +28,7 @@ def logToCsv(files, prefix):
         scp = "scp btpeters@cs.wpi.edu:bootTime.txt bootTime.txt"
         os.system(scp)
         timeStr = ''
-        for line, i in open('bootTime.txt', 'r').readlines(), range(2):
+        for line in open('bootTime.txt', 'r').readlines():
             line.replace('\n', '')
             print(f"{line}")
             #if not i:
