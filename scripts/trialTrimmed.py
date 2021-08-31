@@ -257,7 +257,7 @@ class Trial:
 
     def terminateCommands(self):
         commands = ['iperf3', 'tcpdump', 'UDPing']
-        hosts = self.hosts
+        hosts = self.hosts.copy()
         hosts.append('glomma.cs.wpi.edu')
         for host in self.hosts:
             for command in commands:
