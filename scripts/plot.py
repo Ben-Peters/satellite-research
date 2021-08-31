@@ -1344,6 +1344,9 @@ class PlotAllData(Plot):
         axs[0].set_xlim(xmin=0)
         axs[1].set_xlim(xmin=0)
         axs[2].set_xlim(xmin=0)
+        axs[0].set_xlim(xmax=self.data[1]['tSent_abs'].iloc[-1])
+        axs[1].set_xlim(xmax=self.data[1]['tSent_abs'].iloc[-1])
+        axs[1].set_xlim(xmax=self.data[1]['tSent_abs'].iloc[-1])
 
         pyplot.savefig(self.plotFilepath)
         pyplot.show()
