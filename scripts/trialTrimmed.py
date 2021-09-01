@@ -259,6 +259,7 @@ class Trial:
         commands = ['iperf3', 'tcpdump', 'UDPing']
         hosts = self.hosts.copy()
         hosts.append('glomma.cs.wpi.edu')
+        hosts.append('mlcneta.cs.wpi.edu')
         for host in hosts:
             for command in commands:
                 pkill = f'ssh {self.user}@{host} \"sudo pkill -2 {command}\"'
