@@ -395,7 +395,8 @@ class Trial:
             self.logsSent += 1
 
     def startUDPingServer(self):
-        sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
+        # TODO: This should be changed back to whatever the host is
+        sshPrefix = f'ssh {self.user}@mlcneta.cs.wpi.edu'
         command = f'{sshPrefix} \"~/sUDPing\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         subprocess.Popen(command, shell=True)
@@ -407,7 +408,8 @@ class Trial:
         # command = f'{sshPrefix} \"mkdir Trial_{self.batchNum}/logs\"'
         # os.system(command)
         # self.commandsRun.append((self.getTimeStamp(), command))
-        command = f'{sshPrefix} \"~/myUDPing -h {self.hosts[0]} -p 1234 -n 5 -c {filename}\"'
+        # TODO: This should try to ping the sever not a differnet one
+        command = f'{sshPrefix} \"~/myUDPing -h mlcneta.cs.wpi.edu -p 1234 -n 5 -c {filename}\"'
         os.system(f"echo '{command}'")
         self.csvs.append(filename)
         self.commandsRun.append((self.getTimeStamp(), command))
