@@ -1,0 +1,222 @@
+# README - Viasat Satellite
+
+v3.0 (9/2/21)
+
+
+## Overview
+
+The client connects to a Viasat satellite terminal (with a modem and
+router) via a Gb/s Ethernet connection.
+
+The terminal communicates through a Ka-band outdoor antenna (RF
+amplifier, up/down converter, reflector and feed) through the Viasat 2
+satellite (<https://en.wikipedia.org/wiki/ViaSat-2>) to the larger
+Ka-band gateway antenna.  The terminal supports adaptive coding and
+modulation using 16-APK, 8 PSK, and QPSK (forward) at 10 to 52 MSym/s
+and 8PSK, QPSK and BPSK (return) at 0.625 to 20 MSym/s.
+
+The connected Viasat service plan provides a peak data rate of 144 Mb/s.
+
+
+## Configuration
+
+The network configuration is as follows:
+
+````
+
+                ┌──────┐ 
+           ┌────┤Glomma├──────┐ 
+           │    └──────┘      │ ┌────────────┐
+           │   192.168.1.0/24→├─┤Modem+Router├~~~┐
+           │    ┌─────┐       │ └────────────┘   ┆
+           ├────┤Vorma├───────┘             ┌────┴─────┐
+           │    └─────┘                     │ Viasat 2 │
+┌───────┐  │  ┌───┐             ╭────────╮  └────┬─────┘
+│MLCnetX├──┴──┤WPI├─────────────┤Internet├~~~~~~~┘
+└───────┘  ↑  └───┘             ╰────────╯
+           130.215.0.0/16 
+
+
+			             eno2     eno1
+		-----------             --------
+       \/\/\/\ | terminal  | --------- | glomma | ------ WPI
+		-----------             --------
+	    184.21     192.168      192.168  130.215
+	    .74.168     .1.1         .1.102   .29.36
+
+````
+
+Note, *after* running the script `setup_routes.sh` (see below), the
+table should look like the below.  The default interface is `eno1`, but
+the servers are hard-coded to go out via `eno2`.
+
+````
+~/ ➜ route
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+default         rtr-core-fuller 0.0.0.0         UG    0      0        0 eno1
+default         router.viasatmo 0.0.0.0         UG    100    0        0 eno2
+10.0.3.0        0.0.0.0         255.255.255.0   U     0      0        0 lxcbr0
+130.215.24.0    0.0.0.0         255.255.248.0   U     0      0        0 eno1
+mlcneta.cs.wpi. router.viasatmo 255.255.255.255 UGH   0      0        0 eno2
+mlcnetb.cs.wpi. router.viasatmo 255.255.255.255 UGH   0      0        0 eno2
+mlcnetc.cs.wpi. router.viasatmo 255.255.255.255 UGH   0      0        0 eno2
+mlcnetd.cs.wpi. router.viasatmo 255.255.255.255 UGH   0      0        0 eno2
+link-local      0.0.0.0         255.255.0.0     U     1000   0        0 eno1
+172.17.0.0      0.0.0.0         255.255.0.0     U     0      0        0 docker0
+192.168.1.0     0.0.0.0         255.255.255.0   U     100    0        0 eno2
+192.168.100.0   0.0.0.0         255.255.255.0   U     0      0        0 eno2
+192.168.123.0   0.0.0.0         255.255.255.0   U     0      0        0 virbr0
+````
+
+## Hosts
+
+The client - `glomma.cs.wpi.edu` - is a Linux PC with an Intel
+i7-1065G7 CPU @ 1.30GHz and 32 GB RAM.
+
+There are four servers: `mlcNetA.cs.wpi.edu`, `mlcNetB.cs.wpi.edu`,
+`mlcNetC.cs.wpi.edu`, `mlcNetD.cs.wpi.edu`.  Each server has an Intel
+Ken E312xx CPUs @ 2.5 GHz and 32 GB RAM.  The servers and client all
+run Ubuntu 18.04.4 LTS.  The servers connect to the WPI LAN via Gb/s
+Ethernet.  The WPI campus network is connected to the Internet via
+several 10 Gb/s links, all throttled to 1 Gb/s.
+
+**Note!** neither glomma nor the mlcNet servers can be reached from
+off-campus.  Instead, login to `cs.wpi.edu` and from there
+all the hosts can be reached.
+
+
+**Note!** mlcNetB.cs.wpi.edu has a modified version of the Kernel 
+to test Hystart performance and improvements.
+
+## Other Useful Commands
+
+Check TCP congestion control:
+
+    sysctl net.ipv4.tcp_congestion_control
+
+Permanent change TCP congestion control (e.g., BBR):
+
+    emacs /etc/sysctl.conf
+
+and then add:
+
+    net.core.default_qdisc=fq
+    net.ipv4.tcp_congestion_control=bbr
+
+One-time change (e.g., cubic):
+
+    echo "cubic" > /proc/sys/net/ipv4/tcp_congestion_control
+
+Note!  The PCC module is for a specific Linux kernel version.
+If the kernel is upgraded, it will need to be updated (or
+the kernel rolled back).
+
+To configure routes a shell script has been created(linked below). If no arguments are given
+the script defaults to directing all trafic destined for the mlcnetX servers to be routed
+across the satellite link. If the argument "vorma" is passed to the script it will route all
+trafic destined for the mlcnetX servers through Vorma.cs.wpi.edu.
+
+Get an IP for the satellite network:
+
+    sudo dhclient eno2 -v
+
+Bring interface down (up):
+
+    sudo ifconfig eno2 down
+
+Show route:
+
+    ip route show
+
+## Proxy
+
+Viasat has a proxy that can split all TCP connections into three
+parts.  The instructions to enable/disable it are at:
+
+    glomma:/home/goos/docs/howto-disable-ipep.txt
+
+In short, you need to ssh to the modem and run a set of commands
+(instructions given in the doc above).
+
+Ther is also a script written by Zach Porter (B-term, 2019) called
+`setProxyMode.sh` that may be of use.
+
+## Performance (based on earlier configurations).
+
+By default, TCP traffic uses a TCP proxy (VWA - Viasat Web
+Accelerator), so 1 connection normally has 3 TCP connections.  Below
+is the connectivity diagram.
+
+````
+    WPI - Glomma - modem(VWAuser) - satellite - MAC - VWAcore - Shaper - Inet
+````
+
+So glomma to, say, Google, would have TCP connections like:
+    
+    TCP1: glomma - modem
+    TCP2: modem - VWAcore
+    TCP3: VWAcore - Google
+
+However, there is a way to disable the proxy, effectively having only
+1 TCP connection.
+
+Examples of configurations.
+
+````
+glomma - modem - satellite - MAC - VWAcore - Shaper - Internet - mlcNetA.cs.wpi.edu
+````
+
+A speedtest example (note, this doesn't work with the current routing
+configuration but is kept here for historical purposes):
+
+````
+glomma: ~/speedtest-cli
+Retrieving speedtest.net configuration...
+Testing from ViaSat (184.21.74.168)...
+Retrieving speedtest.net server list...
+Selecting best server based on ping...
+Hosted by Conway Corporation (Conway, AR) [64.34 km]: 603.173 ms
+Testing download speed.................................................
+Download: 58.70 Mbit/s
+Testing upload speed...................................................
+Upload: 2.55 Mbit/s
+````
+
+
+## Links
+
+[Tips on capturing only headers (snaplen)](https://tinyurl.com/8e2ud5m9)
+
+[Script to setup
+routes](https://github.com/Ben-Peters/satellite-research/blob/main/setup_routes.sh)
+
+[Reviews of How Some Video Games Perform on Satellite
+Internet](https://tinyurl.com/y56b664v)
+
+[Install a Speedtest Mini Server on
+Linux](https://www.tecmint.com/speedtest-mini-server-to-test-bandwidth-speed/)
+
+[Measuring Network Performance in Linux with
+Qperf](https://www.opsdash.com/blog/network-performance-linux.html)
+
+[Netem configuration and wiki](https://wiki.linuxfoundation.org/networking/netem)
+
+
+## Files of Interest
+
+```
+/etc/network/interfaces
+
+/etc/dhcp/dhcpd.conf
+
+/etc/sysctl.conf
+
+/etc/ssh/sshd_config
+```
+
+-------------------
+
+Happy satellite-ing!
+
+-- Mark
