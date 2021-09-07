@@ -1319,22 +1319,24 @@ class PlotAllData(Plot):
         self.cwndCI.append(ciCwnd)
         self.throughputCI.append(ciTput)
 
+
     def plotWithRTTStats(self, title):
-        # self.removeTimeOffsetPing()
+        times = self.data[0]['time']
+        times = times - times[0]
         fig, axs = pyplot.subplots(3, gridspec_kw={'height_ratios': [3, 3, 3]})
         fig.set_figheight(8)
 
         throughput = (self.data[0]['packets_out'] * (self.data[0]['mss'] * 8)) / (self.data[0]['sampleRTT'] / 1000) / 1024 / 1024
-        axs[0].plot(self.data[0]['time'], throughput, color='tab:orange')
-        axs[1].plot(self.data[0]['time'], self.data[0]['sampleRTT'], color='tab:orange')
-        axs[1].plot(self.data[0]['time'], self.data[0]['mdev'], color='tab:blue')
-        axs[1].plot(self.data[0]['time'], self.data[0]['max_mdev'], color='tab:green')
-        axs[1].plot(self.data[0]['time'], self.data[0]['srtt'], color='tab:red')
-        axs[1].plot(self.data[0]['time'], self.data[0]['smdev'], color='tab:purple')
-        axs[2].plot(self.data[0]['time'], self.data[0]['cwnd'], color='tab:orange')
+        axs[0].plot(times, throughput, color='tab:orange')
+        sample, = axs[1].plot(times, self.data[0]['sampleRTT'], color='tab:orange', alpha=.8)
+        mdev, = axs[1].plot(times, self.data[0]['mdev'], color='tab:blue', alpha=.8)
+        mdev_max, = axs[1].plot(times, self.data[0]['max_mdev'], color='tab:green', alpha=.8)
+        srtt, = axs[1].plot(times, self.data[0]['srtt']/8, color='tab:red', alpha=.8)
+        smdev, = axs[1].plot(times, self.data[0]['smdev'], color='tab:purple', alpha=.8)
+        axs[2].plot(times, self.data[0]['cwnd'], color='tab:orange')
 
         fig.suptitle("UDP Ping with different server")
-        fig.legend(['Sample RTT', 'Medium Deviation', 'Maximum Med. Dev. (last RTT period)', 'Smoothed RTT', 'Smoothed Med. Dev.'])
+        fig.legend([sample, mdev, mdev_max, srtt, smdev], ['Sample RTT', 'Medium Deviation', 'Maximum Med. Dev. (last RTT period)', 'Smoothed RTT', 'Smoothed Med. Dev.'])
 
         axs[0].set_ylabel("Throughput (Mbits/s)")
         axs[1].set_ylabel("RTT (ms)")
@@ -1347,9 +1349,9 @@ class PlotAllData(Plot):
         axs[0].set_xlim(xmin=0)
         axs[1].set_xlim(xmin=0)
         axs[2].set_xlim(xmin=0)
-        axs[0].set_xlim(xmax=self.data[1]['tSent_abs'].iloc[-1])
-        axs[1].set_xlim(xmax=self.data[1]['tSent_abs'].iloc[-1])
-        axs[2].set_xlim(xmax=self.data[1]['tSent_abs'].iloc[-1])
+        #axs[0].set_xlim(xmax=self.data[0]['time'].iloc[-1])
+        #axs[1].set_xlim(xmax=self.data[0]['time'].iloc[-1])
+        #axs[2].set_xlim(xmax=self.data[0]['time'].iloc[-1])
 
         pyplot.savefig(self.plotFilepath)
         pyplot.show()
