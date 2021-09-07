@@ -112,7 +112,6 @@ def logToCsv(files, prefix):
         log.close()
         csv.close()
 
-
 def getData():
     print("getting data")
     os.system(f'mkdir Trial_{args.batch}')
