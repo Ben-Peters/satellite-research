@@ -1319,19 +1319,22 @@ class PlotAllData(Plot):
         self.cwndCI.append(ciCwnd)
         self.throughputCI.append(ciTput)
 
-    def plotWithPing(self, title):
-        self.removeTimeOffsetPing()
+    def plotWithRTTStats(self, title):
+        # self.removeTimeOffsetPing()
         fig, axs = pyplot.subplots(3, gridspec_kw={'height_ratios': [3, 3, 3]})
         fig.set_figheight(8)
 
         throughput = (self.data[0]['packets_out'] * (self.data[0]['mss'] * 8)) / (self.data[0]['sampleRTT'] / 1000) / 1024 / 1024
         axs[0].plot(self.data[0]['time'], throughput, color='tab:orange')
-        axs[1].plot(self.data[1]['tSent_abs'], self.data[1]['rtt'], color='tab:blue')
         axs[1].plot(self.data[0]['time'], self.data[0]['sampleRTT'], color='tab:orange')
+        axs[1].plot(self.data[0]['time'], self.data[0]['mdev'], color='tab:blue')
+        axs[1].plot(self.data[0]['time'], self.data[0]['max_mdev'], color='tab:green')
+        axs[1].plot(self.data[0]['time'], self.data[0]['srtt'], color='tab:red')
+        axs[1].plot(self.data[0]['time'], self.data[0]['smdev'], color='tab:purple')
         axs[2].plot(self.data[0]['time'], self.data[0]['cwnd'], color='tab:orange')
 
         fig.suptitle("UDP Ping with different server")
-        fig.legend(['TCP Flow (mlcnetb)', 'UDP Ping (mlcneta)'])
+        fig.legend(['Sample RTT', 'Medium Deviation', 'Maximum Med. Dev. (last RTT period)', 'Smoothed RTT', 'Smoothed Med. Dev.'])
 
         axs[0].set_ylabel("Throughput (Mbits/s)")
         axs[1].set_ylabel("RTT (ms)")
@@ -1350,7 +1353,6 @@ class PlotAllData(Plot):
 
         pyplot.savefig(self.plotFilepath)
         pyplot.show()
-
 
 
     def RTT(self, title):

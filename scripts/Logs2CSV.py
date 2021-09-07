@@ -57,7 +57,7 @@ def logToCsv(files, prefix):
             if "(5201)" in line:
                 if "packets since start:" in line:
                     if flag:
-                        csv.write(f"{numPackets},{logTime},{sampleRTT},{cwnd},{packets_out},{mss},{sampleCount},{currRTT},{minRTT},{delayThresh},{exit}\n")
+                        csv.write(f"{numPackets},{logTime},{sampleRTT},{cwnd},{packets_out},{mss},{sampleCount},{currRTT},{minRTT},{delayThresh},{exit},{mdev},{max_mdev},{srtt},{smdev}\n")
                         sampleRTT = 0
                         cwnd = 0
                         packets_out = 0
@@ -68,8 +68,12 @@ def logToCsv(files, prefix):
                         sampleCount = 0
                         numPackets = 0
                         logTime = 0
+                        mdev = 0
+                        max_mdev = 0
+                        srtt = 0
+                        smdev = 0
                     else:
-                        csv.write(f'numPackets,time,sampleRTT,cwnd,packets_out,mss,sampleCount,currRTT,minRTT,delayThresh,exit\n')
+                        csv.write(f'numPackets,time,sampleRTT,cwnd,packets_out,mss,sampleCount,currRTT,minRTT,delayThresh,exit,mdev,max_mdev,srtt,smdev\n')
                         flag = True
                     numPackets = int(line.split("$")[-1])
                     logTime = float(line.split("[")[1].split(']')[0]) + bootTime
@@ -91,7 +95,16 @@ def logToCsv(files, prefix):
                     delayThresh = int(line.split("$")[-1])
                 elif "Exit due to delay detect" in line:
                     exit = 1
-        csv.write(f"{numPackets},{logTime},{sampleRTT},{cwnd},{packets_out},{mss},{sampleCount},{currRTT},{minRTT},{delayThresh},{exit}\n")
+                elif "Medium Deviation" in line:
+                    mdev = int(line.split("$")[-1])
+                elif "Max mdev" in line:
+                    max_mdev = int(line.split("$")[-1])
+                elif "Smoothed RTT" in line:
+                    srtt = int(line.split("$")[-1])
+                elif "Smoothed mdev" in line:
+                    smdev = int(line.split("$")[-1])
+
+        csv.write(f"{numPackets},{logTime},{sampleRTT},{cwnd},{packets_out},{mss},{sampleCount},{currRTT},{minRTT},{delayThresh},{exit},{mdev},{max_mdev},{srtt},{smdev}\n")
         log.close()
         csv.close()
 
