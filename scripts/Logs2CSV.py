@@ -52,6 +52,10 @@ def logToCsv(files, prefix):
         numPackets = 0
         logTime = 0
         exit = 0
+        mdev = 0
+        max_mdev = 0
+        srtt = 0
+        smdev = 0
         flag = False
         for line in lines:
             if "(5201)" in line:
@@ -114,7 +118,7 @@ def getData():
     os.system(f'mkdir Trial_{args.batch}')
     os.system(f'mkdir Trial_{args.batch}/csvs Trial_{args.batch}/logs')
     os.system(f'scp -i ~/.ssh/id_rsa btpeters@cs.wpi.edu:~/Research/tmp/Trial_{args.batch}/logs/* ~/Research/Trial_{args.batch}/logs&')
-    os.system(f'scp -i ~/.ssh/id_rsa btpeters@cs.wpi.edu:~/Research/tmp/Trial_{args.batch}/csvs/* ~/Research/Trial_{args.batch}/csvs&')
+    #os.system(f'scp -i ~/.ssh/id_rsa btpeters@cs.wpi.edu:~/Research/tmp/Trial_{args.batch}/csvs/* ~/Research/Trial_{args.batch}/csvs&')
     sleep(60)
 
 
