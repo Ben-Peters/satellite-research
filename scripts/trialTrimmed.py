@@ -517,6 +517,8 @@ class Trial:
         self.enableHystart()
         print('setting Routes')
         self.routeSatellite()
+        print('Truncating exiting kern log')
+        self.setupKernLog()
         print('starting iperf3 server')
         self.startIperf3Server()
         #print('Starting ping server')
