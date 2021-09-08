@@ -526,7 +526,7 @@ class Trial:
         #self.startUDPingServer()
         #print('Starting ping client')
         #self.startUDPingClient()
-        #self.sleep(5)
+        self.sleep(5)
         print('Starting Iperf3 client')
         self.startIperf3Client()
         print('moving kern log')
