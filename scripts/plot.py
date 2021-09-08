@@ -1335,8 +1335,8 @@ class PlotAllData(Plot):
         smdev, = axs[1].plot(times, self.data[0]['smdev'], color='tab:purple', alpha=.8)
         axs[2].plot(times, self.data[0]['cwnd'], color='tab:orange')
 
-        fig.suptitle("UDP Ping with different server")
-        fig.legend([sample, mdev, mdev_max, srtt, smdev], ['Sample RTT', 'Medium Deviation', 'Maximum Med. Dev. (last RTT period)', 'Smoothed RTT', 'Smoothed Med. Dev.'])
+        fig.suptitle("Emulated (Vorma)")
+        fig.legend([sample, mdev, mdev_max, srtt, smdev], ['Sample RTT', 'Medium Deviation', 'Maximum Med. Dev.', 'Smoothed RTT', 'Smoothed Med. Dev.'])
 
         axs[0].set_ylabel("Throughput (Mbits/s)")
         axs[1].set_ylabel("RTT (ms)")
