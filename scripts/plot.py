@@ -1335,7 +1335,7 @@ class PlotAllData(Plot):
         smdev, = axs[1].plot(times, self.data[0]['smdev'], color='tab:purple', alpha=.8)
         axs[2].plot(times, self.data[0]['cwnd'], color='tab:orange')
 
-        fig.suptitle("Emulated (Vorma)")
+        fig.suptitle("Emulated (Uniform)")
         fig.legend([sample, mdev, mdev_max, srtt, smdev], ['Sample RTT', 'Medium Deviation', 'Maximum Med. Dev.', 'Smoothed RTT', 'Smoothed Med. Dev.'])
 
         axs[0].set_ylabel("Throughput (Mbits/s)")
