@@ -200,9 +200,9 @@ class PlotTputCompare:
 
 
 class Plot:
-    def __init__(self, protocol, legend, csvFiles, plotFile, numRuns=1):
+    def __init__(self, protocol, legend, csv, plotFile, numRuns=1):
         self.protocol = protocol
-        self.csvFile = csvFiles
+        self.csv = csv
         self.plotFilepath = plotFile
         self.legend = legend
         self.data = []
@@ -218,9 +218,8 @@ class Plot:
                     'tcp.analysis.ack_rtt': float,
                     'frame.time': str,
                     'tcp.time_relative': float}
-        for csv in csvFiles:
-            # memory mapping can be enabled to improve performance but at the expense of memory usage for large files
-            self.data.append(pandas.read_csv(csv, memory_map=True))
+        # memory mapping can be enabled to improve performance but at the expense of memory usage for large files
+        self.data.append(pandas.read_csv(csv, memory_map=True))
         self.timesRaw = []  # pandas.to_datetime(self.df['frame.time'], infer_datetime_format=True)
         self.frameTime = []
         self.throughput = []
@@ -323,8 +322,8 @@ def calculateConfidenceInterval(values, confidenceLevel):
 
 
 class PlotAllData(Plot):
-    def __init__(self, protocol, legend, csvFiles, plotFile, title, numRuns=1):
-        super().__init__(protocol=protocol, legend=legend, csvFiles=csvFiles, plotFile=plotFile)
+    def __init__(self, protocol, legend, csv, plotFile, title, numRuns=1):
+        super().__init__(protocol=protocol, legend=legend, csv=csv, plotFile=plotFile)
         self.numRuns = numRuns
         self.title = title
         self.rtt = []
@@ -1319,19 +1318,104 @@ class PlotAllData(Plot):
         self.cwndCI.append(ciCwnd)
         self.throughputCI.append(ciTput)
 
-    def plotWithPing(self, title):
-        self.removeTimeOffsetPing()
+    def calculateStatsSingle(self):
+        df = self.data[0]
+        cutOffTime = 10
+        bytesSent = 0
+        throughput = []
+        seconds = []
+
+        rtt = []
+        RTTSum = 0
+        RTTCount = 0
+
+        cwnd = []
+        cwndSum = 0
+        cwndCount = 0
+
+        clientCount = 0
+
+
+        for j in range(len(df)):
+            # only packets from the Server
+            if df['tcp.srcport'].iloc[j] == 5201:
+                # serverCount += 1
+                # Track bytes sent for tput calc
+                bytesSent += df['frame.len'].iloc[j]
+
+                # Only look at packets that have data bout CWND
+                if not pandas.isnull(df['tcp.analysis.bytes_in_flight'].iloc[j]):
+                    cwndCount += 1
+                    cwndSum += df['tcp.analysis.bytes_in_flight'].iloc[j]
+
+                    # rolling avg for CWND est.
+                    # if avgCwnd != 0:
+                    # avgCwnd = (avgCwnd + df['tcp.analysis.bytes_in_flight'].iloc[j]) / 2
+                    # else:
+                    # avgCwnd = df['tcp.analysis.bytes_in_flight'].iloc[j]
+
+            # only packets from the Client
+            if df['tcp.dstport'].iloc[j] == 5201:
+                clientCount += 1
+
+                if not pandas.isnull(df['tcp.analysis.ack_rtt'].iloc[j]):
+                    RTTCount += 1
+                    RTTSum += df['tcp.analysis.ack_rtt'].iloc[j]
+
+                # rolling avg for RTT est.
+                # if avgRTT != 0:
+                # avgRTT = (avgRTT + df['tcp.analysis.ack_rtt'].iloc[j]) / 2
+                # else:
+                # avgRTT = df['tcp.analysis.ack_rtt'].iloc[j]
+
+                # rolling avg for RWND est.
+                # if avgRwnd != 0:
+                # avgRwnd = (avgRwnd + df['tcp.window_size'].iloc[j]) / 2
+                # else:
+                # avgRwnd = df['tcp.window_size'].iloc[j]
+
+            if df['tcp.time_relative'].iloc[j] > float(cutOffTime):
+                throughput.append((bytesSent * 8) / 1048576)
+                seconds.append(cutOffTime)
+                if RTTCount == 0:
+                    rtt.append(0)
+                else:
+                    rtt.append((RTTSum / RTTCount))
+                if cwndCount == 0:
+                    cwnd.append(0)
+                else:
+                    cwnd.append(cwndSum / cwndCount)
+
+
+
+                bytesSent = 0
+                RTTSum = 0
+                RTTCount = 0
+                cwndSum = 0
+                cwndCount = 0
+                clientCount = 0
+                cutOffTime += 10
+
+        self.throughput = throughput
+        self.rtt = rtt
+        self.cwnd = cwnd
+        self.seconds = seconds
+        print(f"Results Ready")
+
+    def plotOnetcpdump(self):
+        self.calculateStatsSingle()
+        #self.removeTimeOffsetPing()
         fig, axs = pyplot.subplots(3, gridspec_kw={'height_ratios': [3, 3, 3]})
         fig.set_figheight(8)
 
-        throughput = (self.data[0]['packets_out'] * (self.data[0]['mss'] * 8)) / (self.data[0]['sampleRTT'] / 1000) / 1024 / 1024
-        axs[0].plot(self.data[0]['time'], throughput, color='tab:orange')
-        axs[1].plot(self.data[1]['tSent_abs'], self.data[1]['rtt'], color='tab:blue')
-        axs[1].plot(self.data[0]['time'], self.data[0]['sampleRTT'], color='tab:orange')
-        axs[2].plot(self.data[0]['time'], self.data[0]['cwnd'], color='tab:orange')
+        # throughput = (self.data[0]['packets_out'] * (self.data[0]['mss'] * 8)) / (self.data[0]['sampleRTT'] / 1000) / 1024 / 1024
+        axs[0].plot(self.seconds, self.throughput, color='tab:orange')
+        # axs[1].plot(self.data[1]['tSent_abs'], self.data[1]['rtt'], color='tab:blue')
+        axs[1].plot(self.seconds, self.rtt, color='tab:orange')
+        axs[2].plot(self.seconds, self.cwnd, color='tab:orange')
 
-        fig.suptitle("UDP Ping with different server")
-        fig.legend(['TCP Flow (mlcnetb)', 'UDP Ping (mlcneta)'])
+        # fig.suptitle("UDP Ping with different server")
+        # fig.legend(['TCP Flow (mlcnetb)', 'UDP Ping (mlcneta)'])
 
         axs[0].set_ylabel("Throughput (Mbits/s)")
         axs[1].set_ylabel("RTT (ms)")
@@ -1344,9 +1428,9 @@ class PlotAllData(Plot):
         axs[0].set_xlim(xmin=0)
         axs[1].set_xlim(xmin=0)
         axs[2].set_xlim(xmin=0)
-        axs[0].set_xlim(xmax=self.data[1]['tSent_abs'].iloc[-1])
-        axs[1].set_xlim(xmax=self.data[1]['tSent_abs'].iloc[-1])
-        axs[2].set_xlim(xmax=self.data[1]['tSent_abs'].iloc[-1])
+        #axs[0].set_xlim(xmax=self.data[1]['tSent_abs'].iloc[-1])
+        #axs[1].set_xlim(xmax=self.data[1]['tSent_abs'].iloc[-1])
+        #axs[2].set_xlim(xmax=self.data[1]['tSent_abs'].iloc[-1])
 
         pyplot.savefig(self.plotFilepath)
         pyplot.show()

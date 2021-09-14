@@ -130,47 +130,47 @@ def plotData():
         cc.append(c)
     for c in cc:
         hosts.append(dictionary.get(c))
-    files = os.listdir(f'C:/satellite-research/csvs/Trial_{args.batch}')
+    file = f'C:/satellite-research/csvs/OldData/1800000000.csv'
     try:
-        os.mkdir(f'C:/satellite-research/plots/Trial_{args.batch}')
+        os.mkdir(f'C:/satellite-research/plots/OldData')
     except:
         print("Folder not created")
 
     hosts += ["glomma.cs.wpi.edu"]
     csvs = []
-    legend = ['With Receiver Auto-Tune', 'Without Receiver Auto-Tune']
-    for file, i in zip(files, range(len(files))):
-        csvFilename = f'C:/satellite-research/csvs/Trial_{args.batch}/' + file
-        csvs.append(csvFilename)
+    #legend = ['With Receiver Auto-Tune', 'Without Receiver Auto-Tune']
+    #for file, i in zip(files, range(len(files))):
+    # csvFilename = f'C:/satellite-research/csvs/oldData/' + file
+        #csvs.append(csvFilename)
         # legend.append(hosts[i].split('.')[0])
-    plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", "_TPUT.png")
-    plot = PlotAllData(protocol=cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend,
+    plotFilename = file.replace("/csvs/", "/plots/").replace(".csv", ".png")
+    plot = PlotAllData(protocol=cc[0], csv=file, plotFile=plotFilename, legend=None,
                        numRuns=int(args.numToRun / 2), title=args.plotName)
     # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
-    plot.plotALL(maxY=maxY)
+    plot.plotOnetcpdump()
     #plot.plotStartTput(15)
     #plot.plotStart(15)
-    plot.plotTimeDelta()
+    #plot.plotTimeDelta()
 
 
 def main():
-    if args.time is not None:
-        startTrial = f"ssh btpeters@cs.wpi.edu \" python3 ~/Research/scripts/trialTrimmed.py " \
-                     f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
-                     f"--time {args.time} --numToRun {args.numToRun} " \
-                     f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\' --window {args.window}\" "
-    else:
-        startTrial = f"ssh btpeters@cs.wpi.edu \" python3 ~/Research/scripts/trialTrimmed.py " \
-                     f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
-                     f"--size {args.size} --numToRun {args.numToRun}" \
-                     f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\' --window {args.window}\" "
-    print("Running command: " + startTrial)
-    try:
-        os.listdir(f'C:/satellite-research/csvs/Trial_{args.batch}')
-        print("This trial has already been run, just creating plots")
-    except:
-        subprocess.call(startTrial, shell=True)
-        getData()
+    #if args.time is not None:
+        #startTrial = f"ssh btpeters@cs.wpi.edu \" python3 ~/Research/scripts/trialTrimmed.py " \
+       #              f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
+      #               f"--time {args.time} --numToRun {args.numToRun} " \
+     #                f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\' --window {args.window}\" "
+    #else:
+        #startTrial = f"ssh btpeters@cs.wpi.edu \" python3 ~/Research/scripts/trialTrimmed.py " \
+       #              f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
+     #                f"--size {args.size} --numToRun {args.numToRun}" \
+      #               f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\' --window {args.window}\" "
+    #print("Running command: " + startTrial)
+    #try:
+      #  os.listdir(f'C:/satellite-research/csvs/Trial_{args.batch}')
+     #   print("This trial has already been run, just creating plots")
+    #except:
+        #subprocess.call(startTrial, shell=True)
+        #getData()
     plotData()
 
 
