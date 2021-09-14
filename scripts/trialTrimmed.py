@@ -439,7 +439,7 @@ class Trial:
 
         # run downloads
         # Set wmem the traditional way
-        for i in range(self.numToRun/2):
+        for i in range(self.numToRun):
             # if i % 2 == 0:
             print(f"Trial Num: {i}\n")
             self.enableTuning()
