@@ -204,7 +204,7 @@ class Trial:
 
     def startTcpdumpClient(self):
         timestamp = self.getTimeStamp()
-        filename = f'Trial_{self.batchNum}/{self.cc[self.clientDumpsRunning]}_{timestamp}.pcap'
+        filename = f'Trial_{self.batchNum}/{self.cc[0]}_{timestamp}.pcap'
         # tcpdump = f'ssh {self.user}@glomma.cs.wpi.edu \"sudo tcpdump -i 2 -w {filename} port {self.ports[self.clientsRunning]} -s 96\"&'
         tcpdump = f'ssh {self.user}@glomma.cs.wpi.edu \"sudo tcpdump -i 2 -w {filename} port {self.ports[0]} -s 96\" &'
         self.clientDumpsRunning += 1
