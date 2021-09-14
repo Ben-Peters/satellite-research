@@ -143,7 +143,7 @@ def plotData():
         csvFilename = f'C:/satellite-research/csvs/Trial_{args.batch}/' + file
         csvs.append(csvFilename)
         # legend.append(hosts[i].split('.')[0])
-    plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", "_TPUT.png")
+    plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", ".png")
     plot = PlotAllData(protocol=cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend,
                        numRuns=int(args.numToRun / 2), title=args.plotName)
     # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
