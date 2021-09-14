@@ -352,7 +352,7 @@ class PlotAllData(Plot):
 
     def calculateStats(self, data, pipe, pSem, count):
             df = data
-            cutOffTime = 1
+            cutOffTime = 0.2
             bytesSent = 0
             throughput = []
             seconds = []
@@ -466,7 +466,7 @@ class PlotAllData(Plot):
                     clientCount = 0
                     retransmissionsCount = 0
                     startFrame = j
-                    cutOffTime += 1
+                    cutOffTime += 0.2
                     TDsum = 0
                     TDcount = 0
 
@@ -550,11 +550,11 @@ class PlotAllData(Plot):
         sortedData = []
         for df, i in zip(self.data, range(len(self.data))):
             if i % 2 == 0:
-                # is even (tuning enabled)
+                # is even (server)
                 sortedData.append(df)
         for df, i in zip(self.data, range(len(self.data))):
             if i % 2 == 1:
-                # is odd (tuning disabled)
+                # is odd (client)
                 sortedData.append(df)
         self.data = sortedData
         for df, i in zip(self.data, range(len(self.data))):

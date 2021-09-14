@@ -138,7 +138,7 @@ def plotData():
 
     hosts += ["glomma.cs.wpi.edu"]
     csvs = []
-    legend = ['With Receiver Auto-Tune', 'Without Receiver Auto-Tune']
+    legend = ['Server', 'Client']
     for file, i in zip(files, range(len(files))):
         csvFilename = f'C:/satellite-research/csvs/Trial_{args.batch}/' + file
         csvs.append(csvFilename)
@@ -147,10 +147,10 @@ def plotData():
     plot = PlotAllData(protocol=cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend,
                        numRuns=int(args.numToRun / 2), title=args.plotName)
     # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
-    plot.plotALL(maxY=maxY)
-    #plot.plotStartTput(15)
-    #plot.plotStart(15)
-    plot.plotTimeDelta()
+    plot.plotALL()
+    # plot.plotStartTput(15)
+    # plot.plotStart(15)
+    # plot.plotTimeDelta()
 
 
 def main():
