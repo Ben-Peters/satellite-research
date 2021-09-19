@@ -1466,7 +1466,7 @@ class PlotAllData(Plot):
 
     pass
 
-    def mdev_vs_sdev(self, title):
+    def mdev_vs_sdev(self):
         sdev = self.calculateSdev()
 
         # Setup formatting of plots
