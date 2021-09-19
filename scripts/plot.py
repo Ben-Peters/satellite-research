@@ -935,8 +935,8 @@ class PlotAllData(Plot):
         pyplot.plot(time, self.throughputAVG[1][0:seconds+1], color='tab:blue')
         pyplot.ylabel("Throughput (Mb/s)")
         pyplot.xlabel("Time (seconds)")
-        legend = ['Theoretical'] + self.legend
-        # pyplot.legend(legend)
+        # legend = ['Theoretical'] + self.legend
+        pyplot.legend(self.legend)
         pyplot.suptitle(self.title)
         pyplot.ylim([0, 20])
         pyplot.xlim([0, seconds])
@@ -996,15 +996,17 @@ class PlotAllData(Plot):
         # axs[0].plot(self.secondsAVG[i], self.throughputAVG[i], '.', color='tab:blue')
         minLength = len(self.seconds[0])
         minIndex = 0
-        for i in range(int(self.numRuns * 2)):
+        for i in range(len(self.seconds)):
             if minLength > len(self.seconds[i]):
                 minIndex = i
                 minLength = len(self.seconds[i])
         axs[0].plot(self.seconds[minIndex], self.throughputAVG[0], color='tab:orange')
-        axs[0].fill_between(self.seconds[minIndex], self.throughputCI[0][0],
-                                                    self.throughputCI[0][1], color='tab:orange', alpha=.2)
+        #axs[0].fill_between(self.seconds[minIndex], self.throughputCI[0][0],
+         #                                           self.throughputCI[0][1], color='tab:orange', alpha=.2)
 
         axs[1].plot(self.seconds[minIndex], self.rttAVG[0], color='tab:orange')
+        #axs[1].fill_between(self.seconds[minIndex], self.rttCI[0][0],
+           #                                         self.rttCI[0][1], color='tab:orange', alpha=.2)
 
         axs[2].plot(self.seconds[minIndex], self.rwndAVG[0], color='tab:orange')
         axs[2].fill_between(self.seconds[minIndex], numpy.array(self.rwndCI[0][0])/1048576,
@@ -1020,10 +1022,12 @@ class PlotAllData(Plot):
         #                    self.timeDeltaCI[0][1], color='tab:orange', alpha=.2)
 
         axs[0].plot(self.seconds[minIndex], self.throughputAVG[1], color='tab:blue')
-        axs[0].fill_between(self.seconds[minIndex], self.throughputCI[1][0],
-                                                    self.throughputCI[1][1], color='tab:blue', alpha=.2)
+        #axs[0].fill_between(self.seconds[minIndex], self.throughputCI[1][0],
+         #                                           self.throughputCI[1][1], color='tab:blue', alpha=.2)
 
         axs[1].plot(self.seconds[minIndex], self.rttAVG[1], color='tab:blue')
+        #axs[1].fill_between(self.seconds[minIndex], self.rttCI[1][0],
+         #                   self.rttCI[1][1], color='tab:blue', alpha=.2)
 
         axs[2].plot(self.seconds[minIndex], self.rwndAVG[1], color='tab:blue')
         axs[2].fill_between(self.seconds[minIndex], numpy.array(self.rwndCI[1][0])/1048576,
@@ -1039,21 +1043,31 @@ class PlotAllData(Plot):
         #axs[5].fill_between(self.seconds[minIndex], self.timeDeltaCI[1][0],
         #                                            self.timeDeltaCI[1][1], color='tab:blue', alpha=.2)
 
-        axs[0].set_ylim([0, 10.1])
-        axs[1].set_ylim([0, 1.5])
-        axs[2].set_ylim([0, 6])
-        axs[3].set_ylim([0, 6])
-        axs[4].set_ylim([0, 2])
+        #axs[0].set_ylim([0, 10.1])
+        #axs[1].set_ylim([0, 1.5])
+        #axs[2].set_ylim([0, 6])
+        #axs[3].set_ylim([0, 6])
+        #axs[4].set_ylim([0, 2])
         #axs[5].set_ylim([0, 1])
+        axs[0].set_ylim(bottom=0)
+        axs[1].set_ylim(bottom=0)
+        axs[2].set_ylim(bottom=0)
+        axs[3].set_ylim(bottom=0)
+        axs[4].set_ylim(bottom=0)
+        axs[0].set_xlim(xmin=0)
+        axs[1].set_xlim(xmin=0)
+        axs[2].set_xlim(xmin=0)
+        axs[3].set_xlim(xmin=0)
+        axs[4].set_xlim(xmin=0)
 
 
-        for i in range(len(maxY)):
-            if maxY[i] is not None:
-                axs[i].set_ylim([0, maxY[i]])
-            axs[i].set_xlim([0, len(self.seconds[minIndex])])
+        #for i in range(len(maxY)):
+            #if maxY[i] is not None:
+                #axs[i].set_ylim([0, maxY[i]])
+            #axs[i].set_xlim([0, len(self.seconds[minIndex])])
 
         fig.suptitle(self.title)
-        # fig.legend(self.legend)
+        fig.legend(self.legend)
 
         axs[0].set_ylabel("Throughput (Mb/s)")
         axs[1].set_ylabel("RTT (s)")
