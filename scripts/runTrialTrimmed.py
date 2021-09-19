@@ -3,6 +3,7 @@ import os
 from plot import PlotTputOneFlow, PlotTputCompare, PlotAllData
 import subprocess
 import time
+from fabric2 import Connection
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--batch', type=int, help='What batch number is this', required=True)
@@ -116,7 +117,7 @@ def getData():
     except:
         print('Folder not created')
 
-    makeCSVs = f'ssh btpeters@Andromeda \"python3 ~/Research/scripts/makeCSVs.py --batch {args.batch}\"'
+    makeCSVs = f'ssh btpeters@Andromeda \"python3 ~/Research/scripts/Logs2CSV.py --batch {args.batch} --realtime {args.realtime}\"'
     subprocess.call(makeCSVs, shell=True)
 
     getCSVs = f'scp btpeters@Andromeda:~/Research/Trial_{args.batch}/csvs/* C:/satellite-research/csvs/Trial_{args.batch}'
@@ -147,30 +148,33 @@ def plotData():
     plot = PlotAllData(protocol=cc[0], csv=file, plotFile=plotFilename, legend=None,
                        numRuns=int(args.numToRun / 2), title=args.plotName)
     # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
-    plot.plotOnetcpdump()
+    plot.mdev_vs_sdev()
     #plot.plotStartTput(15)
     #plot.plotStart(15)
     #plot.plotTimeDelta()
 
 
 def main():
-    #if args.time is not None:
-        #startTrial = f"ssh btpeters@cs.wpi.edu \" python3 ~/Research/scripts/trialTrimmed.py " \
-       #              f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
-      #               f"--time {args.time} --numToRun {args.numToRun} " \
-     #                f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\' --window {args.window}\" "
-    #else:
-        #startTrial = f"ssh btpeters@cs.wpi.edu \" python3 ~/Research/scripts/trialTrimmed.py " \
-       #              f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
-     #                f"--size {args.size} --numToRun {args.numToRun}" \
-      #               f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\' --window {args.window}\" "
-    #print("Running command: " + startTrial)
-    #try:
-      #  os.listdir(f'C:/satellite-research/csvs/Trial_{args.batch}')
-     #   print("This trial has already been run, just creating plots")
-    #except:
-        #subprocess.call(startTrial, shell=True)
-        #getData()
+    if args.time is not None:
+        startTrial = f"python3 ~/Research/scripts/trialTrimmed.py " \
+                     f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
+                     f"--time {args.time} --numToRun {args.numToRun} " \
+                     f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\' --window {args.window} --RTT 1 --Ping 0 "
+    else:
+        startTrial = f"python3 ~/Research/scripts/trialTrimmed.py " \
+                     f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
+                     f"--size {args.size} --numToRun {args.numToRun}" \
+                     f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\' --window {args.window} --RTT 1 --Ping 0 "
+        #  TODO: Replace this with what it was before (RTT: 1, Ping: 0)
+    print("Running command: " + startTrial)
+    try:
+        os.listdir(f'C:/satellite-research/csvs/Trial_{args.batch}')
+        print("This trial has already been run, just creating plots")
+    except:
+        ssh = Connection(host='cs.wpi.edu', user='btpeters')
+        ssh.run(startTrial)
+        print("getting Data")
+        getData()
     plotData()
 
 

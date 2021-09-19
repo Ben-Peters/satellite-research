@@ -52,12 +52,16 @@ def logToCsv(files, prefix):
         numPackets = 0
         logTime = 0
         exit = 0
+        mdev = 0
+        max_mdev = 0
+        srtt = 0
+        smdev = 0
         flag = False
         for line in lines:
             if "(5201)" in line:
                 if "packets since start:" in line:
                     if flag:
-                        csv.write(f"{numPackets},{logTime},{sampleRTT},{cwnd},{packets_out},{mss},{sampleCount},{currRTT},{minRTT},{delayThresh},{exit}\n")
+                        csv.write(f"{numPackets},{logTime},{sampleRTT},{cwnd},{packets_out},{mss},{sampleCount},{currRTT},{minRTT},{delayThresh},{exit},{mdev},{max_mdev},{srtt},{smdev}\n")
                         sampleRTT = 0
                         cwnd = 0
                         packets_out = 0
@@ -68,8 +72,12 @@ def logToCsv(files, prefix):
                         sampleCount = 0
                         numPackets = 0
                         logTime = 0
+                        mdev = 0
+                        max_mdev = 0
+                        srtt = 0
+                        smdev = 0
                     else:
-                        csv.write(f'numPackets,time,sampleRTT,cwnd,packets_out,mss,sampleCount,currRTT,minRTT,delayThresh,exit\n')
+                        csv.write(f'numPackets,time,sampleRTT,cwnd,packets_out,mss,sampleCount,currRTT,minRTT,delayThresh,exit,mdev,max_mdev,srtt,smdev\n')
                         flag = True
                     numPackets = int(line.split("$")[-1])
                     logTime = float(line.split("[")[1].split(']')[0]) + bootTime
@@ -91,17 +99,25 @@ def logToCsv(files, prefix):
                     delayThresh = int(line.split("$")[-1])
                 elif "Exit due to delay detect" in line:
                     exit = 1
-        csv.write(f"{numPackets},{logTime},{sampleRTT},{cwnd},{packets_out},{mss},{sampleCount},{currRTT},{minRTT},{delayThresh},{exit}\n")
+                elif "Medium Deviation" in line:
+                    mdev = int(line.split("$")[-1])
+                elif "Max mdev" in line:
+                    max_mdev = int(line.split("$")[-1])
+                elif "Smoothed RTT" in line:
+                    srtt = int(line.split("$")[-1])
+                elif "Smoothed mdev" in line:
+                    smdev = int(line.split("$")[-1])
+
+        csv.write(f"{numPackets},{logTime},{sampleRTT},{cwnd},{packets_out},{mss},{sampleCount},{currRTT},{minRTT},{delayThresh},{exit},{mdev},{max_mdev},{srtt},{smdev}\n")
         log.close()
         csv.close()
-
 
 def getData():
     print("getting data")
     os.system(f'mkdir Trial_{args.batch}')
     os.system(f'mkdir Trial_{args.batch}/csvs Trial_{args.batch}/logs')
     os.system(f'scp -i ~/.ssh/id_rsa btpeters@cs.wpi.edu:~/Research/tmp/Trial_{args.batch}/logs/* ~/Research/Trial_{args.batch}/logs&')
-    os.system(f'scp -i ~/.ssh/id_rsa btpeters@cs.wpi.edu:~/Research/tmp/Trial_{args.batch}/csvs/* ~/Research/Trial_{args.batch}/csvs&')
+    #os.system(f'scp -i ~/.ssh/id_rsa btpeters@cs.wpi.edu:~/Research/tmp/Trial_{args.batch}/csvs/* ~/Research/Trial_{args.batch}/csvs&')
     sleep(60)
 
 
@@ -114,6 +130,7 @@ def main():
     print(os.getcwd())
     prefix = f'{os.getcwd()}/logs/'
     logToCsv(files=os.listdir(f'./logs'), prefix=prefix)
+
 
 if __name__ == "__main__":
     main()

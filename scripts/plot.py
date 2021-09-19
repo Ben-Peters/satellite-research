@@ -1435,62 +1435,54 @@ class PlotAllData(Plot):
         pyplot.savefig(self.plotFilepath)
         pyplot.show()
 
+    def update(slef, existingAggregate, newValue):
+        (count, mean, M2) = existingAggregate
+        count += 1
+        delta = newValue - mean
+        mean += delta / count
+        delta2 = newValue - mean
+        M2 += delta * delta2
+        return (count, mean, M2)
 
+    # Retrieve the mean, variance and sample variance from an aggregate
+    def finalize(self, existingAggregate):
+        (count, mean, M2) = existingAggregate
+        if count < 2:
+            return float("nan")
+        else:
+            (mean, variance, sampleVariance) = (mean, M2 / count, M2 / (count - 1))
+            return (mean, variance, sampleVariance)
+
+    def calculateSdev(self):
+        aggregate = (0, 0, 0)
+        sdev = []
+        for rtt in self.data['sampleRTT']:
+            aggregate = self.update(aggregate, rtt)
+            sdev.append(self.finalize(aggregate)[1])
+        return sdev
+
+
+
+
+    pass
 
     def RTT(self, title):
-        self.analyzeThreadedRTT()
-        self.avgAllDataRTT(0)
-        self.avgAllDataRTT(1)
+        sdev = self.calculateSdev()
 
         # Setup formatting of plots
-        fig, axs = pyplot.subplots(3, gridspec_kw={'height_ratios': [3, 3, 3]})
-        fig.set_figheight(8)
+        fig, axs = pyplot.subplots(1, gridspec_kw={'height_ratios': [3]})
+        fig.set_figheight(4)
 
-        minLength = len(self.seconds[0])
-        minIndex = 0
-        for i in range(int(self.numRuns * 2)):
-            if minLength > len(self.seconds[i]):
-                minIndex = i
-                minLength = len(self.seconds[i])
+        axs[0].plot(self.data['time'], self.data['mdev'], color='tab:orange')
+        axs[0].plot(self.data['time'], sdev, color='tab:blue')
+        axs[0].plot(self.data['time'], self.data['sampleRTT'], color='black', alpha=0.8)
 
-        axs[0].plot(self.seconds[minIndex], self.throughputAVG[0], color='tab:orange')
-        axs[0].fill_between(self.seconds[minIndex], self.throughputCI[0][0],
-                            self.throughputCI[0][1], color='tab:orange', alpha=.2)
-        axs[0].plot(self.seconds[minIndex], self.throughputAVG[1], color='tab:blue')
-        axs[0].fill_between(self.seconds[minIndex], self.throughputCI[1][0],
-                            self.throughputCI[1][1], color='tab:blue', alpha=.2)
-
-        axs[1].plot(self.seconds[minIndex], self.rttAVG[0], color='tab:orange')
-        axs[1].fill_between(self.seconds[minIndex], self.rttCI[0][0],
-                            self.rttCI[0][1], color='tab:orange', alpha=.2)
-        axs[1].plot(self.seconds[minIndex], self.rttAVG[1], color='tab:blue')
-        axs[1].fill_between(self.seconds[minIndex], self.rttCI[1][0],
-                            self.rttCI[1][1], color='tab:blue', alpha=.2)
-        axs[1].axvline(x=self.ssExitAVG, color='tab:red', alpha=.5)
-        axs[1].axhline(y=self.minRTTAVG, color='tab:green', alpha=.5)
-
-        axs[2].plot(self.seconds[minIndex], self.cwndAVG[0], color='tab:orange')
-        axs[2].fill_between(self.seconds[minIndex], self.cwndCI[0][0],
-                            self.cwndCI[0][1], color='tab:orange', alpha=.2)
-        axs[2].plot(self.seconds[minIndex], self.cwndAVG[1], color='tab:blue')
-        axs[2].fill_between(self.seconds[minIndex], self.cwndCI[1][0],
-                            self.cwndCI[1][1], color='tab:blue', alpha=.2)
-        axs[2].axvline(x=self.ssExitAVG, color='tab:red', alpha=.5)
         fig.suptitle("Hystart Disabled")
         fig.legend(self.legend)
-        axs[0].set_ylabel("Throughput (Mbits/s)")
-        axs[1].set_ylabel("RTT (ms)")
-        axs[2].set_ylabel("CWND (Packets)")
-        axs[2].set_xlabel("Time (seconds)")
+        axs[0].set_ylabel("Variance")
+
         axs[0].set_ylim(bottom=0)
-        axs[1].set_ylim(bottom=0)
-        axs[2].set_ylim(bottom=0)
         axs[0].set_xlim(xmin=0)
-        axs[0].set_xlim(xmax=self.seconds[minIndex][-1])
-        axs[1].set_xlim(xmin=0)
-        axs[1].set_xlim(xmax=self.seconds[minIndex][-1])
-        axs[2].set_xlim(xmin=0)
-        axs[2].set_xlim(xmax=self.seconds[minIndex][-1])
         pyplot.savefig(self.plotFilepath)
         pyplot.show()
 

@@ -556,25 +556,14 @@ class Trial:
         self.disableHystart()
         print("Running startIperf3Server()")
         self.startIperf3Server()
-        # run downloads
+        # run download
         self.setupKernLog()
-        for i in range(self.numToRun):
-            if i % 2 == 0:
-                self.routeSatellite()
-            else:
-                self.routeVorma()
-            # print("Running startIperf3Server()")
-            # self.startIperf3Server()
-            # print("Running startTcpdumpClient()")
-            # self.startTcpdumpClient()
-            print("Running startIperf3Client()")
-            self.startIperf3Client()
-            # print("Sleeping")
-            # self.sleep(self.timeout)
-            # print('Killing tcpdump and iperf3')
-            # self.terminateCommands()
-            self.moveKernLog()
-            self.sleep(5)
+        self.routeSatellite()
+        self.routeVorma()
+        print("Running startIperf3Client()")
+        self.startIperf3Client()
+        self.moveKernLog()
+        self.sleep(5)
         self.enableTuning()
         # self.removeLimit()
         # self.disableTuning()
@@ -628,9 +617,9 @@ def main():
               numToRun=args.numToRun, time=args.time, tcp_rmem=args.rmem,
               tcp_mem=args.mem, tcp_wmem=args.wmem, ports=['5201', '5201'], iperf_w_arg=args.window)
     #if args.RTT:
-    #    t.startRTT()
+    t.startRTT()
     #elif args.Ping:
-    t.startPingRTT()
+    # t.startPingRTT()
     #else:
     #    t.start()
     print("All done")
