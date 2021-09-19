@@ -83,6 +83,7 @@ def logToCsv(files, prefix):
                         csv.write(f'numPackets,time,sampleRTT,cwnd,packets_out,mss,sampleCount,currRTT,minRTT,delayThresh,exit,mdev,max_mdev,srtt,smdev\n')
                         flag = True
                     sampleRTT = int(line.split("$")[-1])
+                    logTime = float(line.split("[")[1].split(']')[0]) + bootTime
                 elif "cwnd:" in line:
                     cwnd = int(line.split("$")[-1])
                 elif "packets in flight:" in line:

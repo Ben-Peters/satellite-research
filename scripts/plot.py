@@ -1449,7 +1449,7 @@ class PlotAllData(Plot):
     def finalize(self, existingAggregate):
         (count, mean, M2) = existingAggregate
         if count < 2:
-            return float("nan")
+            return (float("nan"), float("nan"), float("nan"))
         else:
             (mean, variance, sampleVariance) = (mean, M2 / count, M2 / (count - 1))
             return (mean, variance, sampleVariance)
@@ -1462,25 +1462,20 @@ class PlotAllData(Plot):
             sdev.append(self.finalize(aggregate)[1])
         return sdev
 
-
-
-
-    pass
-
     def mdev_vs_sdev(self):
         sdev = self.calculateSdev()
 
         # Setup formatting of plots
-        fig, axs = pyplot.subplots(1, gridspec_kw={'height_ratios': [3]})
-        fig.set_figheight(4)
+        fig, axs = pyplot.subplots(2, gridspec_kw={'height_ratios': [3,3]})
+        fig.set_figheight(8)
 
-        axs[0].plot(self.data[0]['time'], self.data[0]['mdev'], color='tab:orange')
-        axs[0].plot(self.data[0]['time'], sdev, color='tab:blue')
-        axs[0].plot(self.data[0]['time'], self.data[0]['sampleRTT'], color='black', alpha=0.8)
+        axs[1].plot(self.data[0]['time'], self.data[0]['mdev'], color='tab:orange')
+        axs[1].plot(self.data[0]['time'], sdev, color='tab:blue')
+        axs[0].plot(self.data[0]['time'], self.data[0]['sampleRTT'], color='black')
 
-        fig.suptitle("Hystart Disabled")
-        fig.legend(self.legend)
-        axs[0].set_ylabel("Variance")
+        #fig.suptitle("Hystart Disabled")
+        #fig.legend(self.legend)
+        axs[1].set_ylabel("Variance")
 
         axs[0].set_ylim(bottom=0)
         axs[0].set_xlim(xmin=0)
