@@ -130,7 +130,7 @@ def plotData():
         cc.append(c)
     for c in cc:
         hosts.append(dictionary.get(c))
-    file = f'C:/satellite-research/csvs/OldData/1800000000.csv'
+    file = f'C:/satellite-research/csvs/OldData/mlc1.csv'
     try:
         os.mkdir(f'C:/satellite-research/plots/OldData')
     except:

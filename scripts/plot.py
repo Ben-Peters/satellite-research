@@ -1320,7 +1320,7 @@ class PlotAllData(Plot):
 
     def calculateStatsSingle(self):
         df = self.data[0]
-        cutOffTime = 10
+        cutOffTime = 1
         bytesSent = 0
         throughput = []
         seconds = []
@@ -1346,7 +1346,7 @@ class PlotAllData(Plot):
                 # Only look at packets that have data bout CWND
                 if not pandas.isnull(df['tcp.analysis.bytes_in_flight'].iloc[j]):
                     cwndCount += 1
-                    cwndSum += df['tcp.analysis.bytes_in_flight'].iloc[j]
+                    cwndSum += df['tcp.analysis.bytes_in_flight'].iloc[j]/1024/1024
 
                     # rolling avg for CWND est.
                     # if avgCwnd != 0:
@@ -1394,7 +1394,7 @@ class PlotAllData(Plot):
                 cwndSum = 0
                 cwndCount = 0
                 clientCount = 0
-                cutOffTime += 10
+                cutOffTime += 1
 
         self.throughput = throughput
         self.rtt = rtt
@@ -1414,12 +1414,12 @@ class PlotAllData(Plot):
         axs[1].plot(self.seconds, self.rtt, color='tab:orange')
         axs[2].plot(self.seconds, self.cwnd, color='tab:orange')
 
-        # fig.suptitle("UDP Ping with different server")
+        fig.suptitle("Jul 13, 2020")
         # fig.legend(['TCP Flow (mlcnetb)', 'UDP Ping (mlcneta)'])
 
         axs[0].set_ylabel("Throughput (Mbits/s)")
-        axs[1].set_ylabel("RTT (ms)")
-        axs[2].set_ylabel("CWND (Packets)")
+        axs[1].set_ylabel("RTT (Secons)")
+        axs[2].set_ylabel("CWND (MB)")
         axs[2].set_xlabel("Time (seconds)")
 
         axs[0].set_ylim(bottom=0)
