@@ -131,21 +131,21 @@ def plotData():
         cc.append(c)
     for c in cc:
         hosts.append(dictionary.get(c))
-    file = f'C:/satellite-research/csvs/OldData/mlc1.csv'
+    files = os.listdir(f'C:/satellite-research/csvs/Trial_{args.batch}')
     try:
-        os.mkdir(f'C:/satellite-research/plots/OldData')
+        os.mkdir(f'C:/satellite-research/plots/Trial_{args.batch}')
     except:
         print("Folder not created")
 
     hosts += ["glomma.cs.wpi.edu"]
     csvs = []
     #legend = ['With Receiver Auto-Tune', 'Without Receiver Auto-Tune']
-    #for file, i in zip(files, range(len(files))):
-    # csvFilename = f'C:/satellite-research/csvs/oldData/' + file
-        #csvs.append(csvFilename)
+    for file, i in zip(files, range(len(files))):
+        csvFilename = f'C:/satellite-research/csvs/oldData/' + file
+        csvs.append(csvFilename)
         # legend.append(hosts[i].split('.')[0])
-    plotFilename = file.replace("/csvs/", "/plots/").replace(".csv", ".png")
-    plot = PlotAllData(protocol=cc[0], csv=file, plotFile=plotFilename, legend=None,
+    plotFilename = files[0].replace("/csvs/", "/plots/").replace(".csv", ".png")
+    plot = PlotAllData(protocol=cc[0], csvs=files, plotFile=plotFilename, legend=None,
                        numRuns=int(args.numToRun / 2), title=args.plotName)
     # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
     plot.mdev_vs_sdev()
@@ -174,7 +174,7 @@ def main():
         ssh = Connection(host='cs.wpi.edu', user='btpeters')
         ssh.run(startTrial)
         print("getting Data")
-        getData()
+    getData()
     plotData()
 
 

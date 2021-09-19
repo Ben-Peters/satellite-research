@@ -200,9 +200,9 @@ class PlotTputCompare:
 
 
 class Plot:
-    def __init__(self, protocol, legend, csv, plotFile, numRuns=1):
+    def __init__(self, protocol, legend, csvs, plotFile, numRuns=1):
         self.protocol = protocol
-        self.csv = csv
+        self.csvs = csvs
         self.plotFilepath = plotFile
         self.legend = legend
         self.data = []
@@ -218,8 +218,9 @@ class Plot:
                     'tcp.analysis.ack_rtt': float,
                     'frame.time': str,
                     'tcp.time_relative': float}
-        # memory mapping can be enabled to improve performance but at the expense of memory usage for large files
-        self.data.append(pandas.read_csv(csv, memory_map=True))
+        for csv in csvs:
+            # memory mapping can be enabled to improve performance but at the expense of memory usage for large files
+            self.data.append(pandas.read_csv(csv, memory_map=True))
         self.timesRaw = []  # pandas.to_datetime(self.df['frame.time'], infer_datetime_format=True)
         self.frameTime = []
         self.throughput = []
@@ -322,8 +323,8 @@ def calculateConfidenceInterval(values, confidenceLevel):
 
 
 class PlotAllData(Plot):
-    def __init__(self, protocol, legend, csv, plotFile, title, numRuns=1):
-        super().__init__(protocol=protocol, legend=legend, csv=csv, plotFile=plotFile)
+    def __init__(self, protocol, legend, csvs, plotFile, title, numRuns=1):
+        super().__init__(protocol=protocol, legend=legend, csvs=csvs, plotFile=plotFile)
         self.numRuns = numRuns
         self.title = title
         self.rtt = []
@@ -1456,7 +1457,7 @@ class PlotAllData(Plot):
     def calculateSdev(self):
         aggregate = (0, 0, 0)
         sdev = []
-        for rtt in self.data['sampleRTT']:
+        for rtt in self.data[0]['sampleRTT']:
             aggregate = self.update(aggregate, rtt)
             sdev.append(self.finalize(aggregate)[1])
         return sdev
@@ -1473,9 +1474,9 @@ class PlotAllData(Plot):
         fig, axs = pyplot.subplots(1, gridspec_kw={'height_ratios': [3]})
         fig.set_figheight(4)
 
-        axs[0].plot(self.data['time'], self.data['mdev'], color='tab:orange')
-        axs[0].plot(self.data['time'], sdev, color='tab:blue')
-        axs[0].plot(self.data['time'], self.data['sampleRTT'], color='black', alpha=0.8)
+        axs[0].plot(self.data[0]['time'], self.data[0]['mdev'], color='tab:orange')
+        axs[0].plot(self.data[0]['time'], sdev, color='tab:blue')
+        axs[0].plot(self.data[0]['time'], self.data[0]['sampleRTT'], color='black', alpha=0.8)
 
         fig.suptitle("Hystart Disabled")
         fig.legend(self.legend)

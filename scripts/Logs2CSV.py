@@ -60,6 +60,9 @@ def logToCsv(files, prefix):
         for line in lines:
             if "(5201)" in line:
                 if "packets since start:" in line:
+                    numPackets = int(line.split("$")[-1])
+                    logTime = float(line.split("[")[1].split(']')[0]) + bootTime
+                elif "sample RTT:" in line:
                     if flag:
                         csv.write(f"{numPackets},{logTime},{sampleRTT},{cwnd},{packets_out},{mss},{sampleCount},{currRTT},{minRTT},{delayThresh},{exit},{mdev},{max_mdev},{srtt},{smdev}\n")
                         sampleRTT = 0
@@ -79,9 +82,6 @@ def logToCsv(files, prefix):
                     else:
                         csv.write(f'numPackets,time,sampleRTT,cwnd,packets_out,mss,sampleCount,currRTT,minRTT,delayThresh,exit,mdev,max_mdev,srtt,smdev\n')
                         flag = True
-                    numPackets = int(line.split("$")[-1])
-                    logTime = float(line.split("[")[1].split(']')[0]) + bootTime
-                elif "sample RTT:" in line:
                     sampleRTT = int(line.split("$")[-1])
                 elif "cwnd:" in line:
                     cwnd = int(line.split("$")[-1])
