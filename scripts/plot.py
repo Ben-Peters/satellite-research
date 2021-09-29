@@ -7,6 +7,7 @@ import numpy
 import statistics
 from scipy import stats
 from multiprocessing import Process, Lock, Pipe
+import math
 
 pyplot.rcParams.update({'font.size': 11})
 class PlotRTTOneFlow:
@@ -1249,10 +1250,9 @@ class PlotAllData(Plot):
             self.minRTT.append(minRTT)
             self.ssExit.append(ssExit)
 
-    def removeTimeOffsetPing(self):
-        minTime = self.data[1]['tSent_abs'].iloc[0]
+    def removeTimeOffsetLog(self):
+        minTime = self.data[0]['time'].iloc[0]
         print(f'minTime is: {minTime}')
-        self.data[1]['tSent_abs'] = self.data[1]['tSent_abs'] - minTime
         self.data[0]['time'] = self.data[0]['time'] - minTime
 
 
@@ -1459,26 +1459,34 @@ class PlotAllData(Plot):
         sdev = []
         for rtt in self.data[0]['sampleRTT']:
             aggregate = self.update(aggregate, rtt)
-            sdev.append(self.finalize(aggregate)[1])
+            sdev.append(math.sqrt(self.finalize(aggregate)[1]))
         return sdev
 
     def mdev_vs_sdev(self):
+        self.removeTimeOffsetLog()
         sdev = self.calculateSdev()
 
         # Setup formatting of plots
-        fig, axs = pyplot.subplots(2, gridspec_kw={'height_ratios': [3,3]})
+        fig, axs = pyplot.subplots(2, gridspec_kw={'height_ratios': [3, 3]})
         fig.set_figheight(8)
 
-        axs[1].plot(self.data[0]['time'], self.data[0]['mdev'], color='tab:orange')
+        # axs[1].plot(self.data[0]['time'], self.data[0]['mdev'], color='tab:orange')
+        axs[1].plot(self.data[0]['time'], self.data[0]['m2'], color='tab:green')
+        axs[1].plot(self.data[0]['time'], self.data[0]['runningAvg'], color='tab:red')
+        axs[1].plot(self.data[0]['time'], self.data[0]['variance'], color='tab:purple')
+        axs[1].plot(self.data[0]['time'], self.data[0]['sdev'], color='tab:orange')
         axs[1].plot(self.data[0]['time'], sdev, color='tab:blue')
         axs[0].plot(self.data[0]['time'], self.data[0]['sampleRTT'], color='black')
 
         #fig.suptitle("Hystart Disabled")
-        #fig.legend(self.legend)
-        axs[1].set_ylabel("Variance")
+        fig.legend(['RTT', 'sdev from kernel', 'm2 from kernel', 'running avg from kernel', 'variance', 'sdev from kernel', 'Welford\'s Algorithm'])
+        axs[1].set_ylabel("Variance (ms)")
+        axs[0].set_ylabel('RTT (ms)')
 
         axs[0].set_ylim(bottom=0)
         axs[0].set_xlim(xmin=0)
+        axs[1].set_ylim(bottom=0)
+        axs[1].set_xlim(xmin=0)
         pyplot.savefig(self.plotFilepath)
         pyplot.show()
 

@@ -174,7 +174,7 @@ def main():
         ssh = Connection(host='cs.wpi.edu', user='btpeters')
         ssh.run(startTrial)
         print("getting Data")
-    getData()
+        getData()
     plotData()
 
 
