@@ -87,7 +87,7 @@ class Trial:
         filePrefix = f'Trial_{self.batchNum}'
         os.system(f'mkdir {filePrefix}')
         os.system(f'{sshPrefix} \"mkdir {filePrefix}\"')
-        os.system(f'{sshPrefix} \"./setup_routes.sh\"') # TODO: make changing between vorma and satellite easier
+        os.system(f'{sshPrefix} \"./setup_routes.sh vorma\"') # TODO: make changing between vorma and satellite easier
         #os.system(f'ssh {self.user}@vorma.cs.wpi.edu \"sudo ./satellite.sh\"')
         for host in self.hosts:
             os.system(f'ssh {self.user}@{host} \"mkdir {filePrefix}\"')
