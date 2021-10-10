@@ -1525,7 +1525,6 @@ class PlotAllData(Plot):
         axs[2].set_ylabel('m2 (ms)')
         axs[3].set_ylabel('cwnd (Mbits)')
 
-        axs[0].set_ylim(bottom=0)
         axs[0].set_xlim(xmin=0)
         axs[1].set_ylim(bottom=0)
         axs[1].set_xlim(xmin=0)
