@@ -315,9 +315,9 @@ class Trial:
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
-    def limitWithRate(self):
+    def emulateNormal(self):
         sshPrefix = f'ssh {self.user}@vorma.cs.wpi.edu'
-        command = f'{sshPrefix} \"sudo ~/rate.sh\"'
+        command = f'{sshPrefix} \"sudo ~/normal_25.sh\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
@@ -554,17 +554,19 @@ class Trial:
             self.setProtocolsRemote()
         print("Disabling HyStart")
         self.disableHystart()
+        print("Setting up vorma")
+        self.emulateNormal()
         print("Running startIperf3Server()")
         self.startIperf3Server()
         # run download
         self.setupKernLog()
-        self.routeSatellite()
+        self.routeVorma()
         print("Running startIperf3Client()")
         self.startIperf3Client()
         self.moveKernLog()
         self.sleep(5)
         self.enableTuning()
-        # self.removeLimit()
+        self.removeLimit()
         # self.disableTuning()
         print("Getting pcaps")
         self.getLogs()
