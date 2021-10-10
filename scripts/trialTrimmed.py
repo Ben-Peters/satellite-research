@@ -317,7 +317,7 @@ class Trial:
 
     def emulateNormal(self):
         sshPrefix = f'ssh {self.user}@vorma.cs.wpi.edu'
-        command = f'{sshPrefix} \"sudo ~/normal_50.sh\"'
+        command = f'{sshPrefix} \"sudo ~/normal_75.sh\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
