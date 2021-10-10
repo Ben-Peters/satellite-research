@@ -148,7 +148,7 @@ def plotData():
     plot = PlotAllData(protocol=cc[0], csvs=csvs, plotFile=plotFilename, legend=None,
                        numRuns=int(args.numToRun / 2), title=args.plotName)
     # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
-    plot.mdev_vs_sdev()
+    plot.windowSize()
     #plot.plotStartTput(15)
     #plot.plotStart(15)
     #plot.plotTimeDelta()
