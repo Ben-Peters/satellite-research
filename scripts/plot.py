@@ -1452,41 +1452,50 @@ class PlotAllData(Plot):
             return (float("nan"), float("nan"), float("nan"))
         else:
             (mean, variance, sampleVariance) = (mean, M2 / count, M2 / (count - 1))
-            return (mean, variance, sampleVariance)
+            return mean, variance, sampleVariance
 
     def calculateSdev(self):
         aggregate = (0, 0, 0)
         sdev = []
+        mean = []
+        m2 = []
         for rtt in self.data[0]['sampleRTT']:
             aggregate = self.update(aggregate, rtt)
             sdev.append(math.sqrt(self.finalize(aggregate)[1]))
-        return sdev
+            mean.append(aggregate[1])
+            m2.append(aggregate[2])
+        return sdev, mean, m2
 
     def mdev_vs_sdev(self):
         self.removeTimeOffsetLog()
-        sdev = self.calculateSdev()
+        (sdev, mean, m2) = self.calculateSdev()
 
         # Setup formatting of plots
-        fig, axs = pyplot.subplots(2, gridspec_kw={'height_ratios': [3, 3]})
+        fig, axs = pyplot.subplots(3, gridspec_kw={'height_ratios': [3, 3, 3]})
         fig.set_figheight(8)
 
         # axs[1].plot(self.data[0]['time'], self.data[0]['mdev'], color='tab:orange')
-        axs[1].plot(self.data[0]['time'], self.data[0]['m2'], color='tab:green')
-        axs[1].plot(self.data[0]['time'], self.data[0]['runningAvg'], color='tab:red')
-        axs[1].plot(self.data[0]['time'], self.data[0]['variance'], color='tab:purple')
-        axs[1].plot(self.data[0]['time'], self.data[0]['sdev'], color='tab:orange')
-        axs[1].plot(self.data[0]['time'], sdev, color='tab:blue')
+        axs[2].plot(self.data[0]['time'], self.data[0]['m2'], color='tab:orange')
+        axs[2].plot(self.data[0]['time'], m2, color='tab:blue')
+        axs[0].plot(self.data[0]['time'], self.data[0]['runningAvg'], color='tab:orange')
+        axs[0].plot(self.data[0]['time'], mean, color='tab:blue')
+        # axs[1].plot(self.data[0]['time'], self.data[0]['variance'], color='tab:purple')
+        axs[1].plot(self.data[0]['time'], self.data[0]['sdev'], color='tab:blue')
+        axs[1].plot(self.data[0]['time'], sdev, color='tab:orange')
         axs[0].plot(self.data[0]['time'], self.data[0]['sampleRTT'], color='black')
 
         #fig.suptitle("Hystart Disabled")
-        fig.legend(['RTT', 'sdev from kernel', 'm2 from kernel', 'running avg from kernel', 'variance', 'sdev from kernel', 'Welford\'s Algorithm'])
-        axs[1].set_ylabel("Variance (ms)")
+        fig.legend(['Python', "Kernel", "Measured RTT"])
+        axs[1].set_ylabel("standard deviation (ms)")
         axs[0].set_ylabel('RTT (ms)')
+        axs[2].set_ylabel('m2 (ms)')
 
         axs[0].set_ylim(bottom=0)
         axs[0].set_xlim(xmin=0)
         axs[1].set_ylim(bottom=0)
         axs[1].set_xlim(xmin=0)
+        axs[2].set_ylim(bottom=0)
+        axs[2].set_xlim(xmin=0)
         pyplot.savefig(self.plotFilepath)
         pyplot.show()
 

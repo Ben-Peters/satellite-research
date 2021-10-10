@@ -118,7 +118,7 @@ def logToCsv(files, prefix):
                     srtt = int(line.split("$")[-1])
                 elif "Smoothed mdev" in line:
                     smdev = int(line.split("$")[-1])
-                elif "M2:" in line:
+                elif "m2:" in line:
                     m2 = int(line.split("$")[-1])
                 elif "Running avg:" in line:
                     running_avg = int(line.split("$")[-1])
