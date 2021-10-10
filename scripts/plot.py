@@ -1508,6 +1508,7 @@ class PlotAllData(Plot):
         fig.set_figheight(8)
 
         # axs[1].plot(self.data[0]['time'], self.data[0]['mdev'], color='tab:orange')
+        axs[0].plot(self.data[0]['time'], self.data[0]['sampleRTT'], color='black')
         axs[2].plot(self.data[0]['time'], self.data[0]['m2'], color='tab:blue')
         axs[2].plot(self.data[0]['time'], m2, color='tab:orange')
         axs[0].plot(self.data[0]['time'], self.data[0]['runningAvg'], color='tab:blue')
@@ -1515,7 +1516,6 @@ class PlotAllData(Plot):
         # axs[1].plot(self.data[0]['time'], self.data[0]['variance'], color='tab:purple')
         axs[1].plot(self.data[0]['time'], self.data[0]['sdev'], color='tab:blue')
         axs[1].plot(self.data[0]['time'], sdev, color='tab:orange')
-        axs[0].plot(self.data[0]['time'], self.data[0]['sampleRTT'], color='black')
         axs[3].plot(self.data[0]['time'], self.data[0]['cwnd']*self.data[0]['mss']/1024/1024, color='tab:blue')
 
         # fig.suptitle("Hystart Disabled")
