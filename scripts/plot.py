@@ -1508,8 +1508,8 @@ class PlotAllData(Plot):
         fig.set_figheight(8)
 
         # axs[1].plot(self.data[0]['time'], self.data[0]['mdev'], color='tab:orange')
-        axs[2].plot(self.data[0]['time'], self.data[0]['m2'], color='tab:orange')
-        axs[2].plot(self.data[0]['time'], m2, color='tab:blue')
+        axs[2].plot(self.data[0]['time'], self.data[0]['m2'], color='tab:blue')
+        axs[2].plot(self.data[0]['time'], m2, color='tab:orange')
         axs[0].plot(self.data[0]['time'], self.data[0]['runningAvg'], color='tab:blue')
         axs[0].plot(self.data[0]['time'], mean, color='tab:orange')
         # axs[1].plot(self.data[0]['time'], self.data[0]['variance'], color='tab:purple')
