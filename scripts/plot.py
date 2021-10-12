@@ -1519,7 +1519,7 @@ class PlotAllData(Plot):
         axs[3].plot(self.data[0]['time'], self.data[0]['cwnd']*self.data[0]['mss']/1024/1024, color='tab:blue')
 
         # fig.suptitle("Hystart Disabled")
-        fig.legend(['Python', "Kernel", "Measured RTT"])
+        fig.legend(["Measured RTT", 'Python', "Kernel"])
         axs[1].set_ylabel("standard deviation (ms)")
         axs[0].set_ylabel('RTT (ms)')
         axs[2].set_ylabel('m2 (ms)')
