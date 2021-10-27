@@ -1480,12 +1480,12 @@ class PlotAllData(Plot):
         axs[0].plot(self.data[0]['time'], self.data[0]['runningAvg'], color='tab:orange')
         axs[0].plot(self.data[0]['time'], mean, color='tab:blue')
         # axs[1].plot(self.data[0]['time'], self.data[0]['variance'], color='tab:purple')
-        axs[1].plot(self.data[0]['time'], self.data[0]['sdev'], color='tab:blue')
-        axs[1].plot(self.data[0]['time'], sdev, color='tab:orange')
+        axs[1].plot(self.data[0]['time'], self.data[0]['sdev'], color='tab:orange')
+        axs[1].plot(self.data[0]['time'], sdev, color='tab:blue')
         axs[0].plot(self.data[0]['time'], self.data[0]['sampleRTT'], color='black')
 
         #fig.suptitle("Hystart Disabled")
-        fig.legend(['Python', "Kernel", "Measured RTT"])
+        fig.legend(["Kernel", 'Python', "Measured RTT"])
         axs[1].set_ylabel("standard deviation (ms)")
         axs[0].set_ylabel('RTT (ms)')
         axs[2].set_ylabel('m2 (ms)')
@@ -1499,46 +1499,112 @@ class PlotAllData(Plot):
         pyplot.savefig(self.plotFilepath)
         pyplot.show()
 
+
+    def filterStreams(self, data):
+        boolIndex = []
+        twoCount = 0
+        lastCount = 1
+        for count in data['count'] :
+            if count == 2:
+                twoCount += 1
+            if twoCount < 2:
+                boolIndex.append(False)
+                continue
+            if lastCount + 1 != count:
+                boolIndex.append(False)
+                continue
+            boolIndex.append(True)
+            lastCount = count
+        return data[pandas.Series(boolIndex)]
+
+
+    def determineExit(self, exitSdev, data, numViolations):
+        exitWindow = []
+        count = 0
+        minSeen = 0
+        overallMin = 0
+
+        for i in range(len(data['sampleRTT'])):
+            if minSeen > data['sampleRTT'].iloc[i]:
+                minSeen = data['sampleRTT'].iloc[i]
+
+            if overallMin > data['sampleRTT'].iloc[i]:
+                overallMin = data['sampleRTT'].iloc[i]
+            if count < 4:
+                if overallMin > data['sampleRTT'].iloc[i] or overallMin == 0:
+                    overallMin = data['sampleRTT'].iloc[i]
+
+                if minSeen > data['sampleRTT'].iloc[i] or minSeen == 0:
+                    minSeen = data['sampleRTT'].iloc[i]
+                count += 1
+            else:
+                if minSeen > (((data['sdev'].iloc[i] ** 2) / exitSdev) + data['runningAvg'].iloc[i]):
+                    #print(i)
+                    #print(f"{minSeen} > {data['sdev'].iloc[i] * exitSdev} + {data['runningAvg'].iloc[i]}")
+                    exitWindow.append((data['cwnd'].iloc[i]*data['mss'].iloc[i])/1024/1024)
+                    if len(exitWindow) == numViolations:
+                        break
+                minSeen = 0
+                count = 0
+
+        if len(exitWindow) < numViolations:
+            for i in range(numViolations - len(exitWindow)):
+                exitWindow.append(65)
+        print(exitWindow)
+        return exitWindow
+
     def windowSize(self):
         self.removeTimeOffsetLog()
-        (sdev, mean, m2) = self.calculateSdev()
+        # (sdev, mean, m2) = self.calculateSdev()
+        entries = []
+
+        for trial in self.data:
+            trial = self.filterStreams(trial)
+            exits = (self.determineExit(2048, trial, 1), self.determineExit(512, trial, 1), self.determineExit(64, trial, 1))
+            entries.append(exits)
+            print(exits)
 
         # Setup formatting of plots
-        fig, axs = pyplot.subplots(4, gridspec_kw={'height_ratios': [3, 3, 3, 3]})
-        fig.set_figheight(8)
+        # fig, axs = pyplot.subplots(1, gridspec_kw={'height_ratios': [8]})
+        # fig.set_figheight(8)
 
         # axs[1].plot(self.data[0]['time'], self.data[0]['mdev'], color='tab:orange')
-        axs[0].plot(self.data[0]['time'], self.data[0]['sampleRTT'], color='black')
-        axs[2].plot(self.data[0]['time'], self.data[0]['m2'], color='tab:blue')
-        axs[2].plot(self.data[0]['time'], m2, color='tab:orange')
-        axs[0].plot(self.data[0]['time'], self.data[0]['runningAvg'], color='tab:blue')
-        axs[0].plot(self.data[0]['time'], mean, color='tab:orange')
-        # axs[1].plot(self.data[0]['time'], self.data[0]['variance'], color='tab:purple')
-        axs[1].plot(self.data[0]['time'], self.data[0]['sdev'], color='tab:blue')
-        axs[1].plot(self.data[0]['time'], sdev, color='tab:orange')
-        axs[3].plot(self.data[0]['time'], self.data[0]['cwnd']*self.data[0]['mss']/1024/1024, color='tab:blue')
+        pyplot.axhline(y=10.8, color="tab:red")
+        for i in range(len(entries)):
+            (oneSd, twoSd, threeSd) = entries[i]
+            if oneSd[0] != 65:
+                pyplot.scatter(30 * i, oneSd[0], c="tab:blue")
+            if twoSd[0] != 65 and twoSd >= oneSd:
+                pyplot.scatter(30 * i, twoSd[0], c='tab:orange')
+            if threeSd[0] != 65 and threeSd >= oneSd and threeSd >= twoSd:
+                pyplot.scatter(30 * i, threeSd[0], c='tab:green')
 
-        # fig.suptitle("Hystart Disabled")
-        fig.legend(["Measured RTT", "Kernel", 'Python'])
-        axs[1].set_ylabel("standard deviation (ms)")
-        axs[0].set_ylabel('RTT (ms)')
-        axs[2].set_ylabel('m2 (ms)')
-        axs[3].set_ylabel('cwnd (Mbits)')
+        pyplot.xlabel("Time (seconds)")
+        pyplot.ylabel("Throughput (Mb/s)")
 
-        axs[0].set_xlim(xmin=0)
-        axs[1].set_ylim(bottom=0)
-        axs[1].set_xlim(xmin=0)
-        axs[2].set_ylim(bottom=0)
-        axs[2].set_xlim(xmin=0)
-        axs[3].set_ylim(bottom=0)
-        axs[3].set_xlim(xmin=0)
+        pyplot.title('Variation in Link vs Window Size at Exit')
+        pyplot.legend(
+            ["Optimal exit Point (BDP)", "1/2048 of Variance", "1/512 of Variance", '1/64 of Variance'])
+
+        pyplot.ylabel('Window size (MB)')
+        pyplot.xlabel("Standard Deviation of Delay (ms)")
+
+        #pyplot.xlim(xmin=0)
+        pyplot.ylim(bottom=0)
         pyplot.savefig(self.plotFilepath)
         pyplot.show()
 
 
 if __name__ == "__main__":
-    plot = PlotTputOneFlow("hybla", "C:\satellite-research/cubic_2021_04_13-20-28-37.csv", "C:/satellite-research/cubicTput")
-    plot.plotTput()
+    import os
+    files = os.listdir(f'C:/satellite-research/csvs/hystartExit')
+    csvs = []
+    for file, i in zip(files, range(len(files))):
+        csvFilename = f'C:/satellite-research/csvs/hystartExit/' + file
+        csvs.append(csvFilename)
+    plot = PlotAllData(protocol=None, csvs=csvs, plotFile='C:/satellite-research/plots/hystartExit/threeViolations',
+                       legend=None, numRuns=1, title=None)
+    plot.windowSize()
     # plot = PlotRTTOneFlow("hybla", "C:/research/hybla_2021_04_12-23-07-43.csv", "C:/research/hyblaRTT")
     # plot.plotRTT()
     # csvs = ["C:/research/hybla_2021_04_12-23-07-43.csv", "C:/research/hybla_2021_04_12-23-07-46.csv"]
