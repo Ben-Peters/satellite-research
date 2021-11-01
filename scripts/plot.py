@@ -352,7 +352,7 @@ class PlotAllData(Plot):
 
     def calculateStats(self, data, pipe, pSem, count):
             df = data
-            cutOffTime = 0.2
+            cutOffTime = 1
             bytesSent = 0
             throughput = []
             seconds = []
@@ -466,7 +466,7 @@ class PlotAllData(Plot):
                     clientCount = 0
                     retransmissionsCount = 0
                     startFrame = j
-                    cutOffTime += 0.2
+                    cutOffTime += 1
                     TDsum = 0
                     TDcount = 0
 
@@ -1066,7 +1066,7 @@ class PlotAllData(Plot):
                 #axs[i].set_ylim([0, maxY[i]])
             #axs[i].set_xlim([0, len(self.seconds[minIndex])])
 
-        fig.suptitle(self.title)
+        fig.suptitle("TCP acceleration OFF") #self.title
         fig.legend(self.legend)
 
         axs[0].set_ylabel("Throughput (Mb/s)")
