@@ -303,10 +303,18 @@ class Trial:
         command = f'{sshPrefix} \"sudo sysctl net.ipv4.tcp_moderate_rcvbuf=0\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
-        # command = f'{sshPrefix} \"./setProxyMode.sh 3\"'
-        # os.system(command)
+
+    def enableProxy(self):
+        sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
+        command = f'{sshPrefix} \"./setProxyMode.sh 2\"'
+        os.system(command)
         # os.system('echo Proxy should be disabled!')
         # self.sleep(30)
+
+    def disableProxy(self):
+        sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
+        command = f'{sshPrefix} \"./setProxyMode.sh 3\"'
+        os.system(command)
 
     def limitWithTBF(self):
         sshPrefix = f'ssh {self.user}@vorma.cs.wpi.edu'
@@ -395,6 +403,7 @@ class Trial:
             self.logsSent += 1
 
     def startUDPingServer(self):
+
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
         command = f'{sshPrefix} \"~/sUDPing\"'
         self.commandsRun.append((self.getTimeStamp(), command))
@@ -510,10 +519,15 @@ class Trial:
             self.disableMaxCap()
             print("Running setProtocolsRemote()")
             self.setProtocolsRemote()
+            print("enabling the TCP Proxy")
+            self.enableProxy()
         print("Enabling Hystart")
         self.enableHystart()
         print('setting Routes')
         self.routeSatellite()
+        #self.routeVorma()
+        print('Truncating existing kern log')
+        self.setupKernLog()
         print('starting iperf3 server')
         self.startIperf3Server()
         print('Starting ping server')

@@ -147,10 +147,11 @@ def plotData():
     plot = PlotAllData(protocol=cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend,
                        numRuns=int(args.numToRun / 2), title=args.plotName)
     # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
-    plot.plotALL(maxY=maxY)
-    #plot.plotStartTput(15)
-    #plot.plotStart(15)
-    plot.plotTimeDelta()
+    # plot.plotALL(maxY=maxY)
+    # plot.plotStartTput(15)
+    # plot.plotStart(15)
+    # plot.plotTimeDelta()
+    plot.plotWithPing("Proxy Enabled")
 
 
 def main():
