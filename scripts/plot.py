@@ -1530,7 +1530,7 @@ class PlotAllData(Plot):
 
             if overallMin > data['sampleRTT'].iloc[i]:
                 overallMin = data['sampleRTT'].iloc[i]
-            if count < 4:
+            if count < 8:
                 if overallMin > data['sampleRTT'].iloc[i] or overallMin == 0:
                     overallMin = data['sampleRTT'].iloc[i]
 
@@ -1538,7 +1538,7 @@ class PlotAllData(Plot):
                     minSeen = data['sampleRTT'].iloc[i]
                 count += 1
             else:
-                if minSeen > (((data['sdev'].iloc[i] ** 2) / exitSdev) + data['runningAvg'].iloc[i]):
+                if minSeen > (((data['sdev'].iloc[i]) * exitSdev) + data['runningAvg'].iloc[i]):
                     #print(i)
                     #print(f"{minSeen} > {data['sdev'].iloc[i] * exitSdev} + {data['runningAvg'].iloc[i]}")
                     exitWindow.append((data['cwnd'].iloc[i]*data['mss'].iloc[i])/1024/1024)
@@ -1560,7 +1560,7 @@ class PlotAllData(Plot):
 
         for trial in self.data:
             trial = self.filterStreams(trial)
-            exits = (self.determineExit(2048, trial, 1), self.determineExit(512, trial, 1), self.determineExit(64, trial, 1))
+            exits = (self.determineExit(0.25, trial, 3), self.determineExit(0.5, trial, 3), self.determineExit(1, trial, 3))
             entries.append(exits)
             print(exits)
 
@@ -1584,7 +1584,7 @@ class PlotAllData(Plot):
 
         pyplot.title('Variation in Link vs Window Size at Exit')
         pyplot.legend(
-            ["Optimal exit Point (BDP)", "1/2048 of Variance", "1/512 of Variance", '1/64 of Variance'])
+            ["Optimal exit Point (BDP)", "0.25 Standard Deviations", "0.5 Standard Deviations", '1 Standard Deviations'])
 
         pyplot.ylabel('Window size (MB)')
         pyplot.xlabel("Standard Deviation of Delay (ms)")
@@ -1602,7 +1602,7 @@ if __name__ == "__main__":
     for file, i in zip(files, range(len(files))):
         csvFilename = f'C:/satellite-research/csvs/hystartExit/' + file
         csvs.append(csvFilename)
-    plot = PlotAllData(protocol=None, csvs=csvs, plotFile='C:/satellite-research/plots/hystartExit/threeViolations',
+    plot = PlotAllData(protocol=None, csvs=csvs, plotFile='C:/satellite-research/plots/hystartExit/AgressiveExit',
                        legend=None, numRuns=1, title=None)
     plot.windowSize()
     # plot = PlotRTTOneFlow("hybla", "C:/research/hybla_2021_04_12-23-07-43.csv", "C:/research/hyblaRTT")
