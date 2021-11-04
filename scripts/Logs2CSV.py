@@ -51,6 +51,7 @@ def logToCsv(files, prefix):
         sampleCount = 0
         numPackets = 0
         logTime = 0
+        exit = 0
         mdev = 0
         max_mdev = 0
         srtt = 0
@@ -68,8 +69,7 @@ def logToCsv(files, prefix):
                     logTime = float(line.split("[")[1].split(']')[0]) + bootTime
                 elif "sample RTT:" in line:
                     if flag:
-                        csv.write(
-                            f"{numPackets},{logTime},{sampleRTT},{cwnd},{packets_out},{mss},{sampleCount},{currRTT},{minRTT},{delayThresh},{exit},{mdev},{max_mdev},{srtt},{smdev},{m2},{running_avg},{count},{variance},{sdev}\n")
+                        csv.write(f"{numPackets},{logTime},{sampleRTT},{cwnd},{packets_out},{mss},{sampleCount},{currRTT},{minRTT},{delayThresh},{exit},{mdev},{max_mdev},{srtt},{smdev},{m2},{running_avg},{count},{variance},{sdev}\n")
                         sampleRTT = 0
                         cwnd = 0
                         packets_out = 0
@@ -90,8 +90,7 @@ def logToCsv(files, prefix):
                         variance = 0
                         sdev = 0
                     else:
-                        csv.write(
-                            f'numPackets,time,sampleRTT,cwnd,packets_out,mss,sampleCount,currRTT,minRTT,delayThresh,exit,mdev,max_mdev,srtt,smdev,m2,runningAvg,count,variance,sdev\n')
+                        csv.write(f'numPackets,time,sampleRTT,cwnd,packets_out,mss,sampleCount,currRTT,minRTT,delayThresh,exit,mdev,max_mdev,srtt,smdev,m2,runningAvg,count,variance,sdev\n')
                         flag = True
                     sampleRTT = int(line.split("$")[-1])
                     logTime = float(line.split("[")[1].split(']')[0]) + bootTime
@@ -130,8 +129,7 @@ def logToCsv(files, prefix):
                 elif "sdev:" in line:
                     sdev = int(line.split("$")[-1])
 
-        csv.write(
-            f"{numPackets},{logTime},{sampleRTT},{cwnd},{packets_out},{mss},{sampleCount},{currRTT},{minRTT},{delayThresh},{exit},{mdev},{max_mdev},{srtt},{smdev},{m2},{running_avg},{count},{variance},{sdev}\n")
+        csv.write(f"{numPackets},{logTime},{sampleRTT},{cwnd},{packets_out},{mss},{sampleCount},{currRTT},{minRTT},{delayThresh},{exit},{mdev},{max_mdev},{srtt},{smdev},{m2},{running_avg},{count},{variance},{sdev}\n")
         log.close()
         csv.close()
 
