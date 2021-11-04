@@ -116,7 +116,7 @@ def getData():
     except:
         print('Folder not created')
 
-    makeCSVs = f'ssh btpeters@Andromeda \"python3 ~/Research/scripts/makeCSVs.py --batch {args.batch}\"'
+    makeCSVs = f'ssh btpeters@Andromeda \"python3 ~/Research/scripts/Logs2CSV.py --batch {args.batch}\"'
     subprocess.call(makeCSVs, shell=True)
 
     getCSVs = f'scp btpeters@Andromeda:~/Research/Trial_{args.batch}/csvs/* C:/satellite-research/csvs/Trial_{args.batch}'

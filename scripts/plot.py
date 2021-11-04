@@ -1319,18 +1319,37 @@ class PlotAllData(Plot):
         self.cwndCI.append(ciCwnd)
         self.throughputCI.append(ciTput)
 
+    def filterStreams(self, data):
+        boolIndex = []
+        twoCount = 0
+        lastCount = 1
+        for count in data['count'] :
+            if count == 2:
+                twoCount += 1
+            if twoCount < 2:
+                boolIndex.append(False)
+                continue
+            if lastCount + 1 > count:
+                boolIndex.append(False)
+                continue
+            boolIndex.append(True)
+            lastCount = count
+        return data[pandas.Series(boolIndex)]
+
+
     def plotWithPing(self, title):
+        self.data[0] = self.filterStreams(self.data[0])
         self.removeTimeOffsetPing()
         fig, axs = pyplot.subplots(3, gridspec_kw={'height_ratios': [3, 3, 3]})
         fig.set_figheight(8)
 
-        throughput = (self.data[0]['packets_out'] * (self.data[0]['mss'] * 8)) / (self.data[0]['sampleRTT'] / 1000) / 1024 / 1024
+        throughput = (self.data[0]['cwnd'] * (self.data[0]['mss'] * 8)) / (self.data[0]['sampleRTT'] / 1000) / 1024 / 1024
         axs[0].plot(self.data[0]['time'], throughput, color='tab:orange')
         axs[1].plot(self.data[1]['tSent_abs'], self.data[1]['rtt'], color='tab:blue')
         axs[1].plot(self.data[0]['time'], self.data[0]['sampleRTT'], color='tab:orange')
         axs[2].plot(self.data[0]['time'], self.data[0]['cwnd'], color='tab:orange')
 
-        fig.suptitle(self.title)
+        fig.suptitle("Proxy enabled")
         fig.legend(['satellite', 'UDP Ping'])
 
         axs[0].set_ylabel("Throughput (Mbits/s)")
@@ -1350,7 +1369,6 @@ class PlotAllData(Plot):
 
         pyplot.savefig(self.plotFilepath)
         pyplot.show()
-
 
 
     def RTT(self, title):
