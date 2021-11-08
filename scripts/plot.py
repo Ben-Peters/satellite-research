@@ -1349,7 +1349,7 @@ class PlotAllData(Plot):
         axs[1].plot(self.data[0]['time'], self.data[0]['sampleRTT'], color='tab:orange')
         axs[2].plot(self.data[0]['time'], self.data[0]['cwnd'], color='tab:orange')
 
-        fig.suptitle("Proxy enabled")
+        fig.suptitle("Proxy disabled")
         fig.legend(['satellite', 'UDP Ping'])
 
         axs[0].set_ylabel("Throughput (Mbits/s)")
