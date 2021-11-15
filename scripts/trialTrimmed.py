@@ -315,9 +315,9 @@ class Trial:
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
-    def emulateNormal(self):
+    def emulateNormal(self, delay, jitter):
         sshPrefix = f'ssh {self.user}@vorma.cs.wpi.edu'
-        command = f'{sshPrefix} \"sudo ~/normal_50.sh\"'
+        command = f'{sshPrefix} \"sudo ~/normal.sh {delay} {jitter}\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
@@ -357,15 +357,15 @@ class Trial:
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
-    def moveKernLog(self):
+    def moveKernLog(self, variation):
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
-        command = f'{sshPrefix} \"sudo sh -c \'cp /var/log/kern.log ~/Trial_{self.batchNum}/{self.cc[0]}_{self.getTimeStamp()}.log\'\"'
+        command = f'{sshPrefix} \"sudo sh -c \'cp /var/log/kern.log ~/Trial_{self.batchNum}/{variation}_{self.getTimeStamp()}.log\'\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
         command = f'{sshPrefix} \"sudo sh -c \'echo \"\" > /var/log/kern.log\'\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
-        self.logs.append(f"Trial_{self.batchNum}/{self.cc[0]}_{self.getTimeStamp()}.log")
+        self.logs.append(f"Trial_{self.batchNum}/{variation}_{self.getTimeStamp()}.log")
 
     def routeSatellite(self):
         sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
@@ -554,17 +554,18 @@ class Trial:
             self.setProtocolsRemote()
         print("Disabling HyStart")
         self.disableHystart()
-        print("Setting up vorma")
-        self.emulateNormal()
-        print("Running startIperf3Server()")
-        self.startIperf3Server()
-        # run download
-        self.setupKernLog()
-        self.routeVorma()
-        print("Running startIperf3Client()")
-        self.startIperf3Client()
-        self.moveKernLog()
-        self.sleep(5)
+        for i in range(self.numToRun*5):
+            print("Setting up vorma")
+            self.emulateNormal(600, (i % 5) * 30)
+            print("Running startIperf3Server()")
+            self.startIperf3Server()
+            # run download
+            self.routeVorma()
+            self.setupKernLog()
+            print("Running startIperf3Client()")
+            self.startIperf3Client()
+            self.moveKernLog((i % 5) * 30)
+            self.sleep(5)
         self.enableTuning()
         self.removeLimit()
         # self.disableTuning()

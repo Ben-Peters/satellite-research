@@ -65,10 +65,11 @@ def plotData():
         csvs.append(csvFilename)
         # legend.append(hosts[i].split('.')[0])
     plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", ".png")
-    plot = PlotAllData(protocol=cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend,
-                       numRuns=int(args.numToRun / 2), title=args.plotName)
+    plot = PlotAllData(protocol=cc[0], csvs=csvs, plotFile=plotFilename, legend=legend,
+                       numRuns=int(args.numToRun), title=args.plotName)
     # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
-    plot.plotWithPing(args.plotName)
+    plot.windowSize()
+    # plot.plotWithPing(args.plotName)
     # TODO: add this back in
     #  plot.RTT(args.plotName)
 
