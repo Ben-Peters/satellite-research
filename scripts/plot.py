@@ -1520,7 +1520,7 @@ class PlotAllData(Plot):
 
     def determineExit(self, exitSdev, data, numViolations):
         exitWindow = []
-        count = 0
+        count = data['cwnd'].iloc[0]
         minSeen = 0
         overallMin = 0
 
@@ -1530,22 +1530,22 @@ class PlotAllData(Plot):
 
             if overallMin > data['sampleRTT'].iloc[i]:
                 overallMin = data['sampleRTT'].iloc[i]
-            if count < 8:
+            if count > 0:
                 if overallMin > data['sampleRTT'].iloc[i] or overallMin == 0:
                     overallMin = data['sampleRTT'].iloc[i]
 
                 if minSeen > data['sampleRTT'].iloc[i] or minSeen == 0:
                     minSeen = data['sampleRTT'].iloc[i]
-                count += 1
+                count -= 1
             else:
-                if minSeen > (((data['sdev'].iloc[i]) * exitSdev) + data['runningAvg'].iloc[i]):
+                if minSeen > (((data['sdev'].iloc[i]) * exitSdev) + overallMin):
                     #print(i)
                     #print(f"{minSeen} > {data['sdev'].iloc[i] * exitSdev} + {data['runningAvg'].iloc[i]}")
                     exitWindow.append((data['cwnd'].iloc[i]*data['mss'].iloc[i])/1024/1024)
                     if len(exitWindow) == numViolations:
                         break
                 minSeen = 0
-                count = 0
+                count = data['cwnd'].iloc[i]
 
         if len(exitWindow) < numViolations:
             for i in range(numViolations - len(exitWindow)):
@@ -1560,7 +1560,7 @@ class PlotAllData(Plot):
 
         for trial in self.data:
             trial = self.filterStreams(trial)
-            exits = (self.determineExit(0.25, trial, 3), self.determineExit(0.5, trial, 3), self.determineExit(1, trial, 3))
+            exits = (self.determineExit(0.1, trial, 3), self.determineExit(0.25, trial, 3), self.determineExit(0.5, trial, 3))
             entries.append(exits)
             print(exits)
 
@@ -1573,18 +1573,18 @@ class PlotAllData(Plot):
         for i in range(len(entries)):
             (oneSd, twoSd, threeSd) = entries[i]
             if oneSd[0] != 65:
-                pyplot.scatter(30 * i, oneSd[0], c="tab:blue")
+                pyplot.scatter(30 * i, oneSd[0], edgecolors="tab:blue", facecolors='none')
             if twoSd[0] != 65 and twoSd >= oneSd:
-                pyplot.scatter(30 * i, twoSd[0], c='tab:orange')
+                pyplot.scatter(30 * i, twoSd[0], edgecolors='tab:orange', facecolors='none')
             if threeSd[0] != 65 and threeSd >= oneSd and threeSd >= twoSd:
-                pyplot.scatter(30 * i, threeSd[0], c='tab:green')
+                pyplot.scatter(30 * i, threeSd[0], edgecolors='tab:green', facecolors='none')
 
         pyplot.xlabel("Time (seconds)")
         pyplot.ylabel("Throughput (Mb/s)")
 
-        pyplot.title('Variation in Link vs Window Size at Exit')
+        pyplot.title('min in last RTT > sdev + min RTT')
         pyplot.legend(
-            ["Optimal exit Point (BDP)", "0.25 Standard Deviations", "0.5 Standard Deviations", '1 Standard Deviations'])
+            ["Optimal exit Point (BDP)", "0.1 Standard Deviations", "0.25 Standard Deviations", '0.5 Standard Deviations'])
 
         pyplot.ylabel('Window size (MB)')
         pyplot.xlabel("Standard Deviation of Delay (ms)")
