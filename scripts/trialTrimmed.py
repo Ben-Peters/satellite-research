@@ -317,7 +317,7 @@ class Trial:
 
     def emulateNormal(self, delay, jitter):
         sshPrefix = f'ssh {self.user}@vorma.cs.wpi.edu'
-        command = f'{sshPrefix} \"sudo ~/normal.sh {delay} {jitter}\"'
+        command = f'{sshPrefix} \"sudo ~/normal-no-reorder.sh {delay} {jitter}\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
@@ -556,7 +556,7 @@ class Trial:
         self.disableHystart()
         for i in range(self.numToRun*5):
             print("Setting up vorma")
-            self.emulateNormal(600, (i % 5) * 30)
+            self.emulateNormal(300, (i % 5) * 30)
             print("Running startIperf3Server()")
             self.startIperf3Server()
             # run download
