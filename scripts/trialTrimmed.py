@@ -281,9 +281,9 @@ class Trial:
             # os.system(f'rm -r pcaps')
             for host in self.hosts:
                 remove = f'ssh {self.user}@{host} \'sudo rm -r Trial_{self.batchNum}\''
-                os.system(remove)
+                #os.system(remove)
             remove = f'ssh {self.user}@glomma.cs.wpi.edu \'sudo rm -r Trial_{self.batchNum}\''
-            os.system(remove)
+            #os.system(remove)
             self.enableTuning()
             if self.log:
                 self.makeLogFile()
@@ -387,13 +387,13 @@ class Trial:
             timeStamp = self.getTimeStamp()
             os.system(changeOwnership)
             self.commandsRun.append((timeStamp, changeOwnership))
-            scpFromServer = f'scp -i ~/.ssh/id_rsa {self.user}@{host}:~/Trial_{self.batchNum}/* /csusers/btpeters/Research/tmp/Trial_{self.batchNum}/logs&'
-            print(f'\trunning command: \n{scpFromServer}')
-            timeStamp = self.getTimeStamp()
-            os.system(scpFromServer)
-            self.commandsRun.append((timeStamp, scpFromServer))
-            self.sleep(3)
-            self.logsSent += 1
+        scpFromServer = f'scp -i ~/.ssh/id_rsa {self.user}@{host}:~/Trial_{self.batchNum}/* /csusers/btpeters/Research/tmp/Trial_{self.batchNum}/logs&'
+        print(f'\trunning command: \n{scpFromServer}')
+        timeStamp = self.getTimeStamp()
+        os.system(scpFromServer)
+        self.commandsRun.append((timeStamp, scpFromServer))
+        self.sleep(3)
+        self.logsSent += 1
 
     def startUDPingServer(self):
         # TODO: This should be changed back to whatever the host is
