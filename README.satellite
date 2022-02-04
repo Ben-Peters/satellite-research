@@ -1,6 +1,6 @@
 # README - Viasat Satellite
 
-v3.0 (9/2/21)
+v3.1 (12/17/21)
 
 
 ## Overview
@@ -69,6 +69,13 @@ link-local      0.0.0.0         255.255.0.0     U     1000   0        0 eno1
 192.168.123.0   0.0.0.0         255.255.255.0   U     0      0        0 virbr0
 ````
 
+
+To use the emulated link instead of the satellite you can run the 
+`setup_routes.sh` script but pass in the argument "vorma" to route 
+all traffic for the servers to voral instead of the modem. The 
+routing table will look simmilar to above but will have 192.168.1.2 
+as the gateway instead of router.viasatmo 
+
 ## Hosts
 
 The client - `glomma.cs.wpi.edu` - is a Linux PC with an Intel
@@ -88,6 +95,26 @@ all the hosts can be reached.
 
 **Note!** mlcNetB.cs.wpi.edu has a modified version of the Kernel 
 to test Hystart performance and improvements.
+
+
+## Configuring the router
+
+To control the link characteristics of the routed link on vorma we 
+have been using netem (tc). To configure this there is a number of 
+different scripts in on vorma with different settings. There is also 
+a more flexible script called `normal-no-reorder.sh` (see below). 
+This script takes 2 arguments the first of which is the amount of 
+delay to add to each direction of the link, and the second is the 
+amount of jitter to add to the link. This script is setup such that 
+it will apply equal amounts of delay and jitter on both traffic coming 
+from the server as well as the client. This means you will measure an
+average RTT that is about 2x the value entered. Something to note is 
+that because this script changes the qdisc for all the connections to 
+the machine adding lots of delay and or jitter will make your ssh 
+session very slow. For this reason there is a script to remove any 
+qdiscs from any link called `remove.sh`. The `normal-no-reorder.sh` 
+script will also limit the rate of the link in both directions to 
+144mbit/s.
 
 ## Other Useful Commands
 
@@ -182,6 +209,15 @@ Download: 58.70 Mbit/s
 Testing upload speed...................................................
 Upload: 2.55 Mbit/s
 ````
+
+
+## Script locations
+
+`setup_routes.sh` -> glomma.cs.wpi.edu:/home/btpeters/setup_routes.sh
+
+`remove.sh` -> vorma.cs.wpi.edu:/home/btpeters/remove.sh
+
+`normal-no-reorder.sh` -> vorma.cs.wpi.edu:/home/btpeters/normal-no-reorder.sh
 
 
 ## Links
