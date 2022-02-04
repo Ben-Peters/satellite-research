@@ -87,8 +87,8 @@ class Trial:
         filePrefix = f'Trial_{self.batchNum}'
         os.system(f'mkdir {filePrefix}')
         os.system(f'{sshPrefix} \"mkdir {filePrefix}\"')
-        os.system(f'{sshPrefix} \"./setup_routes.sh\"') # TODO: make changing between vorma and satellite easier
-        os.system(f'ssh {self.user}@vorma.cs.wpi.edu \"sudo ./satellite.sh\"')
+        os.system(f'{sshPrefix} \"./setup_routes.sh vorma\"') # TODO: make changing between vorma and satellite easier
+        #os.system(f'ssh {self.user}@vorma.cs.wpi.edu \"sudo ./satellite.sh\"')
         for host in self.hosts:
             os.system(f'ssh {self.user}@{host} \"mkdir {filePrefix}\"')
         os.system(f'mkdir {filePrefix}/pcaps')
@@ -259,6 +259,7 @@ class Trial:
         commands = ['iperf3', 'tcpdump', 'UDPing']
         hosts = self.hosts.copy()
         hosts.append('glomma.cs.wpi.edu')
+        hosts.append('mlcneta.cs.wpi.edu')
         for host in hosts:
             for command in commands:
                 pkill = f'ssh {self.user}@{host} \"sudo pkill -2 {command}\"'
@@ -280,9 +281,9 @@ class Trial:
             # os.system(f'rm -r pcaps')
             for host in self.hosts:
                 remove = f'ssh {self.user}@{host} \'sudo rm -r Trial_{self.batchNum}\''
-                os.system(remove)
+                #os.system(remove)
             remove = f'ssh {self.user}@glomma.cs.wpi.edu \'sudo rm -r Trial_{self.batchNum}\''
-            os.system(remove)
+            #os.system(remove)
             self.enableTuning()
             if self.log:
                 self.makeLogFile()
@@ -314,9 +315,9 @@ class Trial:
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
-    def limitWithRate(self):
+    def emulateNormal(self, delay, jitter):
         sshPrefix = f'ssh {self.user}@vorma.cs.wpi.edu'
-        command = f'{sshPrefix} \"sudo ~/rate.sh\"'
+        command = f'{sshPrefix} \"sudo ~/normal-no-reorder.sh {delay} {jitter}\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
@@ -356,15 +357,15 @@ class Trial:
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
 
-    def moveKernLog(self):
+    def moveKernLog(self, variation):
         sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
-        command = f'{sshPrefix} \"sudo sh -c \'cp /var/log/kern.log ~/Trial_{self.batchNum}/{self.cc[0]}_{self.getTimeStamp()}.log\'\"'
+        command = f'{sshPrefix} \"sudo sh -c \'cp /var/log/kern.log ~/Trial_{self.batchNum}/{variation}_{self.getTimeStamp()}.log\'\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
         command = f'{sshPrefix} \"sudo sh -c \'echo \"\" > /var/log/kern.log\'\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         os.system(command)
-        self.logs.append(f"Trial_{self.batchNum}/{self.cc[0]}_{self.getTimeStamp()}.log")
+        self.logs.append(f"Trial_{self.batchNum}/{variation}_{self.getTimeStamp()}.log")
 
     def routeSatellite(self):
         sshPrefix = f'ssh {self.user}@glomma.cs.wpi.edu'
@@ -386,16 +387,17 @@ class Trial:
             timeStamp = self.getTimeStamp()
             os.system(changeOwnership)
             self.commandsRun.append((timeStamp, changeOwnership))
-            scpFromServer = f'scp -i ~/.ssh/id_rsa {self.user}@{host}:~/Trial_{self.batchNum}/* /csusers/btpeters/Research/tmp/Trial_{self.batchNum}/logs&'
-            print(f'\trunning command: \n{scpFromServer}')
-            timeStamp = self.getTimeStamp()
-            os.system(scpFromServer)
-            self.commandsRun.append((timeStamp, scpFromServer))
-            self.sleep(3)
-            self.logsSent += 1
+        scpFromServer = f'scp -i ~/.ssh/id_rsa {self.user}@{host}:~/Trial_{self.batchNum}/* /csusers/btpeters/Research/tmp/Trial_{self.batchNum}/logs&'
+        print(f'\trunning command: \n{scpFromServer}')
+        timeStamp = self.getTimeStamp()
+        os.system(scpFromServer)
+        self.commandsRun.append((timeStamp, scpFromServer))
+        self.sleep(3)
+        self.logsSent += 1
 
     def startUDPingServer(self):
-        sshPrefix = f'ssh {self.user}@{self.hosts[0]}'
+        # TODO: This should be changed back to whatever the host is
+        sshPrefix = f'ssh {self.user}@mlcneta.cs.wpi.edu'
         command = f'{sshPrefix} \"~/sUDPing\"'
         self.commandsRun.append((self.getTimeStamp(), command))
         subprocess.Popen(command, shell=True)
@@ -407,7 +409,8 @@ class Trial:
         # command = f'{sshPrefix} \"mkdir Trial_{self.batchNum}/logs\"'
         # os.system(command)
         # self.commandsRun.append((self.getTimeStamp(), command))
-        command = f'{sshPrefix} \"~/myUDPing -h {self.hosts[0]} -p 1234 -n 5 -c {filename}\"'
+        # TODO: This should try to ping the sever not a differnet one
+        command = f'{sshPrefix} \"~/myUDPing -h mlcneta.cs.wpi.edu -p 1234 -n 5 -c {filename}\"'
         os.system(f"echo '{command}'")
         self.csvs.append(filename)
         self.commandsRun.append((self.getTimeStamp(), command))
@@ -551,29 +554,20 @@ class Trial:
             self.setProtocolsRemote()
         print("Disabling HyStart")
         self.disableHystart()
-        print("Running startIperf3Server()")
-        self.startIperf3Server()
-        # run downloads
-        self.setupKernLog()
-        for i in range(self.numToRun):
-            if i % 2 == 0:
-                self.routeSatellite()
-            else:
-                self.routeVorma()
-            # print("Running startIperf3Server()")
-            # self.startIperf3Server()
-            # print("Running startTcpdumpClient()")
-            # self.startTcpdumpClient()
+        for i in range(self.numToRun*5):
+            print("Setting up vorma")
+            self.emulateNormal(300, (i % 5) * 30)
+            print("Running startIperf3Server()")
+            self.startIperf3Server()
+            # run download
+            self.routeVorma()
+            self.setupKernLog()
             print("Running startIperf3Client()")
             self.startIperf3Client()
-            # print("Sleeping")
-            # self.sleep(self.timeout)
-            # print('Killing tcpdump and iperf3')
-            # self.terminateCommands()
-            self.moveKernLog()
+            self.moveKernLog((i % 5) * 30)
             self.sleep(5)
         self.enableTuning()
-        # self.removeLimit()
+        self.removeLimit()
         # self.disableTuning()
         print("Getting pcaps")
         self.getLogs()
@@ -600,9 +594,9 @@ def main():
     parser.add_argument('--size', type=str, help="How much data should be downloaded (exclusive use with time param)",
                         default=None)
     parser.add_argument('--numToRun', type=int, help="Total number of trial to run")
-    parser.add_argument('--rmem', type=str, help='Value for rmem', default="4096 131072 6291456")
-    parser.add_argument('--wmem', type=str, help='Value for wmem', default="4096 16384 4194304")
-    parser.add_argument('--mem', type=str, help='Value for mem', default="382185 509580 764370")
+    parser.add_argument('--rmem', type=str, help='Value for rmem', default="60000000 60000000 60000000")
+    parser.add_argument('--wmem', type=str, help='Value for wmem', default="60000000 60000000 60000000")
+    parser.add_argument('--mem', type=str, help='Value for mem', default="60000000 60000000 60000000")
     parser.add_argument('--window', type=int, help='Specify size of wmem to be set by iperf', default=0)
     parser.add_argument('--RTT', type=bool, help='Measure RTT or track all stats', default=False)
     parser.add_argument('--Ping', type=bool, help="run UDP at the same time", default=False)
@@ -625,9 +619,9 @@ def main():
               numToRun=args.numToRun, time=args.time, tcp_rmem=args.rmem,
               tcp_mem=args.mem, tcp_wmem=args.wmem, ports=['5201', '5201'], iperf_w_arg=args.window)
     #if args.RTT:
-    #    t.startRTT()
+    t.startRTT()
     #elif args.Ping:
-    t.startPingRTT()
+    # t.startPingRTT()
     #else:
     #    t.start()
     print("All done")

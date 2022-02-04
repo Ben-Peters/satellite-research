@@ -69,11 +69,13 @@ link-local      0.0.0.0         255.255.0.0     U     1000   0        0 eno1
 192.168.123.0   0.0.0.0         255.255.255.0   U     0      0        0 virbr0
 ````
 
+
 To use the emulated link instead of the satellite you can run the 
 `setup_routes.sh` script but pass in the argument "vorma" to route 
 all traffic for the servers to voral instead of the modem. The 
 routing table will look simmilar to above but will have 192.168.1.2 
 as the gateway instead of router.viasatmo 
+
 ## Hosts
 
 The client - `glomma.cs.wpi.edu` - is a Linux PC with an Intel
@@ -93,6 +95,7 @@ all the hosts can be reached.
 
 **Note!** mlcNetB.cs.wpi.edu has a modified version of the Kernel 
 to test Hystart performance and improvements.
+
 
 ## Configuring the router
 
@@ -206,6 +209,8 @@ Download: 58.70 Mbit/s
 Testing upload speed...................................................
 Upload: 2.55 Mbit/s
 ````
+
+
 ## Script locations
 
 `setup_routes.sh` -> glomma.cs.wpi.edu:/home/btpeters/setup_routes.sh
@@ -213,6 +218,7 @@ Upload: 2.55 Mbit/s
 `remove.sh` -> vorma.cs.wpi.edu:/home/btpeters/remove.sh
 
 `normal-no-reorder.sh` -> vorma.cs.wpi.edu:/home/btpeters/normal-no-reorder.sh
+
 
 ## Links
 

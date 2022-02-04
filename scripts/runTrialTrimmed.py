@@ -3,6 +3,7 @@ import os
 from plot import PlotTputOneFlow, PlotTputCompare, PlotAllData
 import subprocess
 import time
+from fabric2 import Connection
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--batch', type=int, help='What batch number is this', required=True)
@@ -13,9 +14,9 @@ parser.add_argument('--size', type=str, help='How much data do you want to downl
 parser.add_argument('--time', type=int, help='How long do you want the download to run', default=None)
 parser.add_argument('--numToRun', type=int, help='Total number of downloads to run', default=10)
 parser.add_argument('--tcpSettings', type=int, help='Which settings should be used', default=None)
-parser.add_argument('--rmem', type=str, help='Value for rmem', default="4096 131072 6291456")
-parser.add_argument('--wmem', type=str, help='Value for wmem', default="4096 16384 4194304")
-parser.add_argument('--mem', type=str, help='Value for mem', default="382185 509580 764370")
+parser.add_argument('--rmem', type=str, help='Value for rmem', default="60000000 60000000 60000000")
+parser.add_argument('--wmem', type=str, help='Value for wmem', default="60000000 60000000 60000000")
+parser.add_argument('--mem', type=str, help='Value for mem', default="60000000 60000000 60000000")
 parser.add_argument('--plotName', type=str, help='Name for plots created', default="TCP Performance")
 parser.add_argument('--window', type=int, help='Specify size of wmem to be set by iperf', default=0)
 args = parser.parse_args()
@@ -116,7 +117,7 @@ def getData():
     except:
         print('Folder not created')
 
-    makeCSVs = f'ssh btpeters@Andromeda \"python3 ~/Research/scripts/makeCSVs.py --batch {args.batch}\"'
+    makeCSVs = f'ssh btpeters@Andromeda \"python3 ~/Research/scripts/Logs2CSV.py --batch {args.batch} --realtime 0\"'
     subprocess.call(makeCSVs, shell=True)
 
     getCSVs = f'scp btpeters@Andromeda:~/Research/Trial_{args.batch}/csvs/* C:/satellite-research/csvs/Trial_{args.batch}'
@@ -138,38 +139,42 @@ def plotData():
 
     hosts += ["glomma.cs.wpi.edu"]
     csvs = []
-    legend = ['With Receiver Auto-Tune', 'Without Receiver Auto-Tune']
+    #legend = ['With Receiver Auto-Tune', 'Without Receiver Auto-Tune']
     for file, i in zip(files, range(len(files))):
         csvFilename = f'C:/satellite-research/csvs/Trial_{args.batch}/' + file
         csvs.append(csvFilename)
         # legend.append(hosts[i].split('.')[0])
-    plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", "_TPUT.png")
-    plot = PlotAllData(protocol=cc[0], csvFiles=csvs, plotFile=plotFilename, legend=legend,
+    plotFilename = csvs[0].replace("/csvs/", "/plots/").replace(".csv", ".png")
+    plot = PlotAllData(protocol=cc[0], csvs=csvs, plotFile=plotFilename, legend=None,
                        numRuns=int(args.numToRun / 2), title=args.plotName)
     # plot = PlotTputOneFlow(protocol=self.cc[0], csvFilepath=csvFilename, plotFilepath=plotFilename)
-    plot.plotALL(maxY=maxY)
+    plot.windowSize()
+    #plot.mdev_vs_sdev()
     #plot.plotStartTput(15)
     #plot.plotStart(15)
-    plot.plotTimeDelta()
+    #plot.plotTimeDelta()
 
 
 def main():
     if args.time is not None:
-        startTrial = f"ssh btpeters@cs.wpi.edu \" python3 ~/Research/scripts/trialTrimmed.py " \
+        startTrial = f"python3 ~/Research/scripts/trialTrimmed.py " \
                      f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
                      f"--time {args.time} --numToRun {args.numToRun} " \
-                     f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\' --window {args.window}\" "
+                     f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\' --window {args.window} --RTT 1 --Ping 0 "
     else:
-        startTrial = f"ssh btpeters@cs.wpi.edu \" python3 ~/Research/scripts/trialTrimmed.py " \
+        startTrial = f"python3 ~/Research/scripts/trialTrimmed.py " \
                      f"--batch {args.batch} --log {args.log} --cc {args.cc} --runNum {args.runNum} " \
                      f"--size {args.size} --numToRun {args.numToRun}" \
-                     f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\' --window {args.window}\" "
+                     f"--rmem \'{args.rmem}\' --wmem \'{args.wmem}\' --mem \'{args.mem}\' --window {args.window} --RTT 1 --Ping 0 "
+        #  TODO: Replace this with what it was before (RTT: 1, Ping: 0)
     print("Running command: " + startTrial)
     try:
         os.listdir(f'C:/satellite-research/csvs/Trial_{args.batch}')
         print("This trial has already been run, just creating plots")
     except:
-        subprocess.call(startTrial, shell=True)
+        ssh = Connection(host='cs.wpi.edu', user='btpeters')
+        ssh.run(startTrial)
+        print("getting Data")
         getData()
     plotData()
 

@@ -7,6 +7,7 @@ import numpy
 import statistics
 from scipy import stats
 from multiprocessing import Process, Lock, Pipe
+import math
 
 pyplot.rcParams.update({'font.size': 11})
 class PlotRTTOneFlow:
@@ -200,9 +201,9 @@ class PlotTputCompare:
 
 
 class Plot:
-    def __init__(self, protocol, legend, csvFiles, plotFile, numRuns=1):
+    def __init__(self, protocol, legend, csvs, plotFile, numRuns=1):
         self.protocol = protocol
-        self.csvFile = csvFiles
+        self.csvs = csvs
         self.plotFilepath = plotFile
         self.legend = legend
         self.data = []
@@ -218,7 +219,7 @@ class Plot:
                     'tcp.analysis.ack_rtt': float,
                     'frame.time': str,
                     'tcp.time_relative': float}
-        for csv in csvFiles:
+        for csv in csvs:
             # memory mapping can be enabled to improve performance but at the expense of memory usage for large files
             self.data.append(pandas.read_csv(csv, memory_map=True))
         self.timesRaw = []  # pandas.to_datetime(self.df['frame.time'], infer_datetime_format=True)
@@ -323,8 +324,8 @@ def calculateConfidenceInterval(values, confidenceLevel):
 
 
 class PlotAllData(Plot):
-    def __init__(self, protocol, legend, csvFiles, plotFile, title, numRuns=1):
-        super().__init__(protocol=protocol, legend=legend, csvFiles=csvFiles, plotFile=plotFile)
+    def __init__(self, protocol, legend, csvs, plotFile, title, numRuns=1):
+        super().__init__(protocol=protocol, legend=legend, csvs=csvs, plotFile=plotFile)
         self.numRuns = numRuns
         self.title = title
         self.rtt = []
@@ -1249,10 +1250,9 @@ class PlotAllData(Plot):
             self.minRTT.append(minRTT)
             self.ssExit.append(ssExit)
 
-    def removeTimeOffsetPing(self):
-        minTime = self.data[1]['tSent_abs'].iloc[0]
+    def removeTimeOffsetLog(self):
+        minTime = self.data[0]['time'].iloc[0]
         print(f'minTime is: {minTime}')
-        self.data[1]['tSent_abs'] = self.data[1]['tSent_abs'] - minTime
         self.data[0]['time'] = self.data[0]['time'] - minTime
 
 
@@ -1319,23 +1319,108 @@ class PlotAllData(Plot):
         self.cwndCI.append(ciCwnd)
         self.throughputCI.append(ciTput)
 
-    def plotWithPing(self, title):
-        self.removeTimeOffsetPing()
+    def calculateStatsSingle(self):
+        df = self.data[0]
+        cutOffTime = 1
+        bytesSent = 0
+        throughput = []
+        seconds = []
+
+        rtt = []
+        RTTSum = 0
+        RTTCount = 0
+
+        cwnd = []
+        cwndSum = 0
+        cwndCount = 0
+
+        clientCount = 0
+
+
+        for j in range(len(df)):
+            # only packets from the Server
+            if df['tcp.srcport'].iloc[j] == 5201:
+                # serverCount += 1
+                # Track bytes sent for tput calc
+                bytesSent += df['frame.len'].iloc[j]
+
+                # Only look at packets that have data bout CWND
+                if not pandas.isnull(df['tcp.analysis.bytes_in_flight'].iloc[j]):
+                    cwndCount += 1
+                    cwndSum += df['tcp.analysis.bytes_in_flight'].iloc[j]/1024/1024
+
+                    # rolling avg for CWND est.
+                    # if avgCwnd != 0:
+                    # avgCwnd = (avgCwnd + df['tcp.analysis.bytes_in_flight'].iloc[j]) / 2
+                    # else:
+                    # avgCwnd = df['tcp.analysis.bytes_in_flight'].iloc[j]
+
+            # only packets from the Client
+            if df['tcp.dstport'].iloc[j] == 5201:
+                clientCount += 1
+
+                if not pandas.isnull(df['tcp.analysis.ack_rtt'].iloc[j]):
+                    RTTCount += 1
+                    RTTSum += df['tcp.analysis.ack_rtt'].iloc[j]
+
+                # rolling avg for RTT est.
+                # if avgRTT != 0:
+                # avgRTT = (avgRTT + df['tcp.analysis.ack_rtt'].iloc[j]) / 2
+                # else:
+                # avgRTT = df['tcp.analysis.ack_rtt'].iloc[j]
+
+                # rolling avg for RWND est.
+                # if avgRwnd != 0:
+                # avgRwnd = (avgRwnd + df['tcp.window_size'].iloc[j]) / 2
+                # else:
+                # avgRwnd = df['tcp.window_size'].iloc[j]
+
+            if df['tcp.time_relative'].iloc[j] > float(cutOffTime):
+                throughput.append((bytesSent * 8) / 1048576)
+                seconds.append(cutOffTime)
+                if RTTCount == 0:
+                    rtt.append(0)
+                else:
+                    rtt.append((RTTSum / RTTCount))
+                if cwndCount == 0:
+                    cwnd.append(0)
+                else:
+                    cwnd.append(cwndSum / cwndCount)
+
+
+
+                bytesSent = 0
+                RTTSum = 0
+                RTTCount = 0
+                cwndSum = 0
+                cwndCount = 0
+                clientCount = 0
+                cutOffTime += 1
+
+        self.throughput = throughput
+        self.rtt = rtt
+        self.cwnd = cwnd
+        self.seconds = seconds
+        print(f"Results Ready")
+
+    def plotOnetcpdump(self):
+        self.calculateStatsSingle()
+        #self.removeTimeOffsetPing()
         fig, axs = pyplot.subplots(3, gridspec_kw={'height_ratios': [3, 3, 3]})
         fig.set_figheight(8)
 
-        throughput = (self.data[0]['packets_out'] * (self.data[0]['mss'] * 8)) / (self.data[0]['sampleRTT'] / 1000) / 1024 / 1024
-        axs[0].plot(self.data[0]['time'], throughput, color='tab:orange')
-        axs[1].plot(self.data[1]['tSent_abs'], self.data[1]['rtt'], color='tab:blue')
-        axs[1].plot(self.data[0]['time'], self.data[0]['sampleRTT'], color='tab:orange')
-        axs[2].plot(self.data[0]['time'], self.data[0]['cwnd'], color='tab:orange')
+        # throughput = (self.data[0]['packets_out'] * (self.data[0]['mss'] * 8)) / (self.data[0]['sampleRTT'] / 1000) / 1024 / 1024
+        axs[0].plot(self.seconds, self.throughput, color='tab:orange')
+        # axs[1].plot(self.data[1]['tSent_abs'], self.data[1]['rtt'], color='tab:blue')
+        axs[1].plot(self.seconds, self.rtt, color='tab:orange')
+        axs[2].plot(self.seconds, self.cwnd, color='tab:orange')
 
-        fig.suptitle("UDP Ping with download")
-        fig.legend(['satellite', 'UDP Ping'])
+        fig.suptitle("Jul 13, 2020")
+        # fig.legend(['TCP Flow (mlcnetb)', 'UDP Ping (mlcneta)'])
 
         axs[0].set_ylabel("Throughput (Mbits/s)")
-        axs[1].set_ylabel("RTT (ms)")
-        axs[2].set_ylabel("CWND (Packets)")
+        axs[1].set_ylabel("RTT (Secons)")
+        axs[2].set_ylabel("CWND (MB)")
         axs[2].set_xlabel("Time (seconds)")
 
         axs[0].set_ylim(bottom=0)
@@ -1344,76 +1429,182 @@ class PlotAllData(Plot):
         axs[0].set_xlim(xmin=0)
         axs[1].set_xlim(xmin=0)
         axs[2].set_xlim(xmin=0)
-        axs[0].set_xlim(xmax=self.data[1]['tSent_abs'].iloc[-1])
-        axs[1].set_xlim(xmax=self.data[1]['tSent_abs'].iloc[-1])
-        axs[2].set_xlim(xmax=self.data[1]['tSent_abs'].iloc[-1])
+        #axs[0].set_xlim(xmax=self.data[1]['tSent_abs'].iloc[-1])
+        #axs[1].set_xlim(xmax=self.data[1]['tSent_abs'].iloc[-1])
+        #axs[2].set_xlim(xmax=self.data[1]['tSent_abs'].iloc[-1])
 
         pyplot.savefig(self.plotFilepath)
         pyplot.show()
 
+    def update(slef, existingAggregate, newValue):
+        (count, mean, M2) = existingAggregate
+        count += 1
+        delta = newValue - mean
+        mean += delta / count
+        delta2 = newValue - mean
+        M2 += delta * delta2
+        return (count, mean, M2)
 
+    # Retrieve the mean, variance and sample variance from an aggregate
+    def finalize(self, existingAggregate):
+        (count, mean, M2) = existingAggregate
+        if count < 2:
+            return (float("nan"), float("nan"), float("nan"))
+        else:
+            (mean, variance, sampleVariance) = (mean, M2 / count, M2 / (count - 1))
+            return mean, variance, sampleVariance
 
-    def RTT(self, title):
-        self.analyzeThreadedRTT()
-        self.avgAllDataRTT(0)
-        self.avgAllDataRTT(1)
+    def calculateSdev(self):
+        aggregate = (0, 0, 0)
+        sdev = []
+        mean = []
+        m2 = []
+        for rtt in self.data[0]['sampleRTT']:
+            aggregate = self.update(aggregate, rtt)
+            sdev.append(math.sqrt(self.finalize(aggregate)[1]))
+            mean.append(aggregate[1])
+            m2.append(aggregate[2])
+        return sdev, mean, m2
+
+    def mdev_vs_sdev(self):
+        self.removeTimeOffsetLog()
+        (sdev, mean, m2) = self.calculateSdev()
 
         # Setup formatting of plots
         fig, axs = pyplot.subplots(3, gridspec_kw={'height_ratios': [3, 3, 3]})
         fig.set_figheight(8)
 
-        minLength = len(self.seconds[0])
-        minIndex = 0
-        for i in range(int(self.numRuns * 2)):
-            if minLength > len(self.seconds[i]):
-                minIndex = i
-                minLength = len(self.seconds[i])
+        # axs[1].plot(self.data[0]['time'], self.data[0]['mdev'], color='tab:orange')
+        axs[2].plot(self.data[0]['time'], self.data[0]['m2'], color='tab:orange')
+        axs[2].plot(self.data[0]['time'], m2, color='tab:blue')
+        axs[0].plot(self.data[0]['time'], self.data[0]['runningAvg'], color='tab:orange')
+        axs[0].plot(self.data[0]['time'], mean, color='tab:blue')
+        # axs[1].plot(self.data[0]['time'], self.data[0]['variance'], color='tab:purple')
+        axs[1].plot(self.data[0]['time'], self.data[0]['sdev'], color='tab:orange')
+        axs[1].plot(self.data[0]['time'], sdev, color='tab:blue')
+        axs[0].plot(self.data[0]['time'], self.data[0]['sampleRTT'], color='black')
 
-        axs[0].plot(self.seconds[minIndex], self.throughputAVG[0], color='tab:orange')
-        axs[0].fill_between(self.seconds[minIndex], self.throughputCI[0][0],
-                            self.throughputCI[0][1], color='tab:orange', alpha=.2)
-        axs[0].plot(self.seconds[minIndex], self.throughputAVG[1], color='tab:blue')
-        axs[0].fill_between(self.seconds[minIndex], self.throughputCI[1][0],
-                            self.throughputCI[1][1], color='tab:blue', alpha=.2)
+        #fig.suptitle("Hystart Disabled")
+        fig.legend(["Kernel", 'Python', "Measured RTT"])
+        axs[1].set_ylabel("standard deviation (ms)")
+        axs[0].set_ylabel('RTT (ms)')
+        axs[2].set_ylabel('m2 (ms)')
 
-        axs[1].plot(self.seconds[minIndex], self.rttAVG[0], color='tab:orange')
-        axs[1].fill_between(self.seconds[minIndex], self.rttCI[0][0],
-                            self.rttCI[0][1], color='tab:orange', alpha=.2)
-        axs[1].plot(self.seconds[minIndex], self.rttAVG[1], color='tab:blue')
-        axs[1].fill_between(self.seconds[minIndex], self.rttCI[1][0],
-                            self.rttCI[1][1], color='tab:blue', alpha=.2)
-        axs[1].axvline(x=self.ssExitAVG, color='tab:red', alpha=.5)
-        axs[1].axhline(y=self.minRTTAVG, color='tab:green', alpha=.5)
-
-        axs[2].plot(self.seconds[minIndex], self.cwndAVG[0], color='tab:orange')
-        axs[2].fill_between(self.seconds[minIndex], self.cwndCI[0][0],
-                            self.cwndCI[0][1], color='tab:orange', alpha=.2)
-        axs[2].plot(self.seconds[minIndex], self.cwndAVG[1], color='tab:blue')
-        axs[2].fill_between(self.seconds[minIndex], self.cwndCI[1][0],
-                            self.cwndCI[1][1], color='tab:blue', alpha=.2)
-        axs[2].axvline(x=self.ssExitAVG, color='tab:red', alpha=.5)
-        fig.suptitle("Hystart Disabled")
-        fig.legend(self.legend)
-        axs[0].set_ylabel("Throughput (Mbits/s)")
-        axs[1].set_ylabel("RTT (ms)")
-        axs[2].set_ylabel("CWND (Packets)")
-        axs[2].set_xlabel("Time (seconds)")
         axs[0].set_ylim(bottom=0)
-        axs[1].set_ylim(bottom=0)
-        axs[2].set_ylim(bottom=0)
         axs[0].set_xlim(xmin=0)
-        axs[0].set_xlim(xmax=self.seconds[minIndex][-1])
+        axs[1].set_ylim(bottom=0)
         axs[1].set_xlim(xmin=0)
-        axs[1].set_xlim(xmax=self.seconds[minIndex][-1])
+        axs[2].set_ylim(bottom=0)
         axs[2].set_xlim(xmin=0)
-        axs[2].set_xlim(xmax=self.seconds[minIndex][-1])
+        pyplot.savefig(self.plotFilepath)
+        pyplot.show()
+
+
+    def filterStreams(self, data):
+        boolIndex = []
+        twoCount = 0
+        lastCount = 1
+        for count in data['count'] :
+            if count == 2:
+                twoCount += 1
+            if twoCount < 2:
+                boolIndex.append(False)
+                continue
+            if lastCount + 1 != count:
+                boolIndex.append(False)
+                continue
+            boolIndex.append(True)
+            lastCount = count
+        return data[pandas.Series(boolIndex)]
+
+
+    def determineExit(self, exitSdev, data, numViolations):
+        exitWindow = []
+        count = data['cwnd'].iloc[0]
+        minSeen = 0
+        overallMin = 0
+
+        for i in range(len(data['sampleRTT'])):
+            if minSeen > data['sampleRTT'].iloc[i]:
+                minSeen = data['sampleRTT'].iloc[i]
+
+            if overallMin > data['sampleRTT'].iloc[i]:
+                overallMin = data['sampleRTT'].iloc[i]
+            if count > 0:
+                if overallMin > data['sampleRTT'].iloc[i] or overallMin == 0:
+                    overallMin = data['sampleRTT'].iloc[i]
+
+                if minSeen > data['sampleRTT'].iloc[i] or minSeen == 0:
+                    minSeen = data['sampleRTT'].iloc[i]
+                count -= 1
+            else:
+                if minSeen > (((data['sdev'].iloc[i]) * exitSdev) + overallMin):
+                    #print(i)
+                    #print(f"{minSeen} > {data['sdev'].iloc[i] * exitSdev} + {data['runningAvg'].iloc[i]}")
+                    exitWindow.append((data['cwnd'].iloc[i]*data['mss'].iloc[i])/1024/1024)
+                    if len(exitWindow) == numViolations:
+                        break
+                minSeen = 0
+                count = data['cwnd'].iloc[i]
+
+        if len(exitWindow) < numViolations:
+            for i in range(numViolations - len(exitWindow)):
+                exitWindow.append(65)
+        print(exitWindow)
+        return exitWindow
+
+    def windowSize(self):
+        self.removeTimeOffsetLog()
+        # (sdev, mean, m2) = self.calculateSdev()
+        entries = []
+
+        for trial in self.data:
+            trial = self.filterStreams(trial)
+            exits = (self.determineExit(0.1, trial, 3), self.determineExit(0.25, trial, 3), self.determineExit(0.5, trial, 3))
+            entries.append(exits)
+            print(exits)
+
+        # Setup formatting of plots
+        # fig, axs = pyplot.subplots(1, gridspec_kw={'height_ratios': [8]})
+        # fig.set_figheight(8)
+
+        # axs[1].plot(self.data[0]['time'], self.data[0]['mdev'], color='tab:orange')
+        pyplot.axhline(y=10.8, color="tab:red")
+        for i in range(len(entries)):
+            (oneSd, twoSd, threeSd) = entries[i]
+            if oneSd[0] != 65:
+                pyplot.scatter(30 * i, oneSd[0], edgecolors="tab:blue", facecolors='none')
+            if twoSd[0] != 65 and twoSd >= oneSd:
+                pyplot.scatter(30 * i, twoSd[0], edgecolors='tab:orange', facecolors='none')
+            if threeSd[0] != 65 and threeSd >= oneSd and threeSd >= twoSd:
+                pyplot.scatter(30 * i, threeSd[0], edgecolors='tab:green', facecolors='none')
+
+        pyplot.xlabel("Time (seconds)")
+        pyplot.ylabel("Throughput (Mb/s)")
+
+        pyplot.title('min in last RTT > sdev + min RTT')
+        pyplot.legend(
+            ["Optimal exit Point (BDP)", "0.1 Standard Deviations", "0.25 Standard Deviations", '0.5 Standard Deviations'])
+
+        pyplot.ylabel('Window size (MB)')
+        pyplot.xlabel("Standard Deviation of Delay (ms)")
+
+        #pyplot.xlim(xmin=0)
+        pyplot.ylim(bottom=0)
         pyplot.savefig(self.plotFilepath)
         pyplot.show()
 
 
 if __name__ == "__main__":
-    plot = PlotTputOneFlow("hybla", "C:\satellite-research/cubic_2021_04_13-20-28-37.csv", "C:/satellite-research/cubicTput")
-    plot.plotTput()
+    import os
+    files = os.listdir(f'C:/satellite-research/csvs/hystartExit')
+    csvs = []
+    for file, i in zip(files, range(len(files))):
+        csvFilename = f'C:/satellite-research/csvs/hystartExit/' + file
+        csvs.append(csvFilename)
+    plot = PlotAllData(protocol=None, csvs=csvs, plotFile='C:/satellite-research/plots/hystartExit/AgressiveExit',
+                       legend=None, numRuns=1, title=None)
+    plot.windowSize()
     # plot = PlotRTTOneFlow("hybla", "C:/research/hybla_2021_04_12-23-07-43.csv", "C:/research/hyblaRTT")
     # plot.plotRTT()
     # csvs = ["C:/research/hybla_2021_04_12-23-07-43.csv", "C:/research/hybla_2021_04_12-23-07-46.csv"]

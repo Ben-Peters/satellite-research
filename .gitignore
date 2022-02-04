@@ -26,3 +26,5 @@ lsquic/*
 quiche/*
 sslSecrets.log
 ssldebug.log
+*.json
+AnalysisTools/delay distributions.ipynb
